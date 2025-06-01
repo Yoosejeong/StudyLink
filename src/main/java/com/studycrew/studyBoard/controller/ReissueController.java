@@ -1,5 +1,8 @@
 package com.studycrew.studyBoard.controller;
 
+import com.studycrew.studyBoard.apiPayload.ApiResponse;
+import com.studycrew.studyBoard.apiPayload.code.status.ErrorStatus;
+import com.studycrew.studyBoard.apiPayload.code.status.SuccessStatus;
 import com.studycrew.studyBoard.service.TokenService;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
@@ -35,9 +38,15 @@ public class ReissueController {
         try {
             String newAccess = tokenService.reissueAccessToken(refresh, response);
             response.setHeader("Authorization", "Bearer " + newAccess);
-            return ResponseEntity.ok().build();
+
+            return ResponseEntity
+                    .status(SuccessStatus._USER_REISSUED.getHttpStatus())
+                    .body(ApiResponse.of(SuccessStatus._USER_REISSUED));
+
         } catch (IllegalArgumentException | ExpiredJwtException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity
+                    .status(ErrorStatus._INVALID_REFRESH_TOKEN.getHttpStatus())
+                    .body(ApiResponse.onFailure(ErrorStatus._INVALID_REFRESH_TOKEN));
         }
     }
 }
