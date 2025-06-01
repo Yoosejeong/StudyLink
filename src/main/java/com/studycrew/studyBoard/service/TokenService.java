@@ -8,9 +8,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.Date;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class TokenService {
 
     private final JWTUtil jwtUtil;
