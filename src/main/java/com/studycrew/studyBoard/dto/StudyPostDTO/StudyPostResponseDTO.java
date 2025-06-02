@@ -1,4 +1,4 @@
-package com.studycrew.studyBoard.dto.StudyPostsDTO;
+package com.studycrew.studyBoard.dto.StudyPostDTO;
 
 import com.studycrew.studyBoard.enums.StudyStatus;
 import lombok.AllArgsConstructor;
@@ -6,14 +6,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-public class StudyPostsResponseDTO {
+public class StudyPostResponseDTO {
 
     @Builder
     @AllArgsConstructor
     @NoArgsConstructor
     @Getter
-    public static class GetStudyPosts{
-        private Long studyPostsId;
+    public static class GetStudyPost{
+        private Long studyPostId;
         private String title;
         private String content;
         private int max_people;
