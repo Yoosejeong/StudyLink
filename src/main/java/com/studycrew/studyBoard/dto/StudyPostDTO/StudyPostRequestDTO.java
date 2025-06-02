@@ -1,18 +1,17 @@
-package com.studycrew.studyBoard.dto.StudyPostsDTO;
+package com.studycrew.studyBoard.dto.StudyPostDTO;
 
-import com.studycrew.studyBoard.enums.StudyStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-public class StudyPostsRequestDTO {
+public class StudyPostRequestDTO {
 
     @Builder
     @AllArgsConstructor
     @NoArgsConstructor
     @Getter
-    public static class StudyPostsCreate{
+    public static class StudyPostCreate{
         private String title;
         private String content;
         private int max_people;
