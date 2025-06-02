@@ -15,6 +15,7 @@ public class StudyPostResponseDTO {
     public static class GetStudyPost{
         private Long studyPostId;
         private String title;
+        private String nickname;
         private String content;
         private int max_people;
         private int current_people;
