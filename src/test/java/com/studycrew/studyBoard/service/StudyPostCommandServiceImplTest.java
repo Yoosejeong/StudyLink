@@ -1,5 +1,7 @@
 package com.studycrew.studyBoard.service;
 
+import com.studycrew.studyBoard.apiPayload.code.status.ErrorStatus;
+import com.studycrew.studyBoard.apiPayload.exception.handler.StudyPostHandler;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO;
 import com.studycrew.studyBoard.entity.StudyPost;
@@ -41,6 +43,11 @@ class StudyPostCommandServiceImplTest {
         StudyPost studyPost = service.createStudyPost(requestDTO, user);
 
         Assertions.assertThat(studyPost.getContent()).isEqualTo("내용");
+    }
+
+    @Test
+    void deleteStudyPost(){
+
     }
 
 }
