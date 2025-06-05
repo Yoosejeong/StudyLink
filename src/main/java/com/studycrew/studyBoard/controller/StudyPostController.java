@@ -41,13 +41,11 @@ public class StudyPostController {
     }
 
     @DeleteMapping("/api/study-posts/{studyPostId}")
-    public ResponseEntity<ApiResponse<Void>> deleteStudyPost(@PathVariable("studyPostId") Long studyPostId, @AuthenticationPrincipal CustomUserDetails customUserDetails){
+    public ApiResponse<Void> deleteStudyPost(@PathVariable("studyPostId") Long studyPostId, @AuthenticationPrincipal CustomUserDetails customUserDetails){
         String email = customUserDetails.getUsername();
         User user = userQueryService.getUserByEmail(email);
         studyPostCommandService.deleteStudyPost(studyPostId, user);
-        return ResponseEntity
-                .status(SuccessStatus._STUDY_POST_DELETED.getHttpStatus())
-                .body(ApiResponse.of(SuccessStatus._STUDY_POST_DELETED));
+        return ApiResponse.of(SuccessStatus._STUDY_POST_DELETED);
     }
 
 
