@@ -12,12 +12,16 @@ import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.StudyPostR
 import com.studycrew.studyBoard.entity.StudyPost;
 import com.studycrew.studyBoard.entity.User;
 import com.studycrew.studyBoard.service.StudyPostCommandService;
+import com.studycrew.studyBoard.service.StudyPostQueryService;
+import com.studycrew.studyBoard.service.StudyPostQueryServiceImpl;
 import com.studycrew.studyBoard.service.UserQueryService;
+import lombok.Getter.AnyAnnotation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,6 +34,7 @@ public class StudyPostController {
 
     private final StudyPostCommandService studyPostCommandService;
     private final UserQueryService userQueryService;
+    private final StudyPostQueryService studyPostQueryService;
 
     @PostMapping("/api/study-posts")
     public ResponseEntity<ApiResponse<StudyPostResponseDTO.GetStudyPost>> createStudyPost(@RequestBody StudyPostCreate requestDTO, @AuthenticationPrincipal CustomUserDetails userDetails){
@@ -59,4 +64,12 @@ public class StudyPostController {
         StudyPostResponseUpdate responseDTO = StudyPostConverter.toResponseUpdate(studyPost);
         return ApiResponse.of(SuccessStatus._STUDY_POST_UPDATE, responseDTO);
     }
+
+    @GetMapping("/api/study-posts/{studyPostId}")
+    public ApiResponse<StudyPostResponseDTO.GetStudyPost> getStudyPost(@PathVariable("studyPostId") Long studyPostId){
+        StudyPost studyPost = studyPostQueryService.getStudyPost(studyPostId);
+        GetStudyPost responseDTO = StudyPostConverter.toGetStudyPost(studyPost);
+        return ApiResponse.of(SuccessStatus._STUDY_POST_RETRIEVED, responseDTO);
+    }
+
 }
