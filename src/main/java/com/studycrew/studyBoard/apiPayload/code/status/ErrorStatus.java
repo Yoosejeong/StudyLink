@@ -24,7 +24,7 @@ public enum ErrorStatus implements BaseErrorCode {
     _INVALID_REFRESH_TOKEN(HttpStatus.BAD_REQUEST, "AUTH400", "유효하지 않은 Refresh 토큰입니다."),
 
     //스터디글 관련 응답
-    _STUDY_POST_NOT_FOUND(HttpStatus.BAD_REQUEST, "POST401", "스터디글이 없습니다."),
+    _STUDY_POST_NOT_FOUND(HttpStatus.NOT_FOUND, "POST404", "스터디글이 없습니다."),
     _STUDY_POST_FORBIDDEN(HttpStatus.FORBIDDEN, "POST400" , "스터디글에 권한이 없습니다." );
 
     private final HttpStatus httpStatus;
