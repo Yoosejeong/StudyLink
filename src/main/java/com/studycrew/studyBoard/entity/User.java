@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
 @AllArgsConstructor
-public class User {
+public class User extends BaseEntity  {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

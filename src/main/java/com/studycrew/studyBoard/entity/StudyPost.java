@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @Table(name = "study_posts")
-public class StudyPost {
+public class StudyPost extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
