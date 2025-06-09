@@ -1,5 +1,6 @@
 package com.studycrew.studyBoard.entity;
 
+import com.fasterxml.jackson.databind.ser.Serializers.Base;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -16,7 +17,7 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class Refresh {
+public class Refresh extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
