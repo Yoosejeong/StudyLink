@@ -43,4 +43,15 @@ public class StudyPost {
 
     @Enumerated(EnumType.STRING)
     private StudyStatus studyStatus;
+
+    public void update(String title, String content) {
+        if (title != null) {
+            System.out.println("title : " + title);
+            this.title = title;
+        }
+        if (content != null) {
+            this.content = content;
+        }
+    }
+
 }

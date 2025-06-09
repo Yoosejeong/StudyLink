@@ -2,6 +2,7 @@ package com.studycrew.studyBoard.converter;
 
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO.StudyPostCreate;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO;
+import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.StudyPostResponseUpdate;
 import com.studycrew.studyBoard.entity.StudyPost;
 import com.studycrew.studyBoard.entity.User;
 import com.studycrew.studyBoard.enums.StudyStatus;
@@ -28,6 +29,15 @@ public class StudyPostConverter {
                 .max_people(studyPost.getMaxPeople())
                 .current_people(studyPost.getCurrentPeople())
                 .studyStatus(studyPost.getStudyStatus())
+                .build();
+    }
+
+    public static StudyPostResponseDTO.StudyPostResponseUpdate toResponseUpdate(StudyPost studyPost){
+        return StudyPostResponseDTO.StudyPostResponseUpdate
+                .builder()
+                .studyPostId(studyPost.getId())
+                .title(studyPost.getTitle())
+                .content(studyPost.getContent())
                 .build();
     }
 }

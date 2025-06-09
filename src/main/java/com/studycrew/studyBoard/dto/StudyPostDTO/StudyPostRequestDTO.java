@@ -17,4 +17,13 @@ public class StudyPostRequestDTO {
         private int max_people;
         private int current_people;
     }
+
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Getter
+    public static class StudyPostRequestUpdate{
+        private String title;
+        private String content;
+    }
 }

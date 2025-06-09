@@ -21,4 +21,14 @@ public class StudyPostResponseDTO {
         private int current_people;
         private StudyStatus studyStatus;
     }
+
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Getter
+    public static class StudyPostResponseUpdate{
+        private Long studyPostId;
+        private String title;
+        private String content;
+    }
 }

@@ -21,8 +21,8 @@ public enum SuccessStatus implements BaseCode {
 
     //스터디글 관련 응답
     _STUDY_POST_CREATED(HttpStatus.CREATED, "POST201", "스터디글 등록을 성공했습니다."),
-    _STUDY_POST_DELETED(HttpStatus.OK, "POST204", "스터디글을 성공적으로 삭제했습니다.")
-
+    _STUDY_POST_DELETED(HttpStatus.OK, "POST204", "스터디글을 성공적으로 삭제했습니다."),
+    _STUDY_POST_UPDATE(HttpStatus.OK, "POST200_UPDATE", "스터디글을 성공적으로 수정했습니다.")
     ;
 
     private final HttpStatus httpStatus;
