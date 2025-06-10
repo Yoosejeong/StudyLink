@@ -33,4 +33,16 @@ public class StudyPostConverter {
                 .build();
     }
 
+    public static StudyPostResponseDTO.GetStudyPostListResponse toGetStudyPostList(StudyPost studyPost){
+        return StudyPostResponseDTO.GetStudyPostListResponse.builder()
+                .studyPostId(studyPost.getId())
+                .title(studyPost.getTitle())
+                .nickname(studyPost.getUser().getNickname())
+                .current_people(studyPost.getCurrentPeople())
+                .max_people(studyPost.getMaxPeople())
+                .studyStatus(studyPost.getStudyStatus())
+                .updatedAt(studyPost.getUpdatedAt())
+                .build();
+    }
+
 }

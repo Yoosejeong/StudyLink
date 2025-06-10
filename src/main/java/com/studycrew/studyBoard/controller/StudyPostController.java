@@ -8,12 +8,17 @@ import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO.StudyPostCr
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO.StudyPostRequestUpdate;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.GetStudyPost;
+import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.GetStudyPostListResponse;
 import com.studycrew.studyBoard.entity.StudyPost;
 import com.studycrew.studyBoard.entity.User;
 import com.studycrew.studyBoard.service.StudyPostCommandService;
 import com.studycrew.studyBoard.service.StudyPostQueryService;
 import com.studycrew.studyBoard.service.UserQueryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -68,4 +73,10 @@ public class StudyPostController {
         return ApiResponse.of(SuccessStatus._STUDY_POST_RETRIEVED, responseDTO);
     }
 
+    @GetMapping("/api/study-posts")
+    public ApiResponse<Page<StudyPostResponseDTO.GetStudyPostListResponse>> getStudyPostList(@PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+                                                            Pageable pageable) {
+        Page<GetStudyPostListResponse> studyPostList = studyPostQueryService.getStudyPostList(pageable);
+        return ApiResponse.of(SuccessStatus._STUDY_POST_LIST_RETRIEVED, studyPostList);
+    }
 }
