@@ -4,8 +4,6 @@ import com.studycrew.studyBoard.apiPayload.code.status.ErrorStatus;
 import com.studycrew.studyBoard.apiPayload.exception.handler.StudyPostHandler;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO.StudyPostRequestUpdate;
-import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO;
-import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.StudyPostResponseUpdate;
 import com.studycrew.studyBoard.entity.StudyPost;
 import com.studycrew.studyBoard.entity.User;
 import com.studycrew.studyBoard.repository.StudyPostRepository;

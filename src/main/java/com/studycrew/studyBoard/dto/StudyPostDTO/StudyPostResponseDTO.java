@@ -1,6 +1,7 @@
 package com.studycrew.studyBoard.dto.StudyPostDTO;
 
 import com.studycrew.studyBoard.enums.StudyStatus;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -20,16 +21,8 @@ public class StudyPostResponseDTO {
         private int max_people;
         private int current_people;
         private StudyStatus studyStatus;
-    }
-
-    @Builder
-    @AllArgsConstructor
-    @NoArgsConstructor
-    @Getter
-    public static class StudyPostResponseUpdate{
-        private Long studyPostId;
-        private String title;
-        private String content;
+        private LocalDateTime createdAt;
+        private LocalDateTime updatedAt;
     }
 
 }
