@@ -25,4 +25,18 @@ public class StudyPostResponseDTO {
         private LocalDateTime updatedAt;
     }
 
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Getter
+    public static class GetStudyPostListResponse{
+        private Long studyPostId;
+        private String title;
+        private String nickname;
+        private int max_people;
+        private int current_people;
+        private StudyStatus studyStatus;
+        private LocalDateTime updatedAt;
+    }
+
 }
