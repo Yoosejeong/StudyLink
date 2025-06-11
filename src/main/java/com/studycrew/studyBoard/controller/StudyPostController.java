@@ -21,6 +21,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -78,5 +79,14 @@ public class StudyPostController {
                                                             Pageable pageable) {
         Page<GetStudyPostListResponse> studyPostList = studyPostQueryService.getStudyPostList(pageable);
         return ApiResponse.of(SuccessStatus._STUDY_POST_LIST_RETRIEVED, studyPostList);
+    }
+
+    @GetMapping("/api/study-posts/{studyPostId}/close")
+    public ApiResponse<StudyPostResponseDTO.GetStudyPost> closeStudyPost(@PathVariable("studyPostId") Long studyPostId, @AuthenticationPrincipal CustomUserDetails customUserDetails){
+        String email = customUserDetails.getUsername();
+        User user = userQueryService.getUserByEmail(email);
+        StudyPost studyPost = studyPostCommandService.closeStudyPost(studyPostId, user);
+        GetStudyPost responseDTO = StudyPostConverter.toGetStudyPost(studyPost);
+        return ApiResponse.of(SuccessStatus._STUDY_POST_CLOSED, responseDTO);
     }
 }

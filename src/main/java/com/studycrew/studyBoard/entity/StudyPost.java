@@ -1,5 +1,7 @@
 package com.studycrew.studyBoard.entity;
 
+import com.studycrew.studyBoard.apiPayload.code.status.ErrorStatus;
+import com.studycrew.studyBoard.apiPayload.exception.handler.StudyPostHandler;
 import com.studycrew.studyBoard.enums.StudyStatus;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -54,4 +56,10 @@ public class StudyPost extends BaseEntity {
         }
     }
 
+    public void closeStudyPost() {
+        if (this.studyStatus == StudyStatus.CLOSED) {
+            throw new StudyPostHandler(ErrorStatus._STUDY_POST_ALREADY_CLOSED);
+        }
+        this.studyStatus = StudyStatus.CLOSED;
+    }
 }

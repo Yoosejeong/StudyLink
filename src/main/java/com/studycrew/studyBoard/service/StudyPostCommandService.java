@@ -11,4 +11,6 @@ public interface StudyPostCommandService {
     void deleteStudyPost(Long studyPostId, User user);
 
     StudyPost updateStudyPost(Long studyPostId, User user, StudyPostRequestUpdate dto);
+
+    StudyPost closeStudyPost(Long studyPostId, User user);
 }
