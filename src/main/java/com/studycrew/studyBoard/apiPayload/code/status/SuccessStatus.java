@@ -24,7 +24,9 @@ public enum SuccessStatus implements BaseCode {
     _STUDY_POST_DELETED(HttpStatus.OK, "POST204", "스터디글을 성공적으로 삭제했습니다."),
     _STUDY_POST_UPDATE(HttpStatus.OK, "POST211", "스터디글을 성공적으로 수정했습니다."),
     _STUDY_POST_RETRIEVED(HttpStatus.OK, "POST210", "스터디글 조회를 성공했습니다."),
-    _STUDY_POST_LIST_RETRIEVED(HttpStatus.OK, "POST212", "스터디글 목록 조회를 성공했습니다.")
+    _STUDY_POST_LIST_RETRIEVED(HttpStatus.OK, "POST212", "스터디글 목록 조회를 성공했습니다."),
+    _STUDY_POST_CLOSED(HttpStatus.OK, "POST213", "스터디글 모집을 종료했습니다.")
+
     ;
 
     private final HttpStatus httpStatus;

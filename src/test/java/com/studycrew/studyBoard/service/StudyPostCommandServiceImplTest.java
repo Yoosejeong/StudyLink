@@ -7,6 +7,7 @@ import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO.StudyPostRe
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.GetStudyPostListResponse;
 import com.studycrew.studyBoard.entity.StudyPost;
 import com.studycrew.studyBoard.entity.User;
+import com.studycrew.studyBoard.enums.StudyStatus;
 import com.studycrew.studyBoard.repository.StudyPostRepository;
 import com.studycrew.studyBoard.repository.UserRepository;
 import org.assertj.core.api.Assertions;
@@ -119,6 +120,16 @@ class StudyPostCommandServiceImplTest {
         Page<GetStudyPostListResponse> studyPostList = studyPostQueryService.getStudyPostList(pageable);
         assertThat(studyPostList.getTotalElements()).isEqualTo(3);
 
+    }
+
+    @Test
+    void 스터디글_모집_종료() {
+        User user = getUser();
+        userRepository.save(user);
+        StudyPost studyPost = getStudyPost(user, 1);
+        studyPostRepository.save(studyPost);
+        StudyPost closedStudyPost = studyPostCommandService.closeStudyPost(studyPost.getId(), user);
+        assertThat(closedStudyPost.getStudyStatus()).isEqualTo(StudyStatus.CLOSED);
     }
 
     private static User getUser() {

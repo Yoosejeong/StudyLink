@@ -8,6 +8,7 @@ import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO.StudyPostRe
 import com.studycrew.studyBoard.entity.StudyPost;
 import com.studycrew.studyBoard.entity.User;
 import com.studycrew.studyBoard.repository.StudyPostRepository;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -47,4 +48,14 @@ public class StudyPostCommandServiceImpl implements StudyPostCommandService{
         return studyPost;
     }
 
+    @Override
+    public StudyPost closeStudyPost(Long studyPostId, User user) {
+        StudyPost studyPost = studyPostRepository.findById(studyPostId)
+                .orElseThrow(() -> new StudyPostHandler(ErrorStatus._STUDY_POST_NOT_FOUND));
+        if (!studyPost.getUser().getId().equals(user.getId())){
+            throw new StudyPostHandler(ErrorStatus._STUDY_POST_FORBIDDEN);
+        }
+        studyPost.closeStudyPost();
+        return studyPost;
+    }
 }
