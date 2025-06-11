@@ -81,7 +81,7 @@ public class StudyPostController {
         return ApiResponse.of(SuccessStatus._STUDY_POST_LIST_RETRIEVED, studyPostList);
     }
 
-    @GetMapping("/api/study-posts/{studyPostId}/close")
+    @PatchMapping("/api/study-posts/{studyPostId}/close")
     public ApiResponse<StudyPostResponseDTO.GetStudyPost> closeStudyPost(@PathVariable("studyPostId") Long studyPostId, @AuthenticationPrincipal CustomUserDetails customUserDetails){
         String email = customUserDetails.getUsername();
         User user = userQueryService.getUserByEmail(email);
