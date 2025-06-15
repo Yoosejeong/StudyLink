@@ -5,8 +5,9 @@ import com.studycrew.studyBoard.apiPayload.exception.handler.StudyPostHandler;
 import com.studycrew.studyBoard.entity.StudyApplication;
 import com.studycrew.studyBoard.entity.StudyPost;
 import com.studycrew.studyBoard.entity.User;
+import com.studycrew.studyBoard.enums.ApplicationStatus;
+import com.studycrew.studyBoard.repository.StudyApplicationRepository;
 import com.studycrew.studyBoard.repository.StudyPostRepository;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,9 +16,16 @@ import org.springframework.stereotype.Service;
 public class StudyApplicationCommandServiceImpl implements StudyApplicationCommandService{
 
     private final StudyPostRepository studyPostRepository;
+    private final StudyApplicationRepository studyApplicationRepository;
 
-    StudyApplication applyStudyApplication(Long studyPostId, User user){
+    public StudyApplication applyStudyApplication(Long studyPostId, User user){
         StudyPost studyPost = studyPostRepository.findById(studyPostId)
                 .orElseThrow(() -> new StudyPostHandler(ErrorStatus._STUDY_POST_NOT_FOUND));
+        StudyApplication studyApplication = StudyApplication.builder()
+                .applicationStatus(ApplicationStatus.PENDING)
+                .studyPost(studyPost)
+                .user(user)
+                .build();
+        return studyApplicationRepository.save(studyApplication);
     }
 }
