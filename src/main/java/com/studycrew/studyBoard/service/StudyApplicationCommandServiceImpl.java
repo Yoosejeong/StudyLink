@@ -2,6 +2,7 @@ package com.studycrew.studyBoard.service;
 
 import com.studycrew.studyBoard.apiPayload.code.status.ErrorStatus;
 import com.studycrew.studyBoard.apiPayload.exception.handler.StudyPostHandler;
+import com.studycrew.studyBoard.converter.StudyApplicationConverter;
 import com.studycrew.studyBoard.entity.StudyApplication;
 import com.studycrew.studyBoard.entity.StudyPost;
 import com.studycrew.studyBoard.entity.User;
@@ -21,11 +22,7 @@ public class StudyApplicationCommandServiceImpl implements StudyApplicationComma
     public StudyApplication applyStudyApplication(Long studyPostId, User user){
         StudyPost studyPost = studyPostRepository.findById(studyPostId)
                 .orElseThrow(() -> new StudyPostHandler(ErrorStatus._STUDY_POST_NOT_FOUND));
-        StudyApplication studyApplication = StudyApplication.builder()
-                .applicationStatus(ApplicationStatus.PENDING)
-                .studyPost(studyPost)
-                .user(user)
-                .build();
+        StudyApplication studyApplication = StudyApplicationConverter.toPendingApplication(studyPost, user);
         return studyApplicationRepository.save(studyApplication);
     }
 }
