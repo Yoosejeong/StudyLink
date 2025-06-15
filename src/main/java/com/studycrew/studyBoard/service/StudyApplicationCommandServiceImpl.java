@@ -7,6 +7,7 @@ import com.studycrew.studyBoard.entity.StudyApplication;
 import com.studycrew.studyBoard.entity.StudyPost;
 import com.studycrew.studyBoard.entity.User;
 import com.studycrew.studyBoard.enums.ApplicationStatus;
+import com.studycrew.studyBoard.enums.StudyStatus;
 import com.studycrew.studyBoard.repository.StudyApplicationRepository;
 import com.studycrew.studyBoard.repository.StudyPostRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,9 @@ public class StudyApplicationCommandServiceImpl implements StudyApplicationComma
     public StudyApplication applyStudyApplication(Long studyPostId, User user){
         StudyPost studyPost = studyPostRepository.findById(studyPostId)
                 .orElseThrow(() -> new StudyPostHandler(ErrorStatus._STUDY_POST_NOT_FOUND));
+        if (studyPost.getStudyStatus() == StudyStatus.CLOSED){
+            throw new StudyPostHandler(ErrorStatus._STUDY_POST_ALREADY_CLOSED);
+        }
         StudyApplication studyApplication = StudyApplicationConverter.toPendingApplication(studyPost, user);
         return studyApplicationRepository.save(studyApplication);
     }
