@@ -26,6 +26,9 @@ public class StudyApplicationCommandServiceImpl implements StudyApplicationComma
         if (studyPost.getStudyStatus() == StudyStatus.CLOSED){
             throw new StudyPostHandler(ErrorStatus._STUDY_POST_ALREADY_CLOSED);
         }
+        if (studyApplicationRepository.existsByStudyPostAndUser(studyPost, user)) {
+            throw new StudyPostHandler(ErrorStatus._STUDY_APPLICATION_ALREADY_EXISTS);
+        }
         StudyApplication studyApplication = StudyApplicationConverter.toPendingApplication(studyPost, user);
         return studyApplicationRepository.save(studyApplication);
     }
