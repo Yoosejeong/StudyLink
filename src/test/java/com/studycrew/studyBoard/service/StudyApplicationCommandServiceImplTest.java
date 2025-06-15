@@ -1,5 +1,6 @@
 package com.studycrew.studyBoard.service;
 
+import com.studycrew.studyBoard.apiPayload.exception.handler.StudyPostHandler;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO;
 import com.studycrew.studyBoard.entity.StudyApplication;
 import com.studycrew.studyBoard.entity.StudyPost;
@@ -40,6 +41,22 @@ class StudyApplicationCommandServiceImplTest {
         assertThat(studyApplication.getApplicationStatus()).isEqualTo(ApplicationStatus.PENDING);
     }
 
+    @Test
+    void 스터디_모집종료_상태_지원_예외발생() {
+        User user =  getUser();
+        userRepository.save(user);
+        StudyPost closedStudyPost = getClosedStudyPost(user);
+        studyPostRepository.save(closedStudyPost);
+        Throwable thrown = catchThrowable(() ->
+                studyApplicationCommandService.applyStudyApplication(closedStudyPost.getId(), user)
+        );
+        assertThat(thrown).isInstanceOf(StudyPostHandler.class);
+
+        StudyPostHandler exception = (StudyPostHandler) thrown;
+        assertThat(exception.getErrorReason().getCode()).isEqualTo("POST409");
+        assertThat(exception.getErrorReason().getMessage()).contains("이미 모집이 종료된 스터디글입니다.");
+    }
+
     private static User getUser() {
         return User.builder()
                 .email("이메일@email.com")
@@ -56,6 +73,18 @@ class StudyApplicationCommandServiceImplTest {
                 .title("제목")
                 .content("내용")
                 .studyStatus(StudyStatus.RECRUITING)
+                .currentPeople(3)
+                .maxPeople(23)
+                .user(user)
+                .build();
+    }
+
+    private StudyPost getClosedStudyPost(User user) {
+
+        return StudyPost.builder()
+                .title("제목")
+                .content("내용")
+                .studyStatus(StudyStatus.CLOSED)
                 .currentPeople(3)
                 .maxPeople(23)
                 .user(user)
