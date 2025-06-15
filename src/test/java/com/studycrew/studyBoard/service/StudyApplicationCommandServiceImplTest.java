@@ -57,6 +57,22 @@ class StudyApplicationCommandServiceImplTest {
         assertThat(exception.getErrorReason().getMessage()).contains("이미 모집이 종료된 스터디글입니다.");
     }
 
+    @Test
+    void 스터디_중복지원_예외발생() {
+        User user = getUser();
+        userRepository.save(user);
+        StudyPost studyPost = getStudyPost(user);
+        studyPostRepository.save(studyPost);
+        studyApplicationCommandService.applyStudyApplication(studyPost.getId(), user);
+        Throwable thrown = catchThrowable(() ->
+                studyApplicationCommandService.applyStudyApplication(studyPost.getId(), user)
+        );
+        StudyPostHandler exception = (StudyPostHandler) thrown;
+        assertThat(exception.getErrorReason().getCode()).isEqualTo("APPLICATION400");
+        assertThat(exception.getErrorReason().getMessage()).contains("이미 해당 스터디에 지원했습니다.");
+
+    }
+
     private static User getUser() {
         return User.builder()
                 .email("이메일@email.com")
