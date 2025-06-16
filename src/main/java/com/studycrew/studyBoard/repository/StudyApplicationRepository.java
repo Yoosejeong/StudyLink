@@ -11,4 +11,5 @@ import org.springframework.stereotype.Repository;
 public interface StudyApplicationRepository extends JpaRepository<StudyApplication, Long> {
     boolean existsByStudyPostAndUser(StudyPost studyPost, User user);
     List<StudyApplication> findByStudyPostId(Long studyPostId);
+    List<StudyApplication> findByUserId(Long userId);
 }
