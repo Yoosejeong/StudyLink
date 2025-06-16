@@ -1,7 +1,6 @@
 package com.studycrew.studyBoard.service;
 
 import com.studycrew.studyBoard.apiPayload.exception.handler.StudyPostHandler;
-import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO;
 import com.studycrew.studyBoard.entity.StudyApplication;
 import com.studycrew.studyBoard.entity.StudyPost;
 import com.studycrew.studyBoard.entity.User;
@@ -9,9 +8,8 @@ import com.studycrew.studyBoard.enums.ApplicationStatus;
 import com.studycrew.studyBoard.enums.StudyStatus;
 import com.studycrew.studyBoard.repository.StudyPostRepository;
 import com.studycrew.studyBoard.repository.UserRepository;
-import org.assertj.core.api.Assertions;
+import com.studycrew.studyBoard.service.studyApplication.StudyApplicationCommandService;
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

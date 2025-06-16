@@ -1,4 +1,4 @@
-package com.studycrew.studyBoard.service;
+package com.studycrew.studyBoard.service.studyPost;
 
 import com.studycrew.studyBoard.apiPayload.code.status.ErrorStatus;
 import com.studycrew.studyBoard.apiPayload.exception.handler.StudyPostHandler;

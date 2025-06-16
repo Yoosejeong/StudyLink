@@ -1,4 +1,4 @@
-package com.studycrew.studyBoard.service;
+package com.studycrew.studyBoard.service.studyApplication;
 
 import com.studycrew.studyBoard.entity.StudyApplication;
 import com.studycrew.studyBoard.entity.User;
