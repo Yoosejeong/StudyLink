@@ -1,4 +1,4 @@
-package com.studycrew.studyBoard.service;
+package com.studycrew.studyBoard.service.studyPost;
 
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO.StudyPostCreate;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO.StudyPostRequestUpdate;
