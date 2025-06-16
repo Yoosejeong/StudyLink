@@ -4,6 +4,7 @@ import com.studycrew.studyBoard.apiPayload.ApiResponse;
 import com.studycrew.studyBoard.apiPayload.code.status.SuccessStatus;
 import com.studycrew.studyBoard.converter.StudyApplicationConverter;
 import com.studycrew.studyBoard.dto.CustomUserDetails;
+import com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationResponseDTO.MyStudyApplicationResponse;
 import com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationResponseDTO.StudyApplicationListResponse;
 import com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationResponseDTO.StudyApplicationResult;
 import com.studycrew.studyBoard.entity.StudyApplication;
@@ -41,5 +42,13 @@ public class StudyApplicationController {
     public ApiResponse<List<StudyApplicationListResponse>> getAllStudyApplication(@PathVariable("studyPostId") Long studyPostId) {
         List<StudyApplicationListResponse> list = studyApplicationQueryService.findAllApplicants(studyPostId);
         return ApiResponse.of(SuccessStatus._STUDY_APPLICANT_LIST_RETRIEVED, list);
+    }
+
+    @GetMapping("/api/users/applications")
+    public ApiResponse<List<MyStudyApplicationResponse>> getMyStudyApplication(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        String email = customUserDetails.getUsername();
+        User user = userQueryService.getUserByEmail(email);
+        List<MyStudyApplicationResponse> list = studyApplicationQueryService.findMyStudyApplications(user.getId());
+        return ApiResponse.of(SuccessStatus._STUDY_APPLICATION_MY_LIST_RETRIEVED, list);
     }
 }
