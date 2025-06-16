@@ -20,4 +20,16 @@ public class StudyApplicationResponseDTO {
         private ApplicationStatus applicationStatus;
     }
 
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class StudyApplicationListResponse {
+        private Long studyApplicationId;
+        private Long userId;
+        private String nickname;
+        private ApplicationStatus applicationStatus;
+        private LocalDateTime appliedAt;
+    }
+
 }
