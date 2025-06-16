@@ -28,7 +28,9 @@ public class StudyApplicationQueryServiceImpl implements StudyApplicationQuerySe
 
     @Override
     public List<MyStudyApplicationResponse> findMyStudyApplications(Long userId) {
-        studyApplicationRepository.findByUserId(userId);
-        return List.of();
+        List<StudyApplication> userApplications = studyApplicationRepository.findByUserId(userId);
+        return userApplications.stream()
+                .map(StudyApplicationConverter::toUserApplications)
+                .collect(Collectors.toList());
     }
 }
