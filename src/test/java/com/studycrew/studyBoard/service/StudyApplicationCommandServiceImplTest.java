@@ -1,6 +1,7 @@
 package com.studycrew.studyBoard.service;
 
 import com.studycrew.studyBoard.apiPayload.exception.handler.StudyPostHandler;
+import com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationResponseDTO.MyStudyApplicationResponse;
 import com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationResponseDTO.StudyApplicationListResponse;
 import com.studycrew.studyBoard.entity.StudyApplication;
 import com.studycrew.studyBoard.entity.StudyPost;
@@ -97,6 +98,29 @@ class StudyApplicationCommandServiceImplTest {
 
     }
 
+    @Test
+    void 회원이_지원한_스터디_목록_조회() {
+        User user = getUser();
+        User user2 = getUser2();
+        userRepository.save(user);
+        userRepository.save(user2);
+
+        StudyPost studyPost = getStudyPost(user);
+        StudyPost studyPost2 = getStudyPost2(user);
+        studyPostRepository.save(studyPost);
+        studyPostRepository.save(studyPost2);
+
+        studyApplicationCommandService.applyStudyApplication(studyPost.getId(), user2);
+        studyApplicationCommandService.applyStudyApplication(studyPost2.getId(), user2);
+
+        List<MyStudyApplicationResponse> list = studyApplicationQueryService.findMyStudyApplications(
+                user2.getId());
+
+        assertThat(list.size()).isEqualTo(2);
+        assertThat(list).extracting(MyStudyApplicationResponse::getStudyPostId)
+                .containsExactlyInAnyOrder(studyPost.getId(), studyPost2.getId());
+    }
+
     private static User getUser() {
         return User.builder()
                 .email("이메일@email.com")
@@ -135,6 +159,18 @@ class StudyApplicationCommandServiceImplTest {
                 .studyStatus(StudyStatus.RECRUITING)
                 .currentPeople(3)
                 .maxPeople(23)
+                .user(user)
+                .build();
+    }
+
+    private StudyPost getStudyPost2(User user) {
+
+        return StudyPost.builder()
+                .title("제목2")
+                .content("내용2")
+                .studyStatus(StudyStatus.RECRUITING)
+                .currentPeople(2)
+                .maxPeople(24)
                 .user(user)
                 .build();
     }
