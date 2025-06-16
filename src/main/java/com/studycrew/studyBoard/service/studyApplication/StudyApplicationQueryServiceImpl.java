@@ -1,8 +1,11 @@
 package com.studycrew.studyBoard.service.studyApplication;
 
+import com.studycrew.studyBoard.converter.StudyApplicationConverter;
 import com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationResponseDTO.StudyApplicationListResponse;
+import com.studycrew.studyBoard.entity.StudyApplication;
 import com.studycrew.studyBoard.repository.StudyApplicationRepository;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +19,9 @@ public class StudyApplicationQueryServiceImpl implements StudyApplicationQuerySe
 
     @Override
     public List<StudyApplicationListResponse> findAllApplicants(Long studyPostId) {
-        return List.of();
+        List<StudyApplication> studyApplicationList = studyApplicationRepository.findByStudyPostId(studyPostId);
+        return studyApplicationList.stream()
+                .map(StudyApplicationConverter::toApplicationList)
+                .collect(Collectors.toList());
     }
 }

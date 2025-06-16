@@ -1,5 +1,6 @@
 package com.studycrew.studyBoard.converter;
 
+import com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationResponseDTO.StudyApplicationListResponse;
 import com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationResponseDTO.StudyApplicationResult;
 import com.studycrew.studyBoard.entity.StudyApplication;
 import com.studycrew.studyBoard.entity.StudyPost;
@@ -20,6 +21,16 @@ public class StudyApplicationConverter {
                 .applicationStatus(ApplicationStatus.PENDING)
                 .studyPost(studyPost)
                 .user(user)
+                .build();
+    }
+
+    public static StudyApplicationListResponse toApplicationList(StudyApplication studyApplication){
+        return StudyApplicationListResponse.builder()
+                .applicationStatus(studyApplication.getApplicationStatus())
+                .studyApplicationId(studyApplication.getId())
+                .appliedAt(studyApplication.getCreatedAt())
+                .userId(studyApplication.getUser().getId())
+                .nickname(studyApplication.getUser().getNickname())
                 .build();
     }
 }
