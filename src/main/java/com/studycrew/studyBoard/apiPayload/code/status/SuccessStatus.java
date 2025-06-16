@@ -28,8 +28,8 @@ public enum SuccessStatus implements BaseCode {
     _STUDY_POST_CLOSED(HttpStatus.OK, "POST213", "스터디글 모집을 종료했습니다."),
 
     //스터디 지원 관련 응답
-    _STUDY_APPLICATION_CREATED(HttpStatus.CREATED, "APPLICATION201", "스터디 지원을 성공했습니다.")
-
+    _STUDY_APPLICATION_CREATED(HttpStatus.CREATED, "APPLICATION201", "스터디 지원을 성공했습니다."),
+    _STUDY_APPLICANT_LIST_RETRIEVED(HttpStatus.OK, "APPLICATION200", "스터디 지원자 목록을 성공적으로 조회했습니다.")
     ;
 
     private final HttpStatus httpStatus;
