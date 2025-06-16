@@ -32,4 +32,16 @@ public class StudyApplicationResponseDTO {
         private LocalDateTime appliedAt;
     }
 
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class MyStudyApplicationResponse {
+        private Long studyApplicationId;
+        private Long studyPostId;
+        private String studyTitle;
+        private ApplicationStatus applicationStatus;
+        private LocalDateTime appliedAt;
+    }
+
 }
