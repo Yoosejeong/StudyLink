@@ -12,9 +12,11 @@ import com.studycrew.studyBoard.repository.StudyApplicationRepository;
 import com.studycrew.studyBoard.repository.StudyPostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class StudyApplicationCommandServiceImpl implements StudyApplicationCommandService {
 
     private final StudyPostRepository studyPostRepository;
