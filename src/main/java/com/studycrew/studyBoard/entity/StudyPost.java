@@ -64,4 +64,11 @@ public class StudyPost extends BaseEntity {
         }
         this.studyStatus = StudyStatus.CLOSED;
     }
+
+    public void increaseAcceptedPeople() {
+        if (this.acceptedPeople >= this.maxPeople) {
+            throw new StudyPostHandler(ErrorStatus._STUDY_POST_MAX_CAPACITY_EXCEEDED);
+        }
+        this.acceptedPeople += 1;
+    }
 }
