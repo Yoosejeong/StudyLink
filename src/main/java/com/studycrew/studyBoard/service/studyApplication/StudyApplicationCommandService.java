@@ -5,4 +5,5 @@ import com.studycrew.studyBoard.entity.User;
 
 public interface StudyApplicationCommandService {
     StudyApplication applyStudyApplication(Long studyPostId, User user);
+    StudyApplication approveStudyApplication(Long studyApplicationId);
 }

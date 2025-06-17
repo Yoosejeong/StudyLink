@@ -31,4 +31,10 @@ public class StudyApplicationCommandServiceImpl implements StudyApplicationComma
         StudyApplication studyApplication = StudyApplicationConverter.toPendingApplication(studyPost, user);
         return studyApplicationRepository.save(studyApplication);
     }
+
+    @Override
+    public StudyApplication approveStudyApplication(Long studyApplicationId) {
+        StudyApplication studyApplication = studyApplicationRepository.findById(studyApplicationId).orElseThrow( ()-> new StudyApplicationHandler(ErrorStatus._STUDY_APPLICATION_NOT_FOUND));
+        return studyApplication;
+    }
 }
