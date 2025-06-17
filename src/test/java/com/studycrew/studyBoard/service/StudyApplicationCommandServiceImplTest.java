@@ -1,5 +1,6 @@
 package com.studycrew.studyBoard.service;
 
+import com.studycrew.studyBoard.apiPayload.exception.handler.StudyApplicationHandler;
 import com.studycrew.studyBoard.apiPayload.exception.handler.StudyPostHandler;
 import com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationResponseDTO.MyStudyApplicationResponse;
 import com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationResponseDTO.StudyApplicationListResponse;
@@ -145,6 +146,34 @@ class StudyApplicationCommandServiceImplTest {
         // then: 승인된 인원이 1 증가했는지 확인
         assertThat(approvedStudyApplication.getStudyPost().getAcceptedPeople()).isEqualTo(1);
 
+    }
+
+    @Test
+    void 이미_승인된_신청에_승인_요청시에_예외발생() {
+        // given: 글 작성자와 지원자 생성 및 저장
+        User user = getUser();
+        User user2 = getUser2();
+        userRepository.save(user);
+        userRepository.save(user2);
+
+        StudyPost studyPost = getStudyPost(user);
+        studyPostRepository.save(studyPost);
+
+        // when: 지원자가 스터디에 지원하고, 승인 처리
+        StudyApplication studyApplication = studyApplicationCommandService.applyStudyApplication(studyPost.getId(),
+                user2);
+        StudyApplication approvedStudyApplication = studyApplicationCommandService.approveStudyApplication(
+                studyApplication.getId());
+
+        // when & then: 2차 승인 → 예외 발생해야 함
+        Throwable thrown = catchThrowable(() ->
+                studyApplicationCommandService.approveStudyApplication(studyApplication.getId())
+        );
+
+        StudyApplicationHandler exception = (StudyApplicationHandler) thrown;
+
+        assertThat(exception.getErrorReason().getCode()).isEqualTo("APPLICATION401");
+        assertThat(exception.getErrorReason().getMessage()).contains("이미 처리된 지원입니다.");
     }
 
     private static User getUser() {
