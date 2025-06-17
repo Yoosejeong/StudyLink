@@ -58,5 +58,10 @@ public class StudyApplicationController {
     public ApiResponse<StudyApplicationApproveResponse> approveStudyApplication(@PathVariable("studyApplicationId") Long studyApplicationId, @AuthenticationPrincipal CustomUserDetails customUserDetails){
         String email = customUserDetails.getUsername();
         User user = userQueryService.getUserByEmail(email);
+        StudyApplication studyApplication = studyApplicationCommandService.approveStudyApplication(studyApplicationId,
+                user);
+        StudyApplicationApproveResponse responseDTO = StudyApplicationConverter.toApproveResponse(studyApplication);
+        return ApiResponse.of(SuccessStatus._STUDY_APPLICATION_APPROVED, responseDTO);
+
     }
 }
