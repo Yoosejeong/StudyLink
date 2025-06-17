@@ -44,4 +44,13 @@ public class StudyApplicationResponseDTO {
         private LocalDateTime appliedAt;
     }
 
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class StudyApplicationApproveResponse {
+        private Long studyApplicationId;
+        private ApplicationStatus applicationStatus;
+        private int acceptedPeople;
+    }
 }
