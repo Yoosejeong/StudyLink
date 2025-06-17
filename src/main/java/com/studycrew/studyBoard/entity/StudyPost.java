@@ -43,6 +43,8 @@ public class StudyPost extends BaseEntity {
 
     private int currentPeople;
 
+    private int acceptedPeople;
+
     @Enumerated(EnumType.STRING)
     private StudyStatus studyStatus;
 
