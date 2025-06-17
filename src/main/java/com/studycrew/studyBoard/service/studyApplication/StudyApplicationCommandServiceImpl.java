@@ -1,6 +1,7 @@
 package com.studycrew.studyBoard.service.studyApplication;
 
 import com.studycrew.studyBoard.apiPayload.code.status.ErrorStatus;
+import com.studycrew.studyBoard.apiPayload.exception.handler.StudyApplicationHandler;
 import com.studycrew.studyBoard.apiPayload.exception.handler.StudyPostHandler;
 import com.studycrew.studyBoard.converter.StudyApplicationConverter;
 import com.studycrew.studyBoard.entity.StudyApplication;
