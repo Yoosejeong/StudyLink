@@ -121,6 +121,32 @@ class StudyApplicationCommandServiceImplTest {
                 .containsExactlyInAnyOrder(studyPost.getId(), studyPost2.getId());
     }
 
+    @Test
+    void 스터디_승인_완료() {
+        // given: 글 작성자와 지원자 생성 및 저장
+        User user = getUser();
+        User user2 = getUser2();
+        userRepository.save(user);
+        userRepository.save(user2);
+
+        StudyPost studyPost = getStudyPost(user);
+        studyPostRepository.save(studyPost);
+
+        // when: 지원자가 스터디에 지원하고, 승인 처리
+        StudyApplication studyApplication = studyApplicationCommandService.applyStudyApplication(studyPost.getId(),
+                user2);
+        StudyApplication approvedStudyApplication = studyApplicationCommandService.approveStudyApplication(
+                studyApplication.getId());
+
+        // then: 승인 상태로 바뀌었는지 확인
+        assertThat(approvedStudyApplication.getApplicationStatus()).isEqualTo(ApplicationStatus.ACCEPTED);
+        // then: 해당 스터디 글과 연결되어 있는지 확인
+        assertThat(approvedStudyApplication.getStudyPost().getId()).isEqualTo(studyPost.getId());
+        // then: 승인된 인원이 1 증가했는지 확인
+        assertThat(approvedStudyApplication.getStudyPost().getAcceptedPeople()).isEqualTo(1);
+
+    }
+
     private static User getUser() {
         return User.builder()
                 .email("이메일@email.com")
