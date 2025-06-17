@@ -137,7 +137,7 @@ class StudyApplicationCommandServiceImplTest {
         StudyApplication studyApplication = studyApplicationCommandService.applyStudyApplication(studyPost.getId(),
                 user2);
         StudyApplication approvedStudyApplication = studyApplicationCommandService.approveStudyApplication(
-                studyApplication.getId());
+                studyApplication.getId(), user);
 
         // then: 승인 상태로 바뀌었는지 확인
         assertThat(approvedStudyApplication.getApplicationStatus()).isEqualTo(ApplicationStatus.ACCEPTED);
@@ -163,11 +163,11 @@ class StudyApplicationCommandServiceImplTest {
         StudyApplication studyApplication = studyApplicationCommandService.applyStudyApplication(studyPost.getId(),
                 user2);
         StudyApplication approvedStudyApplication = studyApplicationCommandService.approveStudyApplication(
-                studyApplication.getId());
+                studyApplication.getId(), user);
 
         // when & then: 2차 승인 → 예외 발생해야 함
         Throwable thrown = catchThrowable(() ->
-                studyApplicationCommandService.approveStudyApplication(studyApplication.getId())
+                studyApplicationCommandService.approveStudyApplication(studyApplication.getId(), user)
         );
 
         StudyApplicationHandler exception = (StudyApplicationHandler) thrown;
