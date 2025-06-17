@@ -30,7 +30,8 @@ public enum ErrorStatus implements BaseErrorCode {
 
     //스터디지원 관련 응답
     _STUDY_APPLICATION_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "APPLICATION400", "이미 해당 스터디에 지원했습니다."),
-    _STUDY_APPLICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "APPLICATION404", "스터디 지원이 없습니다.")
+    _STUDY_APPLICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "APPLICATION404", "스터디 지원이 없습니다."),
+    _STUDY_APPLICATION_ALREADY_PROCESSED(HttpStatus.BAD_REQUEST, "APPLICATION4002", "이미 처리된 지원입니다."),
 
     ;
 
