@@ -36,8 +36,13 @@ public class StudyApplicationCommandServiceImpl implements StudyApplicationComma
     }
 
     @Override
-    public StudyApplication approveStudyApplication(Long studyApplicationId) {
+    public StudyApplication approveStudyApplication(Long studyApplicationId, User user) {
         StudyApplication studyApplication = studyApplicationRepository.findById(studyApplicationId).orElseThrow( ()-> new StudyApplicationHandler(ErrorStatus._STUDY_APPLICATION_NOT_FOUND));
+
+        if(!studyApplication.getStudyPost().getUser().getId().equals(user.getId())) {
+            throw new StudyApplicationHandler(ErrorStatus._STUDY_APPLICATION_FORBIDDEN);
+        }
+
         studyApplication.approve();
         studyApplication.getStudyPost().increaseAcceptedPeople();
         return studyApplication;
