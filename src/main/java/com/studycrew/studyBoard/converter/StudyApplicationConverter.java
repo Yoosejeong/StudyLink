@@ -1,6 +1,7 @@
 package com.studycrew.studyBoard.converter;
 
 import com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationResponseDTO.MyStudyApplicationResponse;
+import com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationResponseDTO.StudyApplicationApproveResponse;
 import com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationResponseDTO.StudyApplicationListResponse;
 import com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationResponseDTO.StudyApplicationResult;
 import com.studycrew.studyBoard.entity.StudyApplication;
@@ -42,6 +43,14 @@ public class StudyApplicationConverter {
                 .studyPostId(studyApplication.getStudyPost().getId())
                 .studyApplicationId(studyApplication.getId())
                 .studyTitle(studyApplication.getStudyPost().getTitle())
+                .build();
+    }
+
+    public static StudyApplicationApproveResponse toApproveResponse(StudyApplication studyApplication){
+        return StudyApplicationApproveResponse.builder()
+                .applicationStatus(studyApplication.getApplicationStatus())
+                .acceptedPeople(studyApplication.getStudyPost().getAcceptedPeople())
+                .studyApplicationId(studyApplication.getId())
                 .build();
     }
 }
