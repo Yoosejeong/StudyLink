@@ -7,6 +7,7 @@ import com.studycrew.studyBoard.dto.CustomUserDetails;
 import com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationResponseDTO.MyStudyApplicationResponse;
 import com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationResponseDTO.StudyApplicationApproveResponse;
 import com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationResponseDTO.StudyApplicationListResponse;
+import com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationResponseDTO.StudyApplicationRejectResponse;
 import com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationResponseDTO.StudyApplicationResult;
 import com.studycrew.studyBoard.entity.StudyApplication;
 import com.studycrew.studyBoard.entity.User;
@@ -63,5 +64,15 @@ public class StudyApplicationController {
         StudyApplicationApproveResponse responseDTO = StudyApplicationConverter.toApproveResponse(studyApplication);
         return ApiResponse.of(SuccessStatus._STUDY_APPLICATION_APPROVED, responseDTO);
 
+    }
+
+    @PatchMapping("/api/study-applications/{studyApplicationId}/reject")
+    public ApiResponse<StudyApplicationRejectResponse> rejectStudyApplication(@PathVariable("studyApplicationId") Long studyApplicationId, @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        String email = customUserDetails.getUsername();
+        User user = userQueryService.getUserByEmail(email);
+        StudyApplication studyApplication = studyApplicationCommandService.rejectStudyApplication(studyApplicationId,
+                user);
+        StudyApplicationRejectResponse responseDTO = StudyApplicationConverter.toRejectResponse(studyApplication);
+        return ApiResponse.of(SuccessStatus._STUDY_APPLICATION_REJECT, responseDTO);
     }
 }
