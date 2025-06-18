@@ -43,6 +43,8 @@ public class StudyPost extends BaseEntity {
 
     private int currentPeople;
 
+    private int acceptedPeople;
+
     @Enumerated(EnumType.STRING)
     private StudyStatus studyStatus;
 
@@ -61,5 +63,12 @@ public class StudyPost extends BaseEntity {
             throw new StudyPostHandler(ErrorStatus._STUDY_POST_ALREADY_CLOSED);
         }
         this.studyStatus = StudyStatus.CLOSED;
+    }
+
+    public void increaseAcceptedPeople() {
+        if (this.acceptedPeople >= this.maxPeople) {
+            throw new StudyPostHandler(ErrorStatus._STUDY_POST_MAX_CAPACITY_EXCEEDED);
+        }
+        this.acceptedPeople += 1;
     }
 }

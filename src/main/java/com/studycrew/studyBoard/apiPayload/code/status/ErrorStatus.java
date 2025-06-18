@@ -26,7 +26,14 @@ public enum ErrorStatus implements BaseErrorCode {
     //스터디글 관련 응답
     _STUDY_POST_NOT_FOUND(HttpStatus.NOT_FOUND, "POST404", "스터디글이 없습니다."),
     _STUDY_POST_FORBIDDEN(HttpStatus.FORBIDDEN, "POST400" , "스터디글에 권한이 없습니다." ),
-    _STUDY_POST_ALREADY_CLOSED(HttpStatus.BAD_REQUEST, "POST409", "이미 모집이 종료된 스터디글입니다.")
+    _STUDY_POST_ALREADY_CLOSED(HttpStatus.BAD_REQUEST, "POST409", "이미 모집이 종료된 스터디글입니다."),
+    _STUDY_POST_MAX_CAPACITY_EXCEEDED(HttpStatus.BAD_REQUEST, "POST401", "스터디 정원이 초과되었습니다."),
+
+    //스터디지원 관련 응답
+    _STUDY_APPLICATION_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "APPLICATION400", "이미 해당 스터디에 지원했습니다."),
+    _STUDY_APPLICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "APPLICATION404", "스터디 지원이 없습니다."),
+    _STUDY_APPLICATION_ALREADY_PROCESSED(HttpStatus.BAD_REQUEST, "APPLICATION401", "이미 처리된 지원입니다."),
+    _STUDY_APPLICATION_FORBIDDEN(HttpStatus.FORBIDDEN, "APPLICATION402", "스터디 지원에 권한이 없습니다.")
     ;
 
     private final HttpStatus httpStatus;

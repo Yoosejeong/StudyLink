@@ -1,4 +1,4 @@
-package com.studycrew.studyBoard.service;
+package com.studycrew.studyBoard.service.studyPost;
 
 import com.studycrew.studyBoard.apiPayload.code.status.ErrorStatus;
 import com.studycrew.studyBoard.apiPayload.exception.handler.StudyPostHandler;
@@ -8,7 +8,6 @@ import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO.StudyPostRe
 import com.studycrew.studyBoard.entity.StudyPost;
 import com.studycrew.studyBoard.entity.User;
 import com.studycrew.studyBoard.repository.StudyPostRepository;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 @RequiredArgsConstructor
 @Slf4j
-public class StudyPostCommandServiceImpl implements StudyPostCommandService{
+public class StudyPostCommandServiceImpl implements StudyPostCommandService {
 
     private final StudyPostRepository studyPostRepository;
 

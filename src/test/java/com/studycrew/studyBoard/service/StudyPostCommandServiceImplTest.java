@@ -10,16 +10,15 @@ import com.studycrew.studyBoard.entity.User;
 import com.studycrew.studyBoard.enums.StudyStatus;
 import com.studycrew.studyBoard.repository.StudyPostRepository;
 import com.studycrew.studyBoard.repository.UserRepository;
-import org.assertj.core.api.Assertions;
+import com.studycrew.studyBoard.service.studyPost.StudyPostCommandService;
+import com.studycrew.studyBoard.service.studyPost.StudyPostQueryService;
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 
 

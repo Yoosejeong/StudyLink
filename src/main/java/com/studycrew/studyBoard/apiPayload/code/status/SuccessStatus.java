@@ -25,9 +25,14 @@ public enum SuccessStatus implements BaseCode {
     _STUDY_POST_UPDATE(HttpStatus.OK, "POST211", "스터디글을 성공적으로 수정했습니다."),
     _STUDY_POST_RETRIEVED(HttpStatus.OK, "POST210", "스터디글 조회를 성공했습니다."),
     _STUDY_POST_LIST_RETRIEVED(HttpStatus.OK, "POST212", "스터디글 목록 조회를 성공했습니다."),
-    _STUDY_POST_CLOSED(HttpStatus.OK, "POST213", "스터디글 모집을 종료했습니다.")
+    _STUDY_POST_CLOSED(HttpStatus.OK, "POST213", "스터디글 모집을 종료했습니다."),
 
-    ;
+    //스터디 지원 관련 응답
+    _STUDY_APPLICATION_CREATED(HttpStatus.CREATED, "APPLICATION201", "스터디 지원을 성공했습니다."),
+    _STUDY_APPLICANT_LIST_RETRIEVED(HttpStatus.OK, "APPLICATION200", "스터디 지원자 목록을 성공적으로 조회했습니다."),
+    _STUDY_APPLICATION_MY_LIST_RETRIEVED(HttpStatus.OK, "APPLICATION202", "회원이 지원한 스터디 목록을 성공적으로 조회했습니다."),
+    _STUDY_APPLICATION_APPROVED(HttpStatus.OK, "APPLICATION203", "스터디 신청이 승인되었습니다."),
+    _STUDY_APPLICATION_REJECT(HttpStatus.OK,"APPLICATION204","스터디 신청이 거절되었습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
