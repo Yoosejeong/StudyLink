@@ -53,4 +53,13 @@ public class StudyApplicationResponseDTO {
         private ApplicationStatus applicationStatus;
         private int acceptedPeople;
     }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class StudyApplicationRejectResponse {
+        private Long studyApplicationId;
+        private ApplicationStatus applicationStatus;
+    }
 }
