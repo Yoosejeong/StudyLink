@@ -197,6 +197,32 @@ class StudyApplicationCommandServiceImplTest {
         assertThat(rejectStudyApplication.getApplicationStatus()).isEqualTo(ApplicationStatus.REJECTED);
     }
 
+    @Test
+    void 자신의_스터디글_아닐경우_지원_거절_불가_예외() {
+        // given: 글 작성자와 지원자 생성 및 저장
+        User user = getUser();
+        User user2 = getUser2();
+        userRepository.save(user);
+        userRepository.save(user2);
+
+        StudyPost studyPost = getStudyPost(user);
+        studyPostRepository.save(studyPost);
+
+        // when: 지원자가 스터디에 지원
+        StudyApplication studyApplication = studyApplicationCommandService.applyStudyApplication(studyPost.getId(),
+                user2);
+
+        // when & then: 글 작성자가 아닌 회원이 거절 할 경우 예외 발생
+        Throwable thrown = catchThrowable(() ->  studyApplicationCommandService.rejectStudyApplication(
+                studyApplication.getId(), user2) );
+
+        StudyApplicationHandler exception = (StudyApplicationHandler) thrown;
+
+        assertThat(exception.getErrorReason().getCode()).isEqualTo("APPLICATION402");
+        assertThat(exception.getErrorReason().getMessage()).contains("스터디 지원에 권한이 없습니다.");
+
+    }
+
     private static User getUser() {
         return User.builder()
                 .email("이메일@email.com")
