@@ -1,6 +1,11 @@
 package com.studycrew.studyBoard.entity;
 
+import com.studycrew.studyBoard.apiPayload.code.status.ErrorStatus;
+import com.studycrew.studyBoard.apiPayload.exception.handler.StudyApplicationHandler;
+import com.studycrew.studyBoard.enums.ApplicationStatus;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -31,5 +36,22 @@ public class StudyApplication extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "study_post_id")
     private StudyPost studyPost;
+
+    @Enumerated(EnumType.STRING)
+    private ApplicationStatus applicationStatus;
+
+    public void approve() {
+        if (this.applicationStatus != ApplicationStatus.PENDING) {
+            throw new StudyApplicationHandler(ErrorStatus._STUDY_APPLICATION_ALREADY_PROCESSED);
+        }
+        this.applicationStatus = ApplicationStatus.ACCEPTED;
+    }
+
+    public void reject() {
+        if (this.applicationStatus != ApplicationStatus.PENDING) {
+            throw new StudyApplicationHandler(ErrorStatus._STUDY_APPLICATION_ALREADY_PROCESSED);
+        }
+        this.applicationStatus = ApplicationStatus.REJECTED;
+    }
 
 }
