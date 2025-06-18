@@ -176,6 +176,27 @@ class StudyApplicationCommandServiceImplTest {
         assertThat(exception.getErrorReason().getMessage()).contains("이미 처리된 지원입니다.");
     }
 
+    @Test
+    void 스터디_지원_거절_완료() {
+        // given: 글 작성자와 지원자 생성 및 저장
+        User user = getUser();
+        User user2 = getUser2();
+        userRepository.save(user);
+        userRepository.save(user2);
+
+        StudyPost studyPost = getStudyPost(user);
+        studyPostRepository.save(studyPost);
+
+        // when: 지원자가 스터디에 지원하고, 거절 처리
+        StudyApplication studyApplication = studyApplicationCommandService.applyStudyApplication(studyPost.getId(),
+                user2);
+        StudyApplication rejectStudyApplication = studyApplicationCommandService.rejectStudyApplication(
+                studyApplication.getId(), user);
+
+        // then: 지원한 스터디 status가 REJECT인지 확인
+        assertThat(rejectStudyApplication.getApplicationStatus()).isEqualTo(ApplicationStatus.REJECTED);
+    }
+
     private static User getUser() {
         return User.builder()
                 .email("이메일@email.com")
