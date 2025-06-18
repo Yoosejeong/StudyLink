@@ -47,4 +47,11 @@ public class StudyApplication extends BaseEntity {
         this.applicationStatus = ApplicationStatus.ACCEPTED;
     }
 
+    public void reject() {
+        if (this.applicationStatus != ApplicationStatus.PENDING) {
+            throw new StudyApplicationHandler(ErrorStatus._STUDY_APPLICATION_ALREADY_PROCESSED);
+        }
+        this.applicationStatus = ApplicationStatus.REJECTED;
+    }
+
 }
