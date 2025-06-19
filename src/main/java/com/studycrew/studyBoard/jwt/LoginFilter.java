@@ -1,6 +1,9 @@
 package com.studycrew.studyBoard.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.studycrew.studyBoard.apiPayload.ApiResponse;
+import com.studycrew.studyBoard.apiPayload.code.status.ErrorStatus;
+import com.studycrew.studyBoard.apiPayload.code.status.SuccessStatus;
 import com.studycrew.studyBoard.dto.UserDTO.UserLoginRequestDTO;
 import com.studycrew.studyBoard.entity.Refresh;
 import com.studycrew.studyBoard.repository.RefreshRepository;
@@ -9,8 +12,10 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -23,12 +28,14 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
     private final JWTUtil jwtUtil;
     private final RefreshRepository refreshRepository;
+    private final ObjectMapper objectMapper;
 
-    public LoginFilter(String loginUrl, AuthenticationManager authenticationManager, JWTUtil jwtUtil, RefreshRepository refreshRepository) {
+    public LoginFilter(String loginUrl, AuthenticationManager authenticationManager, JWTUtil jwtUtil, RefreshRepository refreshRepository, ObjectMapper objectMapper) {
         super(new AntPathRequestMatcher(loginUrl));
         setAuthenticationManager(authenticationManager);
         this.jwtUtil = jwtUtil;
         this.refreshRepository = refreshRepository;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -39,8 +46,8 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
             ObjectMapper objectMapper = new ObjectMapper();
             UserLoginRequestDTO userLoginRequestDTO = objectMapper.readValue(request.getInputStream(), UserLoginRequestDTO.class);
 
-            String email = userLoginRequestDTO.getEmail();
-            String password = userLoginRequestDTO.getPassword();
+            String email = userLoginRequestDTO.email();
+            String password = userLoginRequestDTO.password();
 
             log.info("로그인 요청 email={}, password={}", email, password);
 
@@ -69,7 +76,9 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
         response.setHeader("Authorization", "Bearer " + access);
         response.addCookie(createCookie("refresh", refresh));
-        response.setStatus(HttpServletResponse.SC_OK);
+        ApiResponse<Void> body = ApiResponse.of(SuccessStatus._USER_LOGIN_SUCCESS);
+
+        writeResponse(response, body);
     }
 
     private void addRefreshEntity(String email, String refreshToken, Long expiredMs) {
@@ -85,10 +94,22 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
         refreshRepository.save(refresh);
     }
 
+    private void writeResponse(HttpServletResponse response,
+                               ApiResponse<?> apiResponse) throws IOException {
+
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+
+        objectMapper.writeValue(response.getWriter(), apiResponse);
+    }
+
+
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
                                               AuthenticationException failed) throws IOException {
+        ApiResponse<Void> body = ApiResponse.onFailure(ErrorStatus._USER_LOGIN_INVALID_CREDENTIALS);
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        writeResponse(response, body);
     }
 
     private Cookie createCookie(String key, String value) {
