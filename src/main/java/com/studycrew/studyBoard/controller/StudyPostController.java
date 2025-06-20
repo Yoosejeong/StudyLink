@@ -14,6 +14,9 @@ import com.studycrew.studyBoard.entity.User;
 import com.studycrew.studyBoard.service.studyPost.StudyPostCommandService;
 import com.studycrew.studyBoard.service.studyPost.StudyPostQueryService;
 import com.studycrew.studyBoard.service.user.UserQueryService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +32,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "스터디 모집글", description = "스터디 모집글 관련 API")
 @RestController
 @RequiredArgsConstructor
 public class StudyPostController {
@@ -37,6 +41,7 @@ public class StudyPostController {
     private final UserQueryService userQueryService;
     private final StudyPostQueryService studyPostQueryService;
 
+    @Operation(summary = "스터디 모집글 생성", description = "스터디 모집글을 생성합니다.")
     @PostMapping("/api/study-posts")
     public ResponseEntity<ApiResponse<StudyPostResponseDTO.GetStudyPost>> createStudyPost(@RequestBody StudyPostCreate requestDTO, @AuthenticationPrincipal CustomUserDetails userDetails){
         String email = userDetails.getUsername();
@@ -49,6 +54,7 @@ public class StudyPostController {
                 .body(ApiResponse.of(SuccessStatus._STUDY_POST_CREATED, responseDTO));
     }
 
+    @Operation(summary = "스터디 모집글 삭제", description = "스터디 모집글을 삭제합니다.")
     @DeleteMapping("/api/study-posts/{studyPostId}")
     public ApiResponse<Void> deleteStudyPost(@PathVariable("studyPostId") Long studyPostId, @AuthenticationPrincipal CustomUserDetails customUserDetails){
         String email = customUserDetails.getUsername();
@@ -57,6 +63,7 @@ public class StudyPostController {
         return ApiResponse.of(SuccessStatus._STUDY_POST_DELETED);
     }
 
+    @Operation(summary = "스터디 모집글 수정", description = "스터디 모집글의 제목과 내용을 수정합니다.")
     @PatchMapping("/api/study-posts/{studyPostId}")
     public ApiResponse<StudyPostResponseDTO.GetStudyPost> updateStudyPost(@PathVariable("studyPostId") Long studyPostId, @RequestBody StudyPostRequestUpdate requestDTO, @AuthenticationPrincipal CustomUserDetails customUserDetails){
         String email = customUserDetails.getUsername();
@@ -66,6 +73,10 @@ public class StudyPostController {
         return ApiResponse.of(SuccessStatus._STUDY_POST_UPDATE, responseDTO);
     }
 
+    @Operation(summary = "스터디 모집글 단건 조회", description = "스터디 모집글 ID로 글을 조회합니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "스터디글이 존재하지 않습니다.")
+    })
     @GetMapping("/api/study-posts/{studyPostId}")
     public ApiResponse<StudyPostResponseDTO.GetStudyPost> getStudyPost(@PathVariable("studyPostId") Long studyPostId){
         StudyPost studyPost = studyPostQueryService.getStudyPost(studyPostId);
@@ -73,6 +84,7 @@ public class StudyPostController {
         return ApiResponse.of(SuccessStatus._STUDY_POST_RETRIEVED, responseDTO);
     }
 
+    @Operation(summary = "스터디 모집글 목록 조회", description = "스터디 모집글을 페이징하여 조회합니다.")
     @GetMapping("/api/study-posts")
     public ApiResponse<Page<StudyPostResponseDTO.GetStudyPostListResponse>> getStudyPostList(@PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
                                                             Pageable pageable) {
@@ -80,6 +92,7 @@ public class StudyPostController {
         return ApiResponse.of(SuccessStatus._STUDY_POST_LIST_RETRIEVED, studyPostList);
     }
 
+    @Operation(summary = "스터디 모집 마감", description = "스터디 모집글을 마감 상태로 변경합니다.")
     @PatchMapping("/api/study-posts/{studyPostId}/close")
     public ApiResponse<StudyPostResponseDTO.GetStudyPost> closeStudyPost(@PathVariable("studyPostId") Long studyPostId, @AuthenticationPrincipal CustomUserDetails customUserDetails){
         String email = customUserDetails.getUsername();
