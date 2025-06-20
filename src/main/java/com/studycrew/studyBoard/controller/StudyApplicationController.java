@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -39,12 +40,18 @@ public class StudyApplicationController {
             description = "해당 스터디글에 로그인한 사용자가 지원합니다."
     )
     @PostMapping("/api/study-posts/{studyPostId}/applications")
-    public ApiResponse<StudyApplicationResult> applyStudyPost(@PathVariable("studyPostId") Long studyPostId,  @AuthenticationPrincipal CustomUserDetails customUserDetails){
+    public ResponseEntity<ApiResponse<StudyApplicationResult>> applyStudyPost(
+            @PathVariable("studyPostId") Long studyPostId,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+
         String email = customUserDetails.getUsername();
         User user = userQueryService.getUserByEmail(email);
         StudyApplication studyApplication = studyApplicationCommandService.applyStudyApplication(studyPostId, user);
         StudyApplicationResult responseDTO = StudyApplicationConverter.toStudyApplicationResult(studyApplication);
-        return ApiResponse.of(SuccessStatus._STUDY_APPLICATION_CREATED,responseDTO);
+
+        return ResponseEntity
+                .status(SuccessStatus._STUDY_APPLICATION_CREATED.getHttpStatus())
+                .body(ApiResponse.of(SuccessStatus._STUDY_APPLICATION_CREATED, responseDTO));
     }
 
     @Operation(summary = "스터디 지원자 전체 조회", description = "스터디글에 지원한 모든 지원자 목록을 조회합니다.")
