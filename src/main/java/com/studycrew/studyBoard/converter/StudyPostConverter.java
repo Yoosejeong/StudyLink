@@ -13,7 +13,7 @@ public class StudyPostConverter {
                 .user(user)
                 .title(dto.getTitle())
                 .content(dto.getContent())
-                .maxPeople(dto.getMax_people())
+                .maxPeople(dto.getMaxPeople())
                 .studyStatus(StudyStatus.RECRUITING)
                 .build();
     }
