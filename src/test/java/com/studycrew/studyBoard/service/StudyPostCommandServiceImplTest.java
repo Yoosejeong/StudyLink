@@ -48,8 +48,7 @@ class StudyPostCommandServiceImplTest {
         StudyPostRequestDTO.StudyPostCreate requestDTO = StudyPostRequestDTO.StudyPostCreate.builder()
                 .title("제목")
                 .content("내용")
-                .current_people(5)
-                .max_people(10)
+                .maxPeople(10)
                 .build();
 
         StudyPost studyPost = studyPostCommandService.createStudyPost(requestDTO, user);
