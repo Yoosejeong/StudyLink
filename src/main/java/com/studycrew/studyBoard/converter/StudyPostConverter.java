@@ -24,7 +24,7 @@ public class StudyPostConverter {
                 .nickname(studyPost.getUser().getNickname())
                 .title(studyPost.getTitle())
                 .content(studyPost.getContent())
-                .max_people(studyPost.getMaxPeople())
+                .maxPeople(studyPost.getMaxPeople())
                 .studyStatus(studyPost.getStudyStatus())
                 .createdAt(studyPost.getCreatedAt())
                 .updatedAt(studyPost.getUpdatedAt())
@@ -36,7 +36,7 @@ public class StudyPostConverter {
                 .studyPostId(studyPost.getId())
                 .title(studyPost.getTitle())
                 .nickname(studyPost.getUser().getNickname())
-                .max_people(studyPost.getMaxPeople())
+                .maxPeople(studyPost.getMaxPeople())
                 .studyStatus(studyPost.getStudyStatus())
                 .updatedAt(studyPost.getUpdatedAt())
                 .build();
