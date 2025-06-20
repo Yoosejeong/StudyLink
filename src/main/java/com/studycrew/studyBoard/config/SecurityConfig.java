@@ -1,5 +1,6 @@
 package com.studycrew.studyBoard.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studycrew.studyBoard.jwt.CustomLogoutFilter;
 import com.studycrew.studyBoard.jwt.JWTFilter;
 import com.studycrew.studyBoard.jwt.JWTUtil;
@@ -30,6 +31,7 @@ public class SecurityConfig {
     private final AuthenticationConfiguration authenticationConfiguration;
     private final JWTUtil jwtUtil;
     private final RefreshRepository refreshRepository;
+    private final ObjectMapper objectMapper;
 
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
@@ -84,7 +86,7 @@ public class SecurityConfig {
         //경로별 인가 작업
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/api/login", "/", "/api/signUp","/api/reissue").permitAll()
+                        .requestMatchers("/api/login", "/", "/api/signUp","/api/reissue","/v3/api-docs/**","/swagger-ui/**","/swagger-ui.html").permitAll()
                         .requestMatchers("/api/user").hasRole("USER")
                         .anyRequest().authenticated());
 
@@ -94,7 +96,7 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         http
-                .addFilterAt(new LoginFilter("/api/login", authenticationManager(authenticationConfiguration), jwtUtil, refreshRepository), UsernamePasswordAuthenticationFilter.class);
+                .addFilterAt(new LoginFilter("/api/login", authenticationManager(authenticationConfiguration), jwtUtil, refreshRepository, objectMapper), UsernamePasswordAuthenticationFilter.class);
         http
                 .addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);
         http

@@ -58,7 +58,7 @@ class StudyApplicationCommandServiceImplTest {
         assertThat(thrown).isInstanceOf(StudyPostHandler.class);
 
         StudyPostHandler exception = (StudyPostHandler) thrown;
-        assertThat(exception.getErrorReason().getCode()).isEqualTo("POST409");
+        assertThat(exception.getErrorReason().getCode()).isEqualTo("POST4090");
         assertThat(exception.getErrorReason().getMessage()).contains("이미 모집이 종료된 스터디글입니다.");
     }
 
@@ -94,7 +94,7 @@ class StudyApplicationCommandServiceImplTest {
                 studyApplicationCommandService.applyStudyApplication(studyPost.getId(), user)
         );
         StudyPostHandler exception = (StudyPostHandler) thrown;
-        assertThat(exception.getErrorReason().getCode()).isEqualTo("APPLICATION400");
+        assertThat(exception.getErrorReason().getCode()).isEqualTo("APPLICATION4090");
         assertThat(exception.getErrorReason().getMessage()).contains("이미 해당 스터디에 지원했습니다.");
 
     }
@@ -172,7 +172,7 @@ class StudyApplicationCommandServiceImplTest {
 
         StudyApplicationHandler exception = (StudyApplicationHandler) thrown;
 
-        assertThat(exception.getErrorReason().getCode()).isEqualTo("APPLICATION401");
+        assertThat(exception.getErrorReason().getCode()).isEqualTo("APPLICATION4091");
         assertThat(exception.getErrorReason().getMessage()).contains("이미 처리된 지원입니다.");
     }
 
@@ -218,7 +218,7 @@ class StudyApplicationCommandServiceImplTest {
 
         StudyApplicationHandler exception = (StudyApplicationHandler) thrown;
 
-        assertThat(exception.getErrorReason().getCode()).isEqualTo("APPLICATION402");
+        assertThat(exception.getErrorReason().getCode()).isEqualTo("APPLICATION4030");
         assertThat(exception.getErrorReason().getMessage()).contains("스터디 지원에 권한이 없습니다.");
 
     }

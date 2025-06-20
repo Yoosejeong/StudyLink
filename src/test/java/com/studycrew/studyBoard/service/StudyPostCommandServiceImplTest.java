@@ -103,7 +103,7 @@ class StudyPostCommandServiceImplTest {
         StudyPostHandler exception = (StudyPostHandler) thrown;
 
         assertThat(exception.getCode()).isEqualTo(ErrorStatus._STUDY_POST_NOT_FOUND);
-        assertThat(exception.getErrorReason().getCode()).isEqualTo("POST404");
+        assertThat(exception.getErrorReason().getCode()).isEqualTo("POST4040");
         assertThat(exception.getErrorReason().getIsSuccess()).isFalse();
     }
 
