@@ -36,7 +36,7 @@ class StudyPostCommandServiceImplTest {
     StudyPostQueryService studyPostQueryService;
 
     @Test
-    void createStudyPost(){
+    void 스터디글_생성(){
         User user = getUser();
 
         StudyPost studyPost = getStudyPost(user, 1);
@@ -58,12 +58,12 @@ class StudyPostCommandServiceImplTest {
 
 
     @Test
-    void deleteStudyPost(){
+    void 스터디글_삭제(){
 
     }
 
     @Test
-    void updateStudyPost(){
+    void 스터디글_수정(){
 
         StudyPostRequestDTO.StudyPostRequestUpdate requestDTO = StudyPostRequestUpdate
                 .builder()
