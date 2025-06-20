@@ -41,8 +41,6 @@ public class StudyPost extends BaseEntity {
 
     private int maxPeople;
 
-    private int currentPeople;
-
     private int acceptedPeople;
 
     @Enumerated(EnumType.STRING)

@@ -15,7 +15,6 @@ public class StudyPostRequestDTO {
         private String title;
         private String content;
         private int max_people;
-        private int current_people;
     }
 
     @Builder

@@ -19,7 +19,6 @@ public class StudyPostResponseDTO {
         private String nickname;
         private String content;
         private int max_people;
-        private int current_people;
         private StudyStatus studyStatus;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
@@ -34,7 +33,6 @@ public class StudyPostResponseDTO {
         private String title;
         private String nickname;
         private int max_people;
-        private int current_people;
         private StudyStatus studyStatus;
         private LocalDateTime updatedAt;
     }
