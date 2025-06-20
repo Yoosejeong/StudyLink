@@ -14,8 +14,7 @@ public class StudyPostRequestDTO {
     public static class StudyPostCreate{
         private String title;
         private String content;
-        private int max_people;
-        private int current_people;
+        private int maxPeople;
     }
 
     @Builder
