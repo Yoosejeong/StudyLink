@@ -36,7 +36,7 @@ class StudyPostCommandServiceImplTest {
     StudyPostQueryService studyPostQueryService;
 
     @Test
-    void createStudyPost(){
+    void 스터디글_생성(){
         User user = getUser();
 
         StudyPost studyPost = getStudyPost(user, 1);
@@ -48,8 +48,7 @@ class StudyPostCommandServiceImplTest {
         StudyPostRequestDTO.StudyPostCreate requestDTO = StudyPostRequestDTO.StudyPostCreate.builder()
                 .title("제목")
                 .content("내용")
-                .current_people(5)
-                .max_people(10)
+                .maxPeople(10)
                 .build();
 
         StudyPost studyPost = studyPostCommandService.createStudyPost(requestDTO, user);
@@ -58,12 +57,12 @@ class StudyPostCommandServiceImplTest {
 
 
     @Test
-    void deleteStudyPost(){
+    void 스터디글_삭제(){
 
     }
 
     @Test
-    void updateStudyPost(){
+    void 스터디글_수정(){
 
         StudyPostRequestDTO.StudyPostRequestUpdate requestDTO = StudyPostRequestUpdate
                 .builder()
