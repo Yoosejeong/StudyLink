@@ -259,7 +259,7 @@ class StudyApplicationCommandServiceImplTest {
                 .title("제목")
                 .content("내용")
                 .studyStatus(StudyStatus.RECRUITING)
-                .currentPeople(3)
+                .acceptedPeople(0)
                 .maxPeople(23)
                 .user(user)
                 .build();
@@ -271,7 +271,7 @@ class StudyApplicationCommandServiceImplTest {
                 .title("제목2")
                 .content("내용2")
                 .studyStatus(StudyStatus.RECRUITING)
-                .currentPeople(2)
+                .acceptedPeople(0)
                 .maxPeople(24)
                 .user(user)
                 .build();
@@ -283,7 +283,7 @@ class StudyApplicationCommandServiceImplTest {
                 .title("제목")
                 .content("내용")
                 .studyStatus(StudyStatus.CLOSED)
-                .currentPeople(3)
+                .acceptedPeople(23)
                 .maxPeople(23)
                 .user(user)
                 .build();
