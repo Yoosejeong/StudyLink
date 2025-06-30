@@ -13,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -45,6 +46,10 @@ public class StudyPost extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private StudyStatus studyStatus;
+
+    private boolean deleted = false;
+
+    private LocalDateTime deletedAt;
 
     public void update(String title, String content) {
         if (title != null) {
