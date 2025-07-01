@@ -49,7 +49,7 @@ public class StudyPostCommandServiceImpl implements StudyPostCommandService {
 
     @Override
     public StudyPost closeStudyPost(Long studyPostId, User user) {
-        StudyPost studyPost = studyPostRepository.findById(studyPostId)
+        StudyPost studyPost = studyPostRepository.findByIdAndDeletedFalse(studyPostId)
                 .orElseThrow(() -> new StudyPostHandler(ErrorStatus._STUDY_POST_NOT_FOUND));
         if (!studyPost.getUser().getId().equals(user.getId())){
             throw new StudyPostHandler(ErrorStatus._STUDY_POST_FORBIDDEN);
