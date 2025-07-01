@@ -249,6 +249,31 @@ class StudyApplicationCommandServiceImplTest {
         assertThat(exception.getErrorReason().getMessage()).contains("스터디글이 없습니다.");
     }
 
+    @Test
+    void 삭제된_스터디글_승인_불가() {
+        // given: 회원, 스터디글 생성
+        User user = getUser();
+        User user2 = getUser2();
+        userRepository.save(user);
+        userRepository.save(user2);
+
+        StudyPost studyPost = getStudyPost(user);
+        studyPostRepository.save(studyPost);
+
+        // when: 스터디글 지원 후 삭제
+        StudyApplication studyApplication = studyApplicationCommandService.applyStudyApplication(studyPost.getId(),
+                user2);
+        studyPostCommandService.deleteStudyPost(studyPost.getId(), user);
+
+        // then: 삭제된 스터디글애 승인시 에러 발생
+        Throwable thrown = catchThrowable(() ->  studyApplicationCommandService.approveStudyApplication(
+                studyApplication.getId(), user));
+        StudyApplicationHandler exception = (StudyApplicationHandler) thrown;
+
+        assertThat(exception.getErrorReason().getCode()).isEqualTo("POST4040");
+        assertThat(exception.getErrorReason().getMessage()).contains("스터디글이 없습니다.");
+    }
+
     private static User getUser() {
         return User.builder()
                 .email("이메일@email.com")
