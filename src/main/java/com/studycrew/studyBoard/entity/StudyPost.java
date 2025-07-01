@@ -74,4 +74,9 @@ public class StudyPost extends BaseEntity {
         }
         this.acceptedPeople += 1;
     }
+
+    public void delete() {
+        this.deleted = true;
+        this.deletedAt = LocalDateTime.now();
+    }
 }
