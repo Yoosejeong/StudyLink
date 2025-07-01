@@ -40,6 +40,8 @@ public class StudyApplicationConverter {
     public static MyStudyApplicationResponse toUserApplications(StudyApplication studyApplication) {
         return MyStudyApplicationResponse.builder()
                 .applicationStatus(studyApplication.getApplicationStatus())
+                .studyStatus(studyApplication.getStudyPost().getStudyStatus())
+                .deleted(studyApplication.getStudyPost().isDeleted())
                 .appliedAt(studyApplication.getCreatedAt())
                 .studyPostId(studyApplication.getStudyPost().getId())
                 .studyApplicationId(studyApplication.getId())
