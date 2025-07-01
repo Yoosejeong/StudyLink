@@ -61,6 +61,11 @@ public class StudyApplicationCommandServiceImpl implements StudyApplicationComma
             throw new StudyApplicationHandler(ErrorStatus._STUDY_APPLICATION_FORBIDDEN);
         }
 
+        StudyPost studyPost = studyApplication.getStudyPost();
+        if (studyPost.isDeleted()) {
+            throw new StudyApplicationHandler(ErrorStatus._STUDY_POST_NOT_FOUND);
+        }
+
         studyApplication.reject();
         return studyApplication;
     }
