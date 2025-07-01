@@ -47,6 +47,7 @@ public class StudyPost extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private StudyStatus studyStatus;
 
+    @Builder.Default
     private boolean deleted = false;
 
     private LocalDateTime deletedAt;
