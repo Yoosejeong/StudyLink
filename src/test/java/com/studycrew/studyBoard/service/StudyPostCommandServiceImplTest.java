@@ -58,7 +58,16 @@ class StudyPostCommandServiceImplTest {
 
     @Test
     void 스터디글_삭제(){
+        User user = getUser();
+        userRepository.save(user);
 
+        StudyPost studyPost = getStudyPost(user, 1);
+        studyPostRepository.save(studyPost);
+
+        studyPostCommandService.deleteStudyPost(studyPost.getId(), user);
+
+        assertThat(studyPost.isDeleted()).isEqualTo(true);
+        assertThat(studyPost.getDeletedAt()).isNotNull();
     }
 
     @Test
@@ -141,4 +150,14 @@ class StudyPostCommandServiceImplTest {
         return user;
     }
 
+    private static User getUser2() {
+        User user = User.builder()
+                .email("이메일2@email.com")
+                .nickname("닉네임2")
+                .username("이름2")
+                .password("비밀번호2")
+                .role("ROLE_USER")
+                .build();
+        return user;
+    }
 }
