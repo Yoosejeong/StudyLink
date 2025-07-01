@@ -21,13 +21,13 @@ public class StudyPostQueryServiceImpl implements StudyPostQueryService {
 
     @Override
     public StudyPost getStudyPost(Long studyPostId) {
-        return studyPostRepository.findById(studyPostId).orElseThrow(() -> new StudyPostHandler(
+        return studyPostRepository.findByIdAndDeletedFalse(studyPostId).orElseThrow(() -> new StudyPostHandler(
                 ErrorStatus._STUDY_POST_NOT_FOUND));
     }
 
     @Override
     public Page<StudyPostResponseDTO.GetStudyPostListResponse> getStudyPostList(Pageable pageable) {
-        return studyPostRepository.findAll(pageable)
+        return studyPostRepository.findAllByDeletedFalse(pageable)
                 .map(StudyPostConverter::toGetStudyPostList);
     }
 }
