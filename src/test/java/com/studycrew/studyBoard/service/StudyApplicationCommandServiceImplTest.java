@@ -13,6 +13,7 @@ import com.studycrew.studyBoard.repository.StudyPostRepository;
 import com.studycrew.studyBoard.repository.UserRepository;
 import com.studycrew.studyBoard.service.studyApplication.StudyApplicationCommandService;
 import com.studycrew.studyBoard.service.studyApplication.StudyApplicationQueryService;
+import com.studycrew.studyBoard.service.studyPost.StudyPostCommandService;
 import java.util.List;
 import static org.assertj.core.api.Assertions.*;
 import org.junit.jupiter.api.Test;
@@ -32,6 +33,8 @@ class StudyApplicationCommandServiceImplTest {
     private StudyPostRepository studyPostRepository;
     @Autowired
     private StudyApplicationQueryService studyApplicationQueryService;
+    @Autowired
+    private StudyPostCommandService studyPostCommandService;
 
     @Test
     void 스터디_지원하기_테스트(){
@@ -221,6 +224,79 @@ class StudyApplicationCommandServiceImplTest {
         assertThat(exception.getErrorReason().getCode()).isEqualTo("APPLICATION4030");
         assertThat(exception.getErrorReason().getMessage()).contains("스터디 지원에 권한이 없습니다.");
 
+    }
+
+    @Test
+    void 삭제된_스터디글_지원_불가() {
+        // given: 회원, 스터디글 생성
+        User user = getUser();
+        User user2 = getUser2();
+        userRepository.save(user);
+        userRepository.save(user2);
+
+        StudyPost studyPost = getStudyPost(user);
+        studyPostRepository.save(studyPost);
+
+        // when: 스터디글 삭제하기
+        studyPostCommandService.deleteStudyPost(studyPost.getId(), user);
+
+        // then: 삭제된 스터디글애 지원시 에러 발생
+        Throwable thrown = catchThrowable(() ->  studyApplicationCommandService.applyStudyApplication(
+                studyPost.getId(), user2));
+        StudyPostHandler exception = (StudyPostHandler ) thrown;
+
+        assertThat(exception.getErrorReason().getCode()).isEqualTo("POST4040");
+        assertThat(exception.getErrorReason().getMessage()).contains("스터디글이 없습니다.");
+    }
+
+    @Test
+    void 삭제된_스터디글_승인_불가() {
+        // given: 회원, 스터디글 생성
+        User user = getUser();
+        User user2 = getUser2();
+        userRepository.save(user);
+        userRepository.save(user2);
+
+        StudyPost studyPost = getStudyPost(user);
+        studyPostRepository.save(studyPost);
+
+        // when: 스터디글 지원 후 삭제
+        StudyApplication studyApplication = studyApplicationCommandService.applyStudyApplication(studyPost.getId(),
+                user2);
+        studyPostCommandService.deleteStudyPost(studyPost.getId(), user);
+
+        // then: 삭제된 스터디글애 승인시 에러 발생
+        Throwable thrown = catchThrowable(() ->  studyApplicationCommandService.approveStudyApplication(
+                studyApplication.getId(), user));
+        StudyApplicationHandler exception = (StudyApplicationHandler) thrown;
+
+        assertThat(exception.getErrorReason().getCode()).isEqualTo("POST4040");
+        assertThat(exception.getErrorReason().getMessage()).contains("스터디글이 없습니다.");
+    }
+
+    @Test
+    void 삭제된_스터디글_거절_불가() {
+        // given: 회원, 스터디글 생성
+        User user = getUser();
+        User user2 = getUser2();
+        userRepository.save(user);
+        userRepository.save(user2);
+
+        StudyPost studyPost = getStudyPost(user);
+        studyPostRepository.save(studyPost);
+
+        // when: 스터디글 지원 후 삭제
+        StudyApplication studyApplication = studyApplicationCommandService.applyStudyApplication(studyPost.getId(),
+                user2);
+        studyPostCommandService.deleteStudyPost(studyPost.getId(), user);
+
+        // then: 삭제된 스터디글애 거절시 에러 발생
+        Throwable thrown = catchThrowable(() ->  studyApplicationCommandService.rejectStudyApplication(
+                studyApplication.getId(), user));
+        StudyApplicationHandler exception = (StudyApplicationHandler) thrown;
+
+        assertThat(exception.getErrorReason().getCode()).isEqualTo("POST4040");
+        assertThat(exception.getErrorReason().getMessage()).contains("스터디글이 없습니다.");
     }
 
     private static User getUser() {
