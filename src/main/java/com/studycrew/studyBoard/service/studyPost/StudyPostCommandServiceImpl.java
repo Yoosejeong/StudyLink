@@ -33,7 +33,7 @@ public class StudyPostCommandServiceImpl implements StudyPostCommandService {
         if (!studyPost.getUser().getId().equals(user.getId())){
             throw new StudyPostHandler(ErrorStatus._STUDY_POST_FORBIDDEN);
         }
-        studyPostRepository.deleteById(studyPostId);
+        studyPost.delete();
     }
 
     @Override
