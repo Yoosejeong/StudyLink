@@ -1,6 +1,7 @@
 package com.studycrew.studyBoard.service;
 
 import com.studycrew.studyBoard.apiPayload.code.status.ErrorStatus;
+import com.studycrew.studyBoard.apiPayload.exception.handler.StudyApplicationHandler;
 import com.studycrew.studyBoard.apiPayload.exception.handler.StudyPostHandler;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO.StudyPostRequestUpdate;
@@ -137,6 +138,26 @@ class StudyPostCommandServiceImplTest {
         studyPostRepository.save(studyPost);
         StudyPost closedStudyPost = studyPostCommandService.closeStudyPost(studyPost.getId(), user);
         assertThat(closedStudyPost.getStudyStatus()).isEqualTo(StudyStatus.CLOSED);
+    }
+
+    @Test
+    void 삭제된_스터디글_모집_종료시_예외() {
+        // given: 회원, 스터디글 생성
+        User user = getUser();
+        userRepository.save(user);
+        StudyPost studyPost = getStudyPost(user, 1);
+        studyPostRepository.save(studyPost);
+
+        // when: 스터디글 삭제
+        studyPostCommandService.deleteStudyPost(studyPost.getId(), user);
+
+        // then: 삭제된 스터디글에 모집 종료시 예외 발생
+        Throwable thrown = catchThrowable(() ->  studyPostCommandService.closeStudyPost(
+                studyPost.getId(), user));
+        StudyPostHandler exception = (StudyPostHandler) thrown;
+
+        assertThat(exception.getErrorReason().getCode()).isEqualTo("POST4040");
+        assertThat(exception.getErrorReason().getMessage()).contains("스터디글이 없습니다.");
     }
 
     private static User getUser() {
