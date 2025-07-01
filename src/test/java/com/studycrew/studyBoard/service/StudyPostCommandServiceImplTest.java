@@ -1,6 +1,7 @@
 package com.studycrew.studyBoard.service;
 
 import com.studycrew.studyBoard.apiPayload.code.status.ErrorStatus;
+import com.studycrew.studyBoard.apiPayload.exception.handler.StudyApplicationHandler;
 import com.studycrew.studyBoard.apiPayload.exception.handler.StudyPostHandler;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO.StudyPostRequestUpdate;
@@ -58,7 +59,16 @@ class StudyPostCommandServiceImplTest {
 
     @Test
     void 스터디글_삭제(){
+        User user = getUser();
+        userRepository.save(user);
 
+        StudyPost studyPost = getStudyPost(user, 1);
+        studyPostRepository.save(studyPost);
+
+        studyPostCommandService.deleteStudyPost(studyPost.getId(), user);
+
+        assertThat(studyPost.isDeleted()).isEqualTo(true);
+        assertThat(studyPost.getDeletedAt()).isNotNull();
     }
 
     @Test
@@ -130,6 +140,51 @@ class StudyPostCommandServiceImplTest {
         assertThat(closedStudyPost.getStudyStatus()).isEqualTo(StudyStatus.CLOSED);
     }
 
+    @Test
+    void 삭제된_스터디글_모집_종료시_예외() {
+        // given: 회원, 스터디글 생성
+        User user = getUser();
+        userRepository.save(user);
+        StudyPost studyPost = getStudyPost(user, 1);
+        studyPostRepository.save(studyPost);
+
+        // when: 스터디글 삭제
+        studyPostCommandService.deleteStudyPost(studyPost.getId(), user);
+
+        // then: 삭제된 스터디글에 모집 종료시 예외 발생
+        Throwable thrown = catchThrowable(() ->  studyPostCommandService.closeStudyPost(
+                studyPost.getId(), user));
+        StudyPostHandler exception = (StudyPostHandler) thrown;
+
+        assertThat(exception.getErrorReason().getCode()).isEqualTo("POST4040");
+        assertThat(exception.getErrorReason().getMessage()).contains("스터디글이 없습니다.");
+    }
+
+    @Test
+    void 삭제된_스터디글_수정_예외() {
+        // given: 회원, 스터디글, 수정 requestDTO 생성
+        User user = getUser();
+        userRepository.save(user);
+        StudyPost studyPost = getStudyPost(user, 1);
+        studyPostRepository.save(studyPost);
+
+        StudyPostRequestUpdate dto = StudyPostRequestUpdate.builder()
+                .title("수정제목")
+                .content("수정글")
+                .build();
+
+        // when: 스터디글 삭제
+        studyPostCommandService.deleteStudyPost(studyPost.getId(), user);
+
+        // then: 삭제된 스터디글에 수정시 예외 발생
+        Throwable thrown = catchThrowable(() ->  studyPostCommandService.updateStudyPost(
+                studyPost.getId(), user, dto));
+        StudyPostHandler exception = (StudyPostHandler) thrown;
+
+        assertThat(exception.getErrorReason().getCode()).isEqualTo("POST4040");
+        assertThat(exception.getErrorReason().getMessage()).contains("스터디글이 없습니다.");
+    }
+
     private static User getUser() {
         User user = User.builder()
                 .email("이메일@email.com")
@@ -141,4 +196,14 @@ class StudyPostCommandServiceImplTest {
         return user;
     }
 
+    private static User getUser2() {
+        User user = User.builder()
+                .email("이메일2@email.com")
+                .nickname("닉네임2")
+                .username("이름2")
+                .password("비밀번호2")
+                .role("ROLE_USER")
+                .build();
+        return user;
+    }
 }

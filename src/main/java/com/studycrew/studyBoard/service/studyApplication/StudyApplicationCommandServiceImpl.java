@@ -23,7 +23,7 @@ public class StudyApplicationCommandServiceImpl implements StudyApplicationComma
     private final StudyApplicationRepository studyApplicationRepository;
 
     public StudyApplication applyStudyApplication(Long studyPostId, User user){
-        StudyPost studyPost = studyPostRepository.findById(studyPostId)
+        StudyPost studyPost = studyPostRepository.findByIdAndDeletedFalse(studyPostId)
                 .orElseThrow(() -> new StudyPostHandler(ErrorStatus._STUDY_POST_NOT_FOUND));
         if (studyPost.getStudyStatus() == StudyStatus.CLOSED){
             throw new StudyPostHandler(ErrorStatus._STUDY_POST_ALREADY_CLOSED);
@@ -43,6 +43,11 @@ public class StudyApplicationCommandServiceImpl implements StudyApplicationComma
             throw new StudyApplicationHandler(ErrorStatus._STUDY_APPLICATION_FORBIDDEN);
         }
 
+        StudyPost studyPost = studyApplication.getStudyPost();
+        if (studyPost.isDeleted()) {
+            throw new StudyApplicationHandler(ErrorStatus._STUDY_POST_NOT_FOUND);
+        }
+
         studyApplication.approve();
         studyApplication.getStudyPost().increaseAcceptedPeople();
         return studyApplication;
@@ -54,6 +59,11 @@ public class StudyApplicationCommandServiceImpl implements StudyApplicationComma
 
         if(!studyApplication.getStudyPost().getUser().getId().equals(user.getId())) {
             throw new StudyApplicationHandler(ErrorStatus._STUDY_APPLICATION_FORBIDDEN);
+        }
+
+        StudyPost studyPost = studyApplication.getStudyPost();
+        if (studyPost.isDeleted()) {
+            throw new StudyApplicationHandler(ErrorStatus._STUDY_POST_NOT_FOUND);
         }
 
         studyApplication.reject();

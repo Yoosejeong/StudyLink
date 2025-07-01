@@ -40,6 +40,8 @@ public class StudyApplicationResponseDTO {
         private Long studyApplicationId;
         private Long studyPostId;
         private String studyTitle;
+        private StudyStatus studyStatus;
+        private boolean deleted;
         private ApplicationStatus applicationStatus;
         private LocalDateTime appliedAt;
     }
