@@ -299,6 +299,34 @@ class StudyApplicationCommandServiceImplTest {
         assertThat(exception.getErrorReason().getMessage()).contains("스터디글이 없습니다.");
     }
 
+    @Test
+    void 스터디_정원_초과시_자동마감() {
+        // given: 회원, 스터디글 생성
+        User user = getUser();
+        User user2 = getUser2();
+        User user3 = getUser3();
+        userRepository.save(user);
+        userRepository.save(user2);
+        userRepository.save(user3);
+
+        StudyPost studyPost = getMaxStudyPost(user);
+        studyPostRepository.save(studyPost);
+
+        // when: 스터디 지원하기
+        StudyApplication studyApplication1 = studyApplicationCommandService.applyStudyApplication(studyPost.getId(),
+                user2);
+        StudyApplication studyApplication2 = studyApplicationCommandService.applyStudyApplication(studyPost.getId(),
+                user3);
+
+        // when & then : 정원보다 적을 때 승인 할 시 모집 상태 RECURITTING
+        studyApplicationCommandService.approveStudyApplication(studyApplication1.getId(), user);
+        assertThat(studyPost.getStudyStatus()).isEqualTo(StudyStatus.RECRUITING);
+
+        // when & then: 승인 후 정원 다 찼을 때 모집 상태 CLOSED로 변경
+        studyApplicationCommandService.approveStudyApplication(studyApplication2.getId(), user);
+        assertThat(studyPost.getStudyStatus()).isEqualTo(StudyStatus.CLOSED);
+    }
+
     private static User getUser() {
         return User.builder()
                 .email("이메일@email.com")
@@ -349,6 +377,18 @@ class StudyApplicationCommandServiceImplTest {
                 .studyStatus(StudyStatus.RECRUITING)
                 .acceptedPeople(0)
                 .maxPeople(24)
+                .user(user)
+                .build();
+    }
+
+    private StudyPost getMaxStudyPost(User user) {
+
+        return StudyPost.builder()
+                .title("제목2")
+                .content("내용2")
+                .studyStatus(StudyStatus.RECRUITING)
+                .acceptedPeople(0)
+                .maxPeople(2)
                 .user(user)
                 .build();
     }
