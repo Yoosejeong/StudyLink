@@ -48,8 +48,16 @@ public class StudyApplicationCommandServiceImpl implements StudyApplicationComma
             throw new StudyApplicationHandler(ErrorStatus._STUDY_POST_NOT_FOUND);
         }
 
+        if (studyPost.isFullyBooked()) {
+            throw new StudyApplicationHandler(ErrorStatus._STUDY_POST_MAX_CAPACITY_EXCEEDED);
+        }
+
         studyApplication.approve();
         studyApplication.getStudyPost().increaseAcceptedPeople();
+
+        if (studyPost.isFullyBooked()) {
+            studyPost.closeStudyPost();
+        }
         return studyApplication;
     }
 
