@@ -37,7 +37,7 @@ public enum ErrorStatus implements BaseErrorCode {
     _STUDY_APPLICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "APPLICATION4040", "스터디 지원이 없습니다."),
     _STUDY_APPLICATION_ALREADY_PROCESSED(HttpStatus.CONFLICT, "APPLICATION4091", "이미 처리된 지원입니다."),
     _STUDY_APPLICATION_FORBIDDEN(HttpStatus.FORBIDDEN, "APPLICATION4030", "스터디 지원에 권한이 없습니다."),
-    ;
+    _SELF_APPLICATION_NOT_ALLOWED(HttpStatus.FORBIDDEN, "APPLICATION4031", "자신의 글에는 지원할 수 없습니다." );
 
     private final HttpStatus httpStatus;
     private final String code;
