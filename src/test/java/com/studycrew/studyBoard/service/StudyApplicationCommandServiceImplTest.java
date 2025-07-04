@@ -39,13 +39,15 @@ class StudyApplicationCommandServiceImplTest {
     @Test
     void 스터디_지원하기_테스트(){
         User user = getUser();
+        User user2 = getUser2();
         userRepository.save(user);
+        userRepository.save(user2);
         StudyPost studyPost = getStudyPost(user);
         studyPostRepository.save(studyPost);
         StudyApplication studyApplication = studyApplicationCommandService.applyStudyApplication(studyPost.getId(),
-                user);
+                user2);
         assertThat(studyApplication.getStudyPost()).isEqualTo(studyPost);
-        assertThat(studyApplication.getUser()).isEqualTo(user);
+        assertThat(studyApplication.getUser()).isEqualTo(user2);
         assertThat(studyApplication.getApplicationStatus()).isEqualTo(ApplicationStatus.PENDING);
     }
 
