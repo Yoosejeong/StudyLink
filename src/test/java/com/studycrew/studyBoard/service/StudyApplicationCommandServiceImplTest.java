@@ -54,11 +54,13 @@ class StudyApplicationCommandServiceImplTest {
     @Test
     void 스터디_모집종료_상태_지원_예외발생() {
         User user =  getUser();
+        User user2 = getUser2();
         userRepository.save(user);
+        userRepository.save(user2);
         StudyPost closedStudyPost = getClosedStudyPost(user);
         studyPostRepository.save(closedStudyPost);
         Throwable thrown = catchThrowable(() ->
-                studyApplicationCommandService.applyStudyApplication(closedStudyPost.getId(), user)
+                studyApplicationCommandService.applyStudyApplication(closedStudyPost.getId(), user2)
         );
         assertThat(thrown).isInstanceOf(StudyPostHandler.class);
 
