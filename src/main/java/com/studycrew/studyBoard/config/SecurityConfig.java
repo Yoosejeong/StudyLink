@@ -98,7 +98,7 @@ public class SecurityConfig {
         http
                 .addFilterAt(new LoginFilter("/api/login", authenticationManager(authenticationConfiguration), jwtUtil, refreshRepository, objectMapper), UsernamePasswordAuthenticationFilter.class);
         http
-                .addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);
+                .addFilterBefore(new JWTFilter(jwtUtil, objectMapper), LoginFilter.class);
         http
                 .logout((logout) -> logout.disable());
 
