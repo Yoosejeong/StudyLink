@@ -93,12 +93,17 @@ class StudyApplicationCommandServiceImplTest {
     @Test
     void 스터디_중복지원_예외발생() {
         User user = getUser();
+        User user2 = getUser2();
+
         userRepository.save(user);
+        userRepository.save(user2);
+
         StudyPost studyPost = getStudyPost(user);
         studyPostRepository.save(studyPost);
-        studyApplicationCommandService.applyStudyApplication(studyPost.getId(), user);
+
+        studyApplicationCommandService.applyStudyApplication(studyPost.getId(), user2);
         Throwable thrown = catchThrowable(() ->
-                studyApplicationCommandService.applyStudyApplication(studyPost.getId(), user)
+                studyApplicationCommandService.applyStudyApplication(studyPost.getId(), user2)
         );
         StudyPostHandler exception = (StudyPostHandler) thrown;
         assertThat(exception.getErrorReason().getCode()).isEqualTo("APPLICATION4090");
