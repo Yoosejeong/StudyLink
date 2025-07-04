@@ -327,6 +327,22 @@ class StudyApplicationCommandServiceImplTest {
         assertThat(studyPost.getStudyStatus()).isEqualTo(StudyStatus.CLOSED);
     }
 
+    @Test
+    void 자신의_글에는_지원불가() {
+        User user = getUser();
+        userRepository.save(user);
+
+        StudyPost studyPost = getStudyPost(user);
+        studyPostRepository.save(studyPost);
+
+        Throwable thrown = catchThrowable(() ->  studyApplicationCommandService.applyStudyApplication(
+                studyPost.getId(), user));
+        StudyApplicationHandler exception = (StudyApplicationHandler) thrown;
+
+        assertThat(exception.getErrorReason().getCode()).isEqualTo("APPLICATION4031");
+        assertThat(exception.getErrorReason().getMessage()).contains("자신의 글에는 지원할 수 없습니다.");
+    }
+
     private static User getUser() {
         return User.builder()
                 .email("이메일@email.com")
