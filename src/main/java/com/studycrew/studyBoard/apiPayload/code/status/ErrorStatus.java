@@ -23,6 +23,8 @@ public enum ErrorStatus implements BaseErrorCode {
 
     //토큰 관련 응답
     _INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH4010", "유효하지 않은 Refresh 토큰입니다."),
+    _INVALID_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "TOKEN4012", "유효하지 않은 Access 토큰입니다."),
+    _ACCESS_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "TOKEN4011", "Access 토큰이 만료되었습니다."),
 
     //스터디글 관련 응답
     _STUDY_POST_NOT_FOUND(HttpStatus.NOT_FOUND, "POST4040", "스터디글이 없습니다."),
@@ -34,7 +36,7 @@ public enum ErrorStatus implements BaseErrorCode {
     _STUDY_APPLICATION_ALREADY_EXISTS(HttpStatus.CONFLICT, "APPLICATION4090", "이미 해당 스터디에 지원했습니다."),
     _STUDY_APPLICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "APPLICATION4040", "스터디 지원이 없습니다."),
     _STUDY_APPLICATION_ALREADY_PROCESSED(HttpStatus.CONFLICT, "APPLICATION4091", "이미 처리된 지원입니다."),
-    _STUDY_APPLICATION_FORBIDDEN(HttpStatus.FORBIDDEN, "APPLICATION4030", "스터디 지원에 권한이 없습니다.")
+    _STUDY_APPLICATION_FORBIDDEN(HttpStatus.FORBIDDEN, "APPLICATION4030", "스터디 지원에 권한이 없습니다."),
     ;
 
     private final HttpStatus httpStatus;
