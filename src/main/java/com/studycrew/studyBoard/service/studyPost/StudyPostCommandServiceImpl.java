@@ -5,9 +5,13 @@ import com.studycrew.studyBoard.apiPayload.exception.handler.StudyPostHandler;
 import com.studycrew.studyBoard.converter.StudyPostConverter;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO.StudyPostCreate;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO.StudyPostRequestUpdate;
+import com.studycrew.studyBoard.entity.StudyApplication;
 import com.studycrew.studyBoard.entity.StudyPost;
 import com.studycrew.studyBoard.entity.User;
+import com.studycrew.studyBoard.enums.ApplicationStatus;
+import com.studycrew.studyBoard.repository.StudyApplicationRepository;
 import com.studycrew.studyBoard.repository.StudyPostRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class StudyPostCommandServiceImpl implements StudyPostCommandService {
 
     private final StudyPostRepository studyPostRepository;
+    private final StudyApplicationRepository studyApplicationRepository;
 
     public StudyPost createStudyPost(StudyPostCreate dto, User user){
         StudyPost studyPost = StudyPostConverter.toStudyPost(dto, user);
@@ -54,7 +59,18 @@ public class StudyPostCommandServiceImpl implements StudyPostCommandService {
         if (!studyPost.getUser().getId().equals(user.getId())){
             throw new StudyPostHandler(ErrorStatus._STUDY_POST_FORBIDDEN);
         }
-        studyPost.closeStudyPost();
+        closeAndRejectPending(studyPost);
         return studyPost;
+    }
+
+    @Override
+    public void closeAndRejectPending(StudyPost studyPost) {
+            studyPost.closeStudyPost();
+            List<StudyApplication> pendingApplications =
+                    studyApplicationRepository.findAllByStudyPostAndApplicationStatus(studyPost, ApplicationStatus.PENDING);
+
+            for (StudyApplication application : pendingApplications) {
+                application.reject();
+            }
     }
 }

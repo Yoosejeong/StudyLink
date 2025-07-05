@@ -39,24 +39,28 @@ class StudyApplicationCommandServiceImplTest {
     @Test
     void 스터디_지원하기_테스트(){
         User user = getUser();
+        User user2 = getUser2();
         userRepository.save(user);
+        userRepository.save(user2);
         StudyPost studyPost = getStudyPost(user);
         studyPostRepository.save(studyPost);
         StudyApplication studyApplication = studyApplicationCommandService.applyStudyApplication(studyPost.getId(),
-                user);
+                user2);
         assertThat(studyApplication.getStudyPost()).isEqualTo(studyPost);
-        assertThat(studyApplication.getUser()).isEqualTo(user);
+        assertThat(studyApplication.getUser()).isEqualTo(user2);
         assertThat(studyApplication.getApplicationStatus()).isEqualTo(ApplicationStatus.PENDING);
     }
 
     @Test
     void 스터디_모집종료_상태_지원_예외발생() {
         User user =  getUser();
+        User user2 = getUser2();
         userRepository.save(user);
+        userRepository.save(user2);
         StudyPost closedStudyPost = getClosedStudyPost(user);
         studyPostRepository.save(closedStudyPost);
         Throwable thrown = catchThrowable(() ->
-                studyApplicationCommandService.applyStudyApplication(closedStudyPost.getId(), user)
+                studyApplicationCommandService.applyStudyApplication(closedStudyPost.getId(), user2)
         );
         assertThat(thrown).isInstanceOf(StudyPostHandler.class);
 
@@ -89,12 +93,17 @@ class StudyApplicationCommandServiceImplTest {
     @Test
     void 스터디_중복지원_예외발생() {
         User user = getUser();
+        User user2 = getUser2();
+
         userRepository.save(user);
+        userRepository.save(user2);
+
         StudyPost studyPost = getStudyPost(user);
         studyPostRepository.save(studyPost);
-        studyApplicationCommandService.applyStudyApplication(studyPost.getId(), user);
+
+        studyApplicationCommandService.applyStudyApplication(studyPost.getId(), user2);
         Throwable thrown = catchThrowable(() ->
-                studyApplicationCommandService.applyStudyApplication(studyPost.getId(), user)
+                studyApplicationCommandService.applyStudyApplication(studyPost.getId(), user2)
         );
         StudyPostHandler exception = (StudyPostHandler) thrown;
         assertThat(exception.getErrorReason().getCode()).isEqualTo("APPLICATION4090");
@@ -325,6 +334,22 @@ class StudyApplicationCommandServiceImplTest {
         // when & then: 승인 후 정원 다 찼을 때 모집 상태 CLOSED로 변경
         studyApplicationCommandService.approveStudyApplication(studyApplication2.getId(), user);
         assertThat(studyPost.getStudyStatus()).isEqualTo(StudyStatus.CLOSED);
+    }
+
+    @Test
+    void 자신의_글에는_지원불가() {
+        User user = getUser();
+        userRepository.save(user);
+
+        StudyPost studyPost = getStudyPost(user);
+        studyPostRepository.save(studyPost);
+
+        Throwable thrown = catchThrowable(() ->  studyApplicationCommandService.applyStudyApplication(
+                studyPost.getId(), user));
+        StudyApplicationHandler exception = (StudyApplicationHandler) thrown;
+
+        assertThat(exception.getErrorReason().getCode()).isEqualTo("APPLICATION4031");
+        assertThat(exception.getErrorReason().getMessage()).contains("자신의 글에는 지원할 수 없습니다.");
     }
 
     private static User getUser() {

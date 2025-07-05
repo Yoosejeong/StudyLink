@@ -13,4 +13,6 @@ public interface StudyPostCommandService {
     StudyPost updateStudyPost(Long studyPostId, User user, StudyPostRequestUpdate dto);
 
     StudyPost closeStudyPost(Long studyPostId, User user);
+
+    void closeAndRejectPending(StudyPost studyPost);
 }
