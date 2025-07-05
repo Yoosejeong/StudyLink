@@ -10,6 +10,7 @@ import com.studycrew.studyBoard.entity.User;
 import com.studycrew.studyBoard.enums.StudyStatus;
 import com.studycrew.studyBoard.repository.StudyApplicationRepository;
 import com.studycrew.studyBoard.repository.StudyPostRepository;
+import com.studycrew.studyBoard.service.studyPost.StudyPostCommandService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ public class StudyApplicationCommandServiceImpl implements StudyApplicationComma
 
     private final StudyPostRepository studyPostRepository;
     private final StudyApplicationRepository studyApplicationRepository;
+    private final StudyPostCommandService studyPostCommandService;
 
     public StudyApplication applyStudyApplication(Long studyPostId, User user){
         StudyPost studyPost = studyPostRepository.findByIdAndDeletedFalse(studyPostId)
@@ -30,6 +32,9 @@ public class StudyApplicationCommandServiceImpl implements StudyApplicationComma
         }
         if (studyApplicationRepository.existsByStudyPostAndUser(studyPost, user)) {
             throw new StudyPostHandler(ErrorStatus._STUDY_APPLICATION_ALREADY_EXISTS);
+        }
+        if (user.equals(studyPost.getUser())) {
+            throw new StudyApplicationHandler(ErrorStatus._SELF_APPLICATION_NOT_ALLOWED);
         }
         StudyApplication studyApplication = StudyApplicationConverter.toPendingApplication(studyPost, user);
         return studyApplicationRepository.save(studyApplication);
@@ -56,7 +61,7 @@ public class StudyApplicationCommandServiceImpl implements StudyApplicationComma
         studyApplication.getStudyPost().increaseAcceptedPeople();
 
         if (studyPost.isFullyBooked()) {
-            studyPost.closeStudyPost();
+            studyPostCommandService.closeAndRejectPending(studyPost);
         }
         return studyApplication;
     }

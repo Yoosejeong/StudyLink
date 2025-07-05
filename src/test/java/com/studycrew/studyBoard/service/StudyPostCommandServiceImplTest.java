@@ -6,11 +6,14 @@ import com.studycrew.studyBoard.apiPayload.exception.handler.StudyPostHandler;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO.StudyPostRequestUpdate;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.GetStudyPostListResponse;
+import com.studycrew.studyBoard.entity.StudyApplication;
 import com.studycrew.studyBoard.entity.StudyPost;
 import com.studycrew.studyBoard.entity.User;
+import com.studycrew.studyBoard.enums.ApplicationStatus;
 import com.studycrew.studyBoard.enums.StudyStatus;
 import com.studycrew.studyBoard.repository.StudyPostRepository;
 import com.studycrew.studyBoard.repository.UserRepository;
+import com.studycrew.studyBoard.service.studyApplication.StudyApplicationCommandService;
 import com.studycrew.studyBoard.service.studyPost.StudyPostCommandService;
 import com.studycrew.studyBoard.service.studyPost.StudyPostQueryService;
 import static org.assertj.core.api.Assertions.*;
@@ -35,6 +38,8 @@ class StudyPostCommandServiceImplTest {
     StudyPostRepository studyPostRepository;
     @Autowired
     StudyPostQueryService studyPostQueryService;
+    @Autowired
+    StudyApplicationCommandService studyApplicationCommandService;
 
     @Test
     void 스터디글_생성(){
@@ -183,6 +188,25 @@ class StudyPostCommandServiceImplTest {
 
         assertThat(exception.getErrorReason().getCode()).isEqualTo("POST4040");
         assertThat(exception.getErrorReason().getMessage()).contains("스터디글이 없습니다.");
+    }
+
+    @Test
+    void 모집마감시_처리안된_지원_자동거절() {
+        User user = getUser();
+        User user2 = getUser2();
+
+        userRepository.save(user);
+        userRepository.save(user2);
+
+        StudyPost studyPost = getStudyPost(user, 1);
+        studyPostRepository.save(studyPost);
+
+        StudyApplication studyApplication = studyApplicationCommandService.applyStudyApplication(studyPost.getId(),
+                user2);
+        studyPostCommandService.closeStudyPost(studyPost.getId(), user);
+
+        assertThat(studyApplication.getApplicationStatus()).isEqualTo(ApplicationStatus.REJECTED);
+
     }
 
     private static User getUser() {
