@@ -49,14 +49,13 @@ public class CustomLogoutFilter extends GenericFilterBean {
         //쿠키를 모두 불러와서 리프래시 토큰이 있는지 확인 후 refresh 변수에 담음
         String refresh = null;
         Cookie[] cookies = request.getCookies();
-        for (Cookie cookie : cookies) {
-
-            if (cookie.getName().equals("refresh")) {
-
-                refresh = cookie.getValue();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals("refresh")) {
+                    refresh = cookie.getValue();
+                }
             }
         }
-
 
         //refresh 토큰이 없을 경우 BAD_REQUEST 응답
         if (refresh == null) {
@@ -101,7 +100,6 @@ public class CustomLogoutFilter extends GenericFilterBean {
         Cookie cookie = new Cookie("refresh", null);
         cookie.setMaxAge(0);
         cookie.setPath("/");
-
         response.addCookie(cookie);
         response.setStatus(HttpServletResponse.SC_OK);
     }
