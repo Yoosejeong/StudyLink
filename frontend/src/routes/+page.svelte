@@ -1,52 +1,5 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import { User } from 'lucide-svelte';
-  import { onMount } from 'svelte';
-
-  // ✅ 로그인 상태 변수
-  let isLoggedIn = false;
-
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
-
-  // ✅ 페이지 진입 시 accessToken 있으면 로그인 상태 true
-  onMount(() => {
-    const token = localStorage.getItem('accessToken');
-    isLoggedIn = !!token;
-  });
-
-  // ✅ 로그인 버튼 클릭 시
-  function handleLogin() {
-    goto('/auth'); // 로그인 페이지로 이동
-  }
-
-    // ✅ 로그아웃 함수
-  async function handleLogout() {
-    try {
-      const res = await fetch(`${apiBaseUrl}/api/logout`, {
-        method: 'POST',
-        credentials: 'include' // ✅ refresh 쿠키 보내려면 필수!
-      });
-
-      if (!res.ok) {
-        console.error('🚫 로그아웃 실패:', await res.text());
-        alert('로그아웃 실패! 다시 시도해주세요.');
-        return;
-      }
-
-      // ✅ 서버가 Refresh Token DB에서 삭제 + 쿠키 만료
-      // 클라이언트는 Access Token만 지우면 됨
-      localStorage.removeItem('accessToken');
-
-      // ✅ 상태 갱신해서 버튼 바꿔주기
-      isLoggedIn = false;
-
-      alert('로그아웃 완료!');
-      goto('/'); // 필요하면 메인으로 이동
-    } catch (err) {
-      console.error('🚫 로그아웃 에러:', err);
-      alert('네트워크 오류! 다시 시도해주세요.');
-    }
-  }
+ import { User } from 'lucide-svelte';
 
   const studies = [
     {
@@ -75,40 +28,6 @@
     },
   ];
 </script>
-
-<div class="min-h-screen bg-gray-50">
-  <!-- ✅ 헤더 -->
-  <header class="bg-white shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-16">
-        <div class="flex items-center">
-          <h1 class="text-2xl font-bold text-blue-600">StudyLink</h1>
-        </div>
-        <div class="flex items-center space-x-2">
-          <button class="px-4 py-1 text-sm rounded-full border border-gray-300 bg-white shadow-sm hover:bg-gray-50">
-            팀원 모집
-          </button>
-
-          <!-- ✅ 로그인 상태에 따라 버튼 변경 -->
-          {#if isLoggedIn}
-            <button
-              class="px-4 py-1 text-sm rounded-full bg-gray-600 text-white shadow hover:bg-gray-700"
-              on:click={handleLogout}
-            >
-              로그아웃
-            </button>
-          {:else}
-            <button
-              class="px-4 py-1 text-sm rounded-full bg-blue-600 text-white shadow hover:bg-blue-700"
-              on:click={handleLogin}
-            >
-              로그인
-            </button>
-          {/if}
-        </div>
-      </div>
-    </div>
-  </header>
 
   <!-- ✅ 메인 콘텐츠 -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -168,19 +87,3 @@
       {/each}
     </div>
   </main>
-
-  <!-- 푸터 -->
-  <footer class="bg-white border-t mt-20">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div class="text-center space-y-2">
-        <p class="text-gray-600">
-          Contact us:
-          <a href="mailto:nived3@naver.com" class="text-blue-600 hover:underline">
-            nived3@naver.com
-          </a>
-        </p>
-        <p class="text-gray-500">함께 성장하는 스터디 플랫폼 © 2025 StudyLink</p>
-      </div>
-    </div>
-  </footer>
-</div>
