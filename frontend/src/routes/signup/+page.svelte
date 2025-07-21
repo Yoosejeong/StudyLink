@@ -32,25 +32,6 @@
 <!-- ✅ 전체 페이지 -->
 <div class="min-h-screen flex flex-col bg-gray-50">
 
-  <!-- ✅ 헤더 -->
-  <header class="bg-white shadow-sm border-b">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-16">
-        <div class="flex items-center">
-          <a href="/" class="text-2xl font-bold text-blue-600">StudyLink</a>
-        </div>
-        <div class="flex items-center space-x-4">
-          <a href="/" class="px-4 py-1 text-sm rounded-full border border-gray-300 bg-white shadow-sm hover:bg-gray-50">
-            팀원 모집
-          </a>
-          <a href="/auth" class="px-4 py-1 text-sm rounded-full bg-blue-600 text-white shadow hover:bg-blue-700">
-            로그인
-          </a>
-        </div>
-      </div>
-    </div>
-  </header>
-
   <!-- ✅ 메인 회원가입 폼 -->
   <main class="flex-1 flex items-center justify-center px-4 py-12">
     <div class="w-full max-w-md bg-white p-8 rounded-lg shadow">
@@ -121,20 +102,5 @@
       </div>
     </div>
   </main>
-
-  <!-- ✅ 푸터 -->
-  <footer class="bg-white border-t mt-20">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div class="text-center space-y-2">
-        <p class="text-gray-600">
-          Contact us:
-          <a href="mailto:nived3@naver.com" class="text-blue-600 hover:underline">
-            nived3@naver.com
-          </a>
-        </p>
-        <p class="text-gray-500">함께 성장하는 스터디 플랫폼 © 2025 StudyLink</p>
-      </div>
-    </div>
-  </footer>
 
 </div>
