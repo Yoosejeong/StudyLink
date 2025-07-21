@@ -4,6 +4,10 @@
 
   export let handleLogin: () => void;
   export let handleLogout: () => Promise<void>;
+
+  function goToCreatePage() {
+    goto('/studies/new')
+  }
 </script>
 
 <header class="bg-white shadow-sm">
@@ -20,6 +24,7 @@
       <div class="flex items-center space-x-2">
         <button 
           class="px-4 py-1 text-sm rounded-full border border-gray-300 bg-white shadow-sm hover:bg-gray-50"
+          on:click={goToCreatePage}
         >
           팀원 모집
         </button>
