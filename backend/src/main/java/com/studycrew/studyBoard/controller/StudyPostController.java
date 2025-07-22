@@ -86,7 +86,7 @@ public class StudyPostController {
 
     @Operation(summary = "스터디 모집글 목록 조회", description = "스터디 모집글을 페이징하여 조회합니다.")
     @GetMapping("/api/study-posts")
-    public ApiResponse<Page<StudyPostResponseDTO.GetStudyPostListResponse>> getStudyPostList(@PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+    public ApiResponse<Page<StudyPostResponseDTO.GetStudyPostListResponse>> getStudyPostList(@PageableDefault(size = 9, sort = "createdAt", direction = Sort.Direction.DESC)
                                                             Pageable pageable) {
         Page<GetStudyPostListResponse> studyPostList = studyPostQueryService.getStudyPostList(pageable);
         return ApiResponse.of(SuccessStatus._STUDY_POST_LIST_RETRIEVED, studyPostList);
