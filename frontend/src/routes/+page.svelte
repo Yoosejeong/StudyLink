@@ -1,32 +1,19 @@
 <script lang="ts">
- import { User } from 'lucide-svelte';
+  import { User } from 'lucide-svelte';
+  export let data;
+  console.log('✅ data:', data);
 
-  const studies = [
-    {
-      id: 1,
-      title: "프론트엔드 스터디 팀원 모집합니다",
-      author: "프론트마스터",
-      tags: ["스터디"],
-    },
-    {
-      id: 2,
-      title: "React & TypeScript 스터디 함께해요",
-      author: "타입러버",
-      tags: ["스터디"],
-    },
-    {
-      id: 3,
-      title: "백엔드 개발 스터디 (Spring Boot)",
-      author: "백엔드지존",
-      tags: ["스터디"],
-    },
-    {
-      id: 4,
-      title: "알고리즘 코딩테스트 스터디 모집",
-      author: "알고리즘왕",
-      tags: ["스터디"],
-    },
-  ];
+  interface Study {
+    studyPostId: number;
+    title: string;
+    nickname: string;
+    maxPeople: number;
+    acceptedPeople: number;
+    studyStatus: 'RECRUITING' | 'CLOSED';
+    updatedAt: string;
+  }
+
+  const studies: Study[] = data.studies?.result?.content ?? [];
 </script>
 
   <!-- ✅ 메인 콘텐츠 -->
@@ -68,22 +55,25 @@
     </div>
 
     <!-- 스터디 카드 그리드 -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {#each studies as study (study.id)}
-        <div class="border rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer">
-          <div class="mb-3">
-            <span class="inline-block bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">
-              {study.tags[0]}
-            </span>
-          </div>
-          <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2 leading-tight">
-            {study.title}
-          </h3>
-          <div class="flex items-center">
-            <User class="w-4 h-4 text-blue-600" />
-            <span class="ml-1 text-sm font-medium text-gray-700">{study.author}</span>
-          </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    {#each studies as study (study.studyPostId)}
+      <div class="border rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer">
+        <div class="mb-3">
+          <span class="inline-block bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">
+            {study.studyStatus}
+          </span>
         </div>
-      {/each}
-    </div>
-  </main>
+        <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2 leading-tight">
+          {study.title}
+        </h3>
+        <div class="flex items-center mb-1 text-sm text-gray-600">
+          <User class="w-4 h-4 text-blue-600" />
+          <span class="ml-1 font-medium">{study.nickname}</span>
+        </div>
+        <div class="text-sm text-gray-500">
+          인원 {study.acceptedPeople} / {study.maxPeople}
+        </div>
+      </div>
+    {/each}
+  </div>
+</main>
