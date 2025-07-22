@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { User } from 'lucide-svelte';
+  import { onDestroy } from 'svelte';
+  import { page } from '$app/stores';
   import { goto } from '$app/navigation';
-  export let data;
+  import { User } from 'lucide-svelte';
 
   interface Study {
     studyPostId: number;
@@ -13,20 +14,45 @@
     updatedAt: string;
   }
 
-  const studies: Study[] = data.studies?.result?.content ?? [];
+  let studies: Study[] = [];
+  let totalPages = 1;
+  let currentPage = 0;
+
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
+
+  const unsubscribe = page.subscribe(async ($page) => {
+    const pageParam = Number($page.url.searchParams.get('page') ?? '0');
+    currentPage = pageParam;
+
+    try {
+      const res = await fetch(`${baseUrl}/api/study-posts?page=${pageParam}`);
+      const data = await res.json();
+
+      studies = data.result?.content ?? [];
+      totalPages = data.result?.totalPages ?? 1;
+    } catch (err) {
+      console.error('❌ 목록 불러오기 실패', err);
+    }
+  });
+
+  onDestroy(() => {
+    unsubscribe();
+  });
 
   function goToDetail(id: number) {
     goto(`/studies/${id}`);
   }
+
+  function goToPage(page: number) {
+    goto(`/?page=${page}`);
+  }
 </script>
 
-  <!-- ✅ 메인 콘텐츠 -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-  <!-- 히어로 섹션 -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <!-- 히어로 -->
   <div class="bg-gradient-to-r from-yellow-300 to-yellow-400 rounded-3xl mx-4 mb-16 overflow-hidden">
     <div class="relative px-8 py-12 md:px-16 md:py-16">
       <div class="flex flex-col lg:flex-row items-center justify-between">
-        <!-- 왼쪽 콘텐츠 -->
         <div class="flex-1 mb-8 lg:mb-0">
           <div class="inline-block bg-pink-400 text-white px-4 py-2 rounded-full text-sm font-medium mb-4">
             JOIN US
@@ -34,8 +60,6 @@
           <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Grow Together! 🤍</h2>
           <p class="text-lg md:text-xl text-gray-700 max-w-lg">원하는 스터디에 지원하고, 함께 성장하세요!</p>
         </div>
-
-        <!-- 오른쪽 채팅 UI -->
         <div class="flex-1 relative max-w-md">
           <div class="absolute -top-4 -right-4 bg-white rounded-full p-3 shadow-lg">
             <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">📢</div>
@@ -58,7 +82,7 @@
     </div>
   </div>
 
-  <!-- 스터디 카드 그리드 -->
+  <!-- ✅ 스터디 목록 카드 -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
     {#each studies as study (study.studyPostId)}
       <div
@@ -81,6 +105,21 @@
           인원 {study.acceptedPeople} / {study.maxPeople}
         </div>
       </div>
+    {/each}
+  </div>
+
+  <!-- ✅ 페이지버튼 -->
+  <div class="mt-10 flex justify-center gap-2">
+    {#each Array(totalPages).fill(0).map((_, i) => i) as page}
+      <button
+        on:click={() => goToPage(page)}
+        class="px-4 py-2 border rounded"
+        class:bg-blue-500={page === currentPage}
+        class:text-white={page === currentPage}
+        class:text-gray-800={page !== currentPage}
+      >
+        {page + 1}
+      </button>
     {/each}
   </div>
 </main>
