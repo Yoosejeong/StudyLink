@@ -137,10 +137,16 @@
       on:click={() => goToDetail(study.studyPostId)}
     >
       <div class="mb-3">
-          <span class="inline-block bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">
-            {study.studyStatus}
-          </span>
-        </div>
+        <span
+          class="inline-block px-2 py-1 rounded text-xs"
+          class:bg-yellow-100={study.studyStatus === 'RECRUITING'}
+          class:text-yellow-800={study.studyStatus === 'RECRUITING'}
+          class:bg-gray-300={study.studyStatus === 'CLOSED'}
+          class:text-gray-800={study.studyStatus === 'CLOSED'}
+        >
+          {study.studyStatus}
+        </span>
+      </div>
       <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2 leading-tight">
         {study.title}
       </h3>
