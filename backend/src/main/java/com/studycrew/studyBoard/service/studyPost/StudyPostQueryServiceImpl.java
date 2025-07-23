@@ -4,7 +4,9 @@ import com.studycrew.studyBoard.apiPayload.code.status.ErrorStatus;
 import com.studycrew.studyBoard.apiPayload.exception.handler.StudyPostHandler;
 import com.studycrew.studyBoard.converter.StudyPostConverter;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO;
+import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.GetStudyPostListResponse;
 import com.studycrew.studyBoard.entity.StudyPost;
+import com.studycrew.studyBoard.enums.StudyStatus;
 import com.studycrew.studyBoard.repository.StudyPostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -26,8 +28,7 @@ public class StudyPostQueryServiceImpl implements StudyPostQueryService {
     }
 
     @Override
-    public Page<StudyPostResponseDTO.GetStudyPostListResponse> getStudyPostList(Pageable pageable) {
-        return studyPostRepository.findAllByDeletedFalse(pageable)
-                .map(StudyPostConverter::toGetStudyPostList);
+    public Page<GetStudyPostListResponse> getStudyPostList(StudyStatus status, Pageable pageable) {
+        return studyPostRepository.searchByStatusAndNotDeleted(status, pageable);
     }
 }
