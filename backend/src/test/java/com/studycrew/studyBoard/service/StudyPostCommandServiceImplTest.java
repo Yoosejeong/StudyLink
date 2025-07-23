@@ -129,8 +129,9 @@ class StudyPostCommandServiceImplTest {
             studyPostRepository.save(getStudyPost(user, i));
         }
 
+        StudyStatus status = null;
         Pageable pageable = PageRequest.of(0, 10);
-        Page<GetStudyPostListResponse> studyPostList = studyPostQueryService.getStudyPostList(pageable);
+        Page<GetStudyPostListResponse> studyPostList = studyPostQueryService.getStudyPostList(status, pageable);
         assertThat(studyPostList.getTotalElements()).isEqualTo(3);
 
     }
@@ -207,6 +208,25 @@ class StudyPostCommandServiceImplTest {
 
         assertThat(studyApplication.getApplicationStatus()).isEqualTo(ApplicationStatus.REJECTED);
 
+    }
+
+    @Test
+    void 스터디글_모집중만_전체조회() {
+        User user = getUser();
+        userRepository.save(user);
+        StudyPost studyPost = getStudyPost(user, 1);
+        studyPostRepository.save(studyPost);
+
+        StudyPost studyPost2 = getStudyPost(user, 2);
+        studyPostRepository.save(studyPost2);
+
+        studyPostCommandService.closeStudyPost(studyPost2.getId(), user);
+
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<GetStudyPostListResponse> studyPostList = studyPostQueryService.getStudyPostList(StudyStatus.RECRUITING,
+                pageable);
+
+        assertThat(studyPostList.getTotalElements()).isEqualTo(1);
     }
 
     private static User getUser() {
