@@ -17,6 +17,7 @@
   let studies: Study[] = [];
   let totalPages = 1;
   let currentPage = 0;
+  let currentStatus: string | null = null;  // 상태 필터 ('RECRUITING' or null)
 
   const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -24,8 +25,17 @@
     const pageParam = Number($page.url.searchParams.get('page') ?? '0');
     currentPage = pageParam;
 
+    const statusParam = $page.url.searchParams.get('status');
+    currentStatus = statusParam;
+
     try {
-      const res = await fetch(`${baseUrl}/api/study-posts?page=${pageParam}`);
+      // status 쿼리 파라미터가 있을 때만 붙임
+      const url = new URL(`${baseUrl}/api/study-posts`);
+      url.searchParams.set('page', String(pageParam));
+      if (statusParam) {
+        url.searchParams.set('status', statusParam);
+      }
+      const res = await fetch(url.toString());
       const data = await res.json();
 
       studies = data.result?.content ?? [];
@@ -43,10 +53,27 @@
     goto(`/studies/${id}`);
   }
 
+  // 페이지 이동 시 현재 상태 필터 유지해서 쿼리 업데이트
   function goToPage(page: number) {
-    goto(`/?page=${page}`);
+    const params = new URLSearchParams();
+    params.set('page', String(page));
+    if (currentStatus) {
+      params.set('status', currentStatus);
+    }
+    goto(`/?${params.toString()}`);
+  }
+
+  // 상태 필터 버튼 클릭 핸들러
+  function filterByStatus(status: string | null) {
+    const params = new URLSearchParams();
+    params.set('page', '0');  // 필터 변경 시 첫 페이지로 이동
+    if (status) {
+      params.set('status', status);
+    }
+    goto(`/?${params.toString()}`);
   }
 </script>
+
 
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
   <!-- 히어로 -->
@@ -82,44 +109,71 @@
     </div>
   </div>
 
+  <div class="mb-6 flex gap-4 justify-center">
+  <button
+    on:click={() => filterByStatus(null)}
+    class="px-4 py-2 rounded border"
+    class:bg-blue-500={!currentStatus}
+    class:text-white={!currentStatus}
+  >
+    전체보기
+  </button>
+  <button
+    on:click={() => filterByStatus('RECRUITING')}
+    class="px-4 py-2 rounded border"
+    class:bg-blue-500={currentStatus === 'RECRUITING'}
+    class:text-white={currentStatus === 'RECRUITING'}
+  >
+    모집중만 보기
+  </button>
+</div>
+
   <!-- ✅ 스터디 목록 카드 -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-    {#each studies as study (study.studyPostId)}
-      <div
-        class="border rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer"
-        on:click={() => goToDetail(study.studyPostId)}
-      >
-        <div class="mb-3">
-          <span class="inline-block bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">
-            {study.studyStatus}
-          </span>
-        </div>
-        <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2 leading-tight">
-          {study.title}
-        </h3>
-        <div class="flex items-center mb-1 text-sm text-gray-600">
-          <User class="w-4 h-4 text-blue-600" />
-          <span class="ml-1 font-medium">{study.nickname}</span>
-        </div>
-        <div class="text-sm text-gray-500">
-          인원 {study.acceptedPeople} / {study.maxPeople}
-        </div>
+  {#each studies as study (study.studyPostId)}
+    <button
+      type="button"
+      class="w-full text-left border rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer"
+      on:click={() => goToDetail(study.studyPostId)}
+    >
+      <div class="mb-3">
+        <span
+          class="inline-block px-2 py-1 rounded text-xs"
+          class:bg-yellow-100={study.studyStatus === 'RECRUITING'}
+          class:text-yellow-800={study.studyStatus === 'RECRUITING'}
+          class:bg-gray-300={study.studyStatus === 'CLOSED'}
+          class:text-gray-800={study.studyStatus === 'CLOSED'}
+        >
+          {study.studyStatus}
+        </span>
       </div>
-    {/each}
-  </div>
+      <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2 leading-tight">
+        {study.title}
+      </h3>
+      <div class="flex items-center mb-1 text-sm text-gray-600">
+        <User class="w-4 h-4 text-blue-600" />
+        <span class="ml-1 font-medium">{study.nickname}</span>
+      </div>
+      <div class="text-sm text-gray-500">
+        인원 {study.acceptedPeople} / {study.maxPeople}
+      </div>
+    </button>
+  {/each}
+</div>
+
 
   <!-- ✅ 페이지버튼 -->
   <div class="mt-10 flex justify-center gap-2">
-    {#each Array(totalPages).fill(0).map((_, i) => i) as page}
-      <button
-        on:click={() => goToPage(page)}
-        class="px-4 py-2 border rounded"
-        class:bg-blue-500={page === currentPage}
-        class:text-white={page === currentPage}
-        class:text-gray-800={page !== currentPage}
-      >
-        {page + 1}
-      </button>
-    {/each}
-  </div>
+  {#each Array(totalPages).fill(0).map((_, i) => i) as page}
+    <button
+      on:click={() => goToPage(page)}
+      class="px-4 py-2 border rounded"
+      class:bg-blue-500={page === currentPage}
+      class:text-white={page === currentPage}
+      class:text-gray-800={page !== currentPage}
+    >
+      {page + 1}
+    </button>
+  {/each}
+</div>
 </main>
