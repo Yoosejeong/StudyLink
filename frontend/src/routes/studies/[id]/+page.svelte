@@ -96,11 +96,34 @@
     goto(`/studies/${studyPostId}/edit`);
   }
 
-  function handleDelete() {
-    if (confirm('정말 삭제하시겠습니까?')) {
-      alert('삭제 로직은 아직 구현되지 않았습니다.');
+  async function handleDelete() {
+  const confirmed = confirm('정말 삭제하시겠습니까?');
+  if (!confirmed) return;
+
+  try {
+    const token = localStorage.getItem('accessToken') || '';
+    const accessToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+
+    const res = await fetch(`${apiBaseUrl}/api/study-posts/${studyPostId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: accessToken,
+      }
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      alert(`삭제 실패: ${errorData.message || res.status}`);
+      return;
     }
+
+    alert('삭제가 완료되었습니다.');
+    goto('/');
+  } catch (err) {
+    console.error('삭제 요청 오류:', err);
+    alert('네트워크 오류로 삭제에 실패했습니다.');
   }
+}
 </script>
 
 {#if isLoading}
