@@ -9,11 +9,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface StudyPostRepository extends JpaRepository<StudyPost, Long> {
-
-
-    @EntityGraph(attributePaths = {"user"})
-    Page<StudyPost> findAllByDeletedFalse(Pageable pageable);
-
+public interface StudyPostRepository extends StudyPostRepositoryCustom, JpaRepository<StudyPost, Long> {
     Optional<StudyPost> findByIdAndDeletedFalse(Long id);
 }
