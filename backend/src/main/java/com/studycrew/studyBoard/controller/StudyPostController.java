@@ -11,6 +11,7 @@ import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.GetStudyPo
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.GetStudyPostListResponse;
 import com.studycrew.studyBoard.entity.StudyPost;
 import com.studycrew.studyBoard.entity.User;
+import com.studycrew.studyBoard.enums.StudyStatus;
 import com.studycrew.studyBoard.service.studyPost.StudyPostCommandService;
 import com.studycrew.studyBoard.service.studyPost.StudyPostQueryService;
 import com.studycrew.studyBoard.service.user.UserQueryService;
@@ -30,6 +31,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "스터디 모집글", description = "스터디 모집글 관련 API")
@@ -86,9 +88,10 @@ public class StudyPostController {
 
     @Operation(summary = "스터디 모집글 목록 조회", description = "스터디 모집글을 페이징하여 조회합니다.")
     @GetMapping("/api/study-posts")
-    public ApiResponse<Page<StudyPostResponseDTO.GetStudyPostListResponse>> getStudyPostList(@PageableDefault(size = 9, sort = "createdAt", direction = Sort.Direction.DESC)
+    public ApiResponse<Page<StudyPostResponseDTO.GetStudyPostListResponse>> getStudyPostList(@RequestParam(required = false) StudyStatus status,
+                                                                                             @PageableDefault(size = 9)
                                                             Pageable pageable) {
-        Page<GetStudyPostListResponse> studyPostList = studyPostQueryService.getStudyPostList(pageable);
+        Page<GetStudyPostListResponse> studyPostList = studyPostQueryService.getStudyPostList(status, pageable);
         return ApiResponse.of(SuccessStatus._STUDY_POST_LIST_RETRIEVED, studyPostList);
     }
 
