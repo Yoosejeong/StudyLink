@@ -46,6 +46,10 @@ Thumbs.db
 /backend/.springBeans
 /backend/.sts4-cache
 /backend/bin/
+/backend/src/main/resources/application.yml
+/backend/src/main/resources/application-*.yml
+/backend/src/main/resources/application.properties
+/backend/src/main/resources/application-*.properties
 
 # Gradle wrapper는 포함
 !/backend/gradle/wrapper/gradle-wrapper.jar
