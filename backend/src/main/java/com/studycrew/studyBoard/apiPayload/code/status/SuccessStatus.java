@@ -33,7 +33,8 @@ public enum SuccessStatus implements BaseCode {
     _STUDY_APPLICANT_LIST_RETRIEVED(HttpStatus.OK, "APPLICATION2000", "스터디 지원자 목록을 성공적으로 조회했습니다."),
     _STUDY_APPLICATION_MY_LIST_RETRIEVED(HttpStatus.OK, "APPLICATION2001", "회원이 지원한 스터디 목록을 성공적으로 조회했습니다."),
     _STUDY_APPLICATION_APPROVED(HttpStatus.OK, "APPLICATION2002", "스터디 신청이 승인되었습니다."),
-    _STUDY_APPLICATION_REJECT(HttpStatus.OK,"APPLICATION2003","스터디 신청이 거절되었습니다.");
+    _STUDY_APPLICATION_REJECT(HttpStatus.OK,"APPLICATION2003","스터디 신청이 거절되었습니다."),
+    _STUDY_APPLICATION_EXISTENCE(HttpStatus.OK, "APPLICATION2004", "스터디 지원 여부 조회를 성공했습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
