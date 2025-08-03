@@ -4,6 +4,7 @@ import com.studycrew.studyBoard.apiPayload.ApiResponse;
 import com.studycrew.studyBoard.apiPayload.code.status.SuccessStatus;
 import com.studycrew.studyBoard.converter.StudyApplicationConverter;
 import com.studycrew.studyBoard.dto.CustomUserDetails;
+import com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationResponseDTO;
 import com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationResponseDTO.MyStudyApplicationResponse;
 import com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationResponseDTO.StudyApplicationApproveResponse;
 import com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationResponseDTO.StudyApplicationListResponse;
@@ -20,11 +21,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "스터디 신청", description = "스터디 신청 관련 API")
 @RestController
@@ -91,5 +88,15 @@ public class StudyApplicationController {
                 user);
         StudyApplicationRejectResponse responseDTO = StudyApplicationConverter.toRejectResponse(studyApplication);
         return ApiResponse.of(SuccessStatus._STUDY_APPLICATION_REJECT, responseDTO);
+    }
+
+    @Operation(summary = "스터디 지원 여부 조회", description = "")
+    @GetMapping("/api/study-applications/check")
+    public ApiResponse<StudyApplicationResponseDTO.HasAppliedResponse> hasUserApplied(@RequestParam("studyPostId") Long studyPostId, @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        String email = customUserDetails.getUsername();
+        User user = userQueryService.getUserByEmail(email);
+        StudyApplicationResponseDTO.HasAppliedResponse responseDTO = studyApplicationQueryService.hasUserApplied(user.getId(),
+                studyPostId);
+        return ApiResponse.of(SuccessStatus._STUDY_APPLICATION_EXISTENCE, responseDTO);
     }
 }
