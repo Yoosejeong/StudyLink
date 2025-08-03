@@ -64,4 +64,14 @@ public class StudyApplicationResponseDTO {
         private Long studyApplicationId;
         private ApplicationStatus applicationStatus;
     }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class HasAppliedResponse {
+        private boolean hasApplied;
+        private ApplicationStatus applicationStatus;
+    }
+
 }
