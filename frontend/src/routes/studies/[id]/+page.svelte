@@ -28,6 +28,9 @@
   let isLoading = true;
   let errorMessage = '';
   $: studyPostId = $page.params.id;
+  let hasApplied = false;
+  let applicationStatus: string | null = null;
+
 
   onMount(async () => {
     if (!get(isLoggedIn)) {
@@ -38,6 +41,7 @@
 
     await fetchUser();
     await fetchStudyPost();
+    await checkApplicationStatus();
   });
 
   async function fetchUser() {
@@ -62,6 +66,57 @@
       console.error('유저 정보 요청 실패', err);
     }
   }
+
+  async function handleApply() {
+  try {
+    const token = localStorage.getItem('accessToken') || '';
+    const accessToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+
+    const res = await fetch(`${apiBaseUrl}/api/study-posts/${studyPostId}/applications`, { // ✅ 경로 수정
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: accessToken
+      }
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      alert(`지원 실패: ${errorData.message || res.status}`);
+      return;
+    }
+
+    alert('지원이 완료되었습니다.');
+    await checkApplicationStatus(); 
+  } catch (err) {
+    console.error('지원 요청 오류', err);
+    alert('네트워크 오류로 지원에 실패했습니다.');
+  }
+}
+
+  async function checkApplicationStatus() {
+  try {
+    const token = localStorage.getItem('accessToken') || '';
+    const accessToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+
+    const res = await fetch(`${apiBaseUrl}/api/study-applications/check?studyPostId=${studyPostId}`, {
+      headers: {
+        Authorization: accessToken,
+      },
+      credentials: 'include',
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      hasApplied = data.result.hasApplied;
+      applicationStatus = data.result.applicationStatus;
+    } else {
+      console.error('지원 여부 확인 실패');
+    }
+  } catch (err) {
+    console.error('지원 여부 요청 오류', err);
+  }
+}
 
   async function fetchStudyPost() {
     try {
@@ -132,7 +187,17 @@
   <p class="text-center mt-10 text-red-500">{errorMessage}</p>
 {:else if studyPost}
   <div class="max-w-3xl mx-auto px-4 py-12">
-    <div class="bg-white shadow-md rounded-lg p-8">
+    <div class="bg-white shadow-md rounded-lg p-8 relative">
+      <!-- ✅ 오른쪽 상단 버튼 (자기 글만) -->
+      {#if currentUserNickname === studyPost.nickname}
+  <button
+    class="absolute top-4 right-4 px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-white hover:bg-gray-100 shadow-sm flex items-center gap-1 transition"
+    on:click={() => goto(`/studies/${studyPostId}/applications`)}
+  >
+    👥 지원자 목록
+  </button>
+{/if}
+
       <h1 class="text-3xl font-bold text-gray-900 mb-2">{studyPost.title}</h1>
       <p class="text-gray-600 mb-6">
         작성자: <span class="font-medium">{studyPost.nickname}</span> |
@@ -186,6 +251,24 @@
               삭제하기
             </button>
           </div>
+        {:else}
+          {#if hasApplied}
+            <div class="flex items-center space-x-3 bg-green-50 border border-green-300 px-4 py-2 rounded-lg">
+              <span class="text-green-600 font-semibold">이미 지원한 스터디입니다.</span>
+              {#if applicationStatus}
+                <span class="text-sm text-green-600 bg-white px-2 py-0.5 rounded-full border border-green-300">
+                  상태: {applicationStatus}
+                </span>
+              {/if}
+            </div>
+          {:else if studyPost.studyStatus === 'RECRUITING'}
+            <button
+              class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              on:click={handleApply}
+            >
+              지원하기
+            </button>
+          {/if}
         {/if}
       </div>
     </div>
