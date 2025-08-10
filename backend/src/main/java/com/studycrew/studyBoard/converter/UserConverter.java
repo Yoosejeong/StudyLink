@@ -6,10 +6,10 @@ import com.studycrew.studyBoard.entity.User;
 
 public class UserConverter {
 
-    public static UserResponseDTO.getUserDTO togetUserDTO(User user){
+    public static UserResponseDTO.getUserDTO toGetUserDTO(User user){
         return UserResponseDTO.getUserDTO
                 .builder()
-                .user_id(user.getId())
+                .userId(user.getId())
                 .email(user.getEmail())
                 .nickname(user.getNickname())
                 .username(user.getUsername())
