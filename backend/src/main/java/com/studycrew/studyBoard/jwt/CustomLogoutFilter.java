@@ -57,13 +57,6 @@ public class CustomLogoutFilter extends GenericFilterBean {
             }
         }
 
-        //refresh 토큰이 없을 경우 BAD_REQUEST 응답
-        if (refresh == null) {
-
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
-
         //refresh 토큰 만료 확인
         try {
             jwtUtil.isExpired(refresh);
