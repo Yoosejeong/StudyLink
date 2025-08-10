@@ -8,26 +8,27 @@
   let password = '';
   let errorMessage = '';
 
-  async function handleLogin(e) {
-    e.preventDefault();
+  async function handleLogin() {
     const res = await fetch(`${apiBaseUrl}/api/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-      credentials: 'include'
+      credentials: 'include',              
+      body: JSON.stringify({ email, password })
     });
 
     if (!res.ok) {
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       errorMessage = data.message || '로그인 실패';
       return;
     }
 
-    const token = res.headers.get('Authorization');
+    const raw = res.headers.get('Authorization');
+    const token = raw?.startsWith('Bearer ') ? raw.slice('Bearer '.length) : raw;
     if (token) {
       localStorage.setItem('accessToken', token);
       isLoggedIn.set(true);
     }
+
     goto('/');
   }
 </script>
