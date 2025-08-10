@@ -12,7 +12,7 @@ public class UserResponseDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class getUserDTO{
-        private Long user_id;
+        private Long userId;
         private String email;
         private String username;
         private String nickname;
