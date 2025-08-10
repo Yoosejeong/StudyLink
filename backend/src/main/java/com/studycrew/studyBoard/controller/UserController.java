@@ -44,7 +44,7 @@ public class UserController {
     public ApiResponse<getUserDTO> getUser(@AuthenticationPrincipal CustomUserDetails userDetails){
         String email = userDetails.getUsername();
         User user = userQueryService.getUserByEmail(email);
-        getUserDTO getUserDTO = UserConverter.togetUserDTO(user);
+        getUserDTO getUserDTO = UserConverter.toGetUserDTO(user);
         return ApiResponse.onSuccess(getUserDTO);
     }
 
