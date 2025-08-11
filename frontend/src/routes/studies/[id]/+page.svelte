@@ -140,6 +140,26 @@
     }
   }
 
+  async function handleCloseRecruitment() {
+  const ok = confirm('정말 모집을 종료하시겠습니까?');
+  if (!ok) return;
+
+  try {
+    const res = await http.patch(`/api/study-posts/${studyPostId}/close`);
+    if (!res.ok) {
+      const err = await safeJson(res);
+      alert(`모집 종료 실패: ${err?.message || res.status}`);
+      return;
+    }
+    alert('모집이 종료되었습니다.');
+    // UI 갱신
+    if (studyPost) studyPost.studyStatus = 'CLOSED';
+  } catch (e) {
+    console.error('모집 종료 요청 오류:', e);
+    alert('네트워크 오류로 모집 종료에 실패했습니다.');
+  }
+}
+
   // 204 등 본문 없는 응답 대비
   async function safeJson(res: Response) {
     const text = await res.text();
@@ -158,12 +178,23 @@
     <div class="bg-white shadow-md rounded-lg p-8 relative">
       <!-- ✅ 오른쪽 상단 버튼 (자기 글만) -->
       {#if currentUserId === studyPost.userId}
-  <button
-    class="absolute top-4 right-4 px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-white hover:bg-gray-100 shadow-sm flex items-center gap-1 transition"
-    on:click={() => goto(`/studies/${studyPostId}/applications`)}
-  >
-    👥 지원자 목록
-  </button>
+  <div class="absolute top-4 right-4 z-10 flex items-center gap-2">
+    <button
+      class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-white hover:bg-gray-100 shadow-sm flex items-center gap-1 transition"
+      on:click={() => goto(`/studies/${studyPostId}/applications`)}
+    >
+      👥 지원자 목록
+    </button>
+
+    {#if studyPost.studyStatus === 'RECRUITING'}
+      <button
+        class="px-3 py-1.5 text-sm border border-red-300 rounded-lg bg-white hover:bg-red-50 text-red-600 shadow-sm transition"
+        on:click={handleCloseRecruitment}
+      >
+        🔒 모집 종료하기
+      </button>
+    {/if}
+  </div>
 {/if}
 
       <h1 class="text-3xl font-bold text-gray-900 mb-2">{studyPost.title}</h1>
@@ -204,7 +235,7 @@
           목록으로 돌아가기
         </button>
 
-        {#if currentUserNickname === studyPost.nickname}
+        {#if currentUserId === studyPost.userId}
           <div class="flex space-x-3">
             <button
               class="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300"
