@@ -4,13 +4,14 @@
   import { goto } from '$app/navigation';
   import { get } from 'svelte/store';
   import { isLoggedIn } from '$lib/stores/auth';
-
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+  import { http } from '$lib/api/http';
+  import { registerOnReissueFail } from '$lib/api/fetchWithAuth';
 
   type StudyPost = {
     studyPostId: number;
     title: string;
-    nickname: string; // ✅ 작성자 닉네임
+    userId : number;
+    nickname: string;
     content: string;
     maxPeople: number;
     acceptedPeople: number;
@@ -20,10 +21,12 @@
   };
 
   type CurrentUser = {
-    nickname: string; // ✅ 로그인한 유저 닉네임
+    userId: number;
+    nickname: string;
   };
 
   let studyPost: StudyPost | null = null;
+  let currentUserId: number | null = null;
   let currentUserNickname: string | null = null;
   let isLoading = true;
   let errorMessage = '';
@@ -31,6 +34,12 @@
   let hasApplied = false;
   let applicationStatus: string | null = null;
 
+  registerOnReissueFail(() => {
+    localStorage.removeItem('accessToken');
+    isLoggedIn.set(false);
+    alert('세션이 만료되었습니다. 다시 로그인해주세요.');
+    goto('/auth');
+  });
 
   onMount(async () => {
     if (!get(isLoggedIn)) {
@@ -44,23 +53,19 @@
     await checkApplicationStatus();
   });
 
+  function handleEdit() {
+  goto(`/studies/${studyPostId}/edit`);
+  }
+
   async function fetchUser() {
     try {
-      const token = localStorage.getItem('accessToken') || '';
-      const accessToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-
-      const res = await fetch(`${apiBaseUrl}/api/users`, {
-        headers: {
-          Authorization: accessToken,
-        },
-        credentials: 'include',
-      });
-
+      const res = await http.get('/api/users'); 
       if (res.ok) {
-        const data: CurrentUser = await res.json();
+        const data: { result: CurrentUser } = await res.json();
+        currentUserId = data.result.userId;
         currentUserNickname = data.result.nickname;
       } else {
-        console.error('유저 정보 조회 실패');
+        console.error('유저 정보 조회 실패', res.status);
       }
     } catch (err) {
       console.error('유저 정보 요청 실패', err);
@@ -68,75 +73,44 @@
   }
 
   async function handleApply() {
-  try {
-    const token = localStorage.getItem('accessToken') || '';
-    const accessToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-
-    const res = await fetch(`${apiBaseUrl}/api/study-posts/${studyPostId}/applications`, { // ✅ 경로 수정
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: accessToken
+    try {
+      const res = await http.post(`/api/study-posts/${studyPostId}/applications`); 
+      if (!res.ok) {
+        const errorData = await safeJson(res);
+        alert(`지원 실패: ${errorData?.message || res.status}`);
+        return;
       }
-    });
-
-    if (!res.ok) {
-      const errorData = await res.json();
-      alert(`지원 실패: ${errorData.message || res.status}`);
-      return;
+      alert('지원이 완료되었습니다.');
+      await checkApplicationStatus();
+    } catch (err) {
+      console.error('지원 요청 오류', err);
+      alert('네트워크 오류로 지원에 실패했습니다.');
     }
-
-    alert('지원이 완료되었습니다.');
-    await checkApplicationStatus(); 
-  } catch (err) {
-    console.error('지원 요청 오류', err);
-    alert('네트워크 오류로 지원에 실패했습니다.');
   }
-}
 
   async function checkApplicationStatus() {
-  try {
-    const token = localStorage.getItem('accessToken') || '';
-    const accessToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-
-    const res = await fetch(`${apiBaseUrl}/api/study-applications/check?studyPostId=${studyPostId}`, {
-      headers: {
-        Authorization: accessToken,
-      },
-      credentials: 'include',
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      hasApplied = data.result.hasApplied;
-      applicationStatus = data.result.applicationStatus;
-    } else {
-      console.error('지원 여부 확인 실패');
+    try {
+      const res = await http.get(`/api/study-applications/check?studyPostId=${studyPostId}`);
+      if (res.ok) {
+        const data = await res.json();
+        hasApplied = data.result.hasApplied;
+        applicationStatus = data.result.applicationStatus;
+      } else {
+        console.error('지원 여부 확인 실패', res.status);
+      }
+    } catch (err) {
+      console.error('지원 여부 요청 오류', err);
     }
-  } catch (err) {
-    console.error('지원 여부 요청 오류', err);
   }
-}
 
   async function fetchStudyPost() {
     try {
-      const token = localStorage.getItem('accessToken') || '';
-      const accessToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-
-      const res = await fetch(`${apiBaseUrl}/api/study-posts/${studyPostId}`, {
-        method: 'GET',
-        headers: {
-          Authorization: accessToken,
-        },
-        credentials: 'include',
-      });
-
+      const res = await http.get(`/api/study-posts/${studyPostId}`);
       if (!res.ok) {
-        const errorData = await res.json();
-        errorMessage = errorData.message || `조회 실패 (code: ${res.status})`;
+        const errorData = await safeJson(res);
+        errorMessage = errorData?.message || `조회 실패 (code: ${res.status})`;
         return;
       }
-
       const data = await res.json();
       studyPost = data.result;
     } catch (err) {
@@ -147,39 +121,33 @@
     }
   }
 
-  function handleEdit() {
-    goto(`/studies/${studyPostId}/edit`);
-  }
-
   async function handleDelete() {
-  const confirmed = confirm('정말 삭제하시겠습니까?');
-  if (!confirmed) return;
+    const confirmed = confirm('정말 삭제하시겠습니까?');
+    if (!confirmed) return;
 
-  try {
-    const token = localStorage.getItem('accessToken') || '';
-    const accessToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-
-    const res = await fetch(`${apiBaseUrl}/api/study-posts/${studyPostId}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: accessToken,
+    try {
+      const res = await http.delete(`/api/study-posts/${studyPostId}`);
+      if (!res.ok) {
+        const errorData = await safeJson(res);
+        alert(`삭제 실패: ${errorData?.message || res.status}`);
+        return;
       }
-    });
-
-    if (!res.ok) {
-      const errorData = await res.json();
-      alert(`삭제 실패: ${errorData.message || res.status}`);
-      return;
+      alert('삭제가 완료되었습니다.');
+      goto('/');
+    } catch (err) {
+      console.error('삭제 요청 오류:', err);
+      alert('네트워크 오류로 삭제에 실패했습니다.');
     }
-
-    alert('삭제가 완료되었습니다.');
-    goto('/');
-  } catch (err) {
-    console.error('삭제 요청 오류:', err);
-    alert('네트워크 오류로 삭제에 실패했습니다.');
   }
-}
+
+  // 204 등 본문 없는 응답 대비
+  async function safeJson(res: Response) {
+    const text = await res.text();
+    if (!text) return null;
+    try { return JSON.parse(text); } catch { return null; }
+  }
 </script>
+
 
 {#if isLoading}
   <p class="text-center mt-10 text-gray-500">불러오는 중...</p>
@@ -189,7 +157,7 @@
   <div class="max-w-3xl mx-auto px-4 py-12">
     <div class="bg-white shadow-md rounded-lg p-8 relative">
       <!-- ✅ 오른쪽 상단 버튼 (자기 글만) -->
-      {#if currentUserNickname === studyPost.nickname}
+      {#if currentUserId === studyPost.userId}
   <button
     class="absolute top-4 right-4 px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-white hover:bg-gray-100 shadow-sm flex items-center gap-1 transition"
     on:click={() => goto(`/studies/${studyPostId}/applications`)}
