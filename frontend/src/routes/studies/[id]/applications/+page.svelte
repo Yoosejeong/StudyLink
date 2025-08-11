@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
   import { Check, X, Calendar, User } from 'lucide-svelte';
+  import { http } from '$lib/api/http'; 
 
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
   $: studyPostId = $page.params.id;
@@ -10,35 +11,25 @@
     studyApplicationId: number;
     userId: number;
     nickname: string;
-    applicationStatus: string; 
-    appliedAt: string;         
+    applicationStatus: string;
+    appliedAt: string;
   };
 
   let applicants: Applicant[] = [];
   let isLoading = true;
   let errorMessage = '';
 
-  // ✅ 지원자 목록 불러오기
+  // ✅ 지원자 목록 불러오기 (토큰/재발급 자동)
   onMount(async () => {
     try {
-      const token = localStorage.getItem('accessToken') || '';
-      const accessToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-
-      const res = await fetch(`${apiBaseUrl}/api/study-posts/${studyPostId}/applications`, {
-        headers: {
-          Authorization: accessToken,
-        },
-        credentials: 'include'
-      });
-
+      const res = await http.get(`/api/study-posts/${studyPostId}/applications`);
       if (!res.ok) {
-        const errorData = await res.json();
-        errorMessage = errorData.message || `조회 실패 (code: ${res.status})`;
+        const err = await safeJson(res);
+        errorMessage = err?.message || `조회 실패 (code: ${res.status})`;
         return;
       }
-
       const data = await res.json();
-      applicants = data.result; 
+      applicants = data.result ?? [];
     } catch (err) {
       console.error('지원자 목록 조회 실패:', err);
       errorMessage = '네트워크 오류 발생';
@@ -46,7 +37,15 @@
       isLoading = false;
     }
   });
+
+  // 본문이 없을 수도 있으니 안전 파서
+  async function safeJson(res: Response) {
+    const text = await res.text();
+    if (!text) return null;
+    try { return JSON.parse(text); } catch { return null; }
+  }
 </script>
+
 
 {#if isLoading}
   <p class="text-center mt-10 text-gray-500">불러오는 중...</p>
