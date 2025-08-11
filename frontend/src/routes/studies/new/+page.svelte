@@ -1,13 +1,15 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
+  import { get } from 'svelte/store';
   import { isLoggedIn } from '$lib/stores/auth';
+  import { http } from '$lib/api/http'; 
 
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
   onMount(() => {
-    if (!$isLoggedIn) {
-      alert("로그인 후 작성 가능합니다.");
+    if (!get(isLoggedIn)) { 
+      alert('로그인 후 작성 가능합니다.');
       goto('/auth');
     }
   });
@@ -25,23 +27,12 @@
       maxPeople: Number(maxPeople),
     };
 
-    const rawToken = localStorage.getItem('accessToken') || '';
-    const accessToken = rawToken.startsWith('Bearer ') ? rawToken.slice(7) : rawToken;
-
     try {
-      const res = await fetch(`${apiBaseUrl}/api/study-posts`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
-        },
-        credentials: 'include',
-        body: JSON.stringify(payload),
-      });
+      const res = await http.post('/api/study-posts', payload);
 
       if (!res.ok) {
-        const errorData = await res.json();
-        alert(`오류 발생: ${errorData.message || res.status}`);
+        const errorData = await safeJson(res);
+        alert(`오류 발생: ${errorData?.message || res.status}`);
         return;
       }
 
@@ -52,6 +43,13 @@
       alert('네트워크 오류 발생');
     }
   };
+
+  // 본문이 없을 수도 있으니 안전 파서
+  async function safeJson(res: Response) {
+    const text = await res.text();
+    if (!text) return null;
+    try { return JSON.parse(text); } catch { return null; }
+  }
 </script>
 
 <div class="max-w-3xl mx-auto px-4 py-12">
