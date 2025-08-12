@@ -1,5 +1,6 @@
 package com.studycrew.studyBoard.service.studyApplication;
 
+import com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationResponseDTO;
 import com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationResponseDTO.MyStudyApplicationResponse;
 import com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationResponseDTO.StudyApplicationListResponse;
 import java.util.List;
@@ -7,4 +8,5 @@ import java.util.List;
 public interface StudyApplicationQueryService {
     List<StudyApplicationListResponse> findAllApplicants(Long studyPostId);
     List<MyStudyApplicationResponse> findMyStudyApplications(Long userId);
+    StudyApplicationResponseDTO.HasAppliedResponse hasUserApplied(Long userId, Long studyPostId);
 }

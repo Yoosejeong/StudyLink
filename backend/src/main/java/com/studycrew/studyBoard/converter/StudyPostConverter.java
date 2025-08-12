@@ -21,6 +21,7 @@ public class StudyPostConverter {
     public static StudyPostResponseDTO.GetStudyPost toGetStudyPost(StudyPost studyPost){
         return StudyPostResponseDTO.GetStudyPost.builder()
                 .studyPostId(studyPost.getId())
+                .userId(studyPost.getUser().getId())
                 .nickname(studyPost.getUser().getNickname())
                 .title(studyPost.getTitle())
                 .content(studyPost.getContent())

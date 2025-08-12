@@ -16,6 +16,7 @@ public class StudyPostResponseDTO {
     @Getter
     public static class GetStudyPost{
         private Long studyPostId;
+        private Long userId;
         private String title;
         private String nickname;
         private String content;

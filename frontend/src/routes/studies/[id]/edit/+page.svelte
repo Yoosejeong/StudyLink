@@ -2,41 +2,32 @@
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
+  import { get } from 'svelte/store';
+  import { http } from '$lib/api/http'; // ✅ reissue 자동
 
   let title = '';
   let content = '';
   let studyPostId: number;
 
-  const baseUrl = import.meta.env.VITE_API_BASE_URL;
+  // 204 등 본문 없을 때 대비
+  async function safeJson(res: Response) {
+    const text = await res.text();
+    if (!text) return null;
+    try { return JSON.parse(text); } catch { return null; }
+  }
 
   // 기존 데이터 불러오기
   onMount(async () => {
-    const id = Number($page.url.pathname.split('/')[2]);
-    studyPostId = id;
-
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      alert('로그인이 필요합니다.');
-      goto('/auth');
-      return;
-    }
-
-    const accessToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+    const idStr = get(page).params?.id ?? get(page).url.pathname.split('/')[2];
+    studyPostId = Number(idStr);
 
     try {
-      const res = await fetch(`${baseUrl}/api/study-posts/${studyPostId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': accessToken,
-          'Content-Type': 'application/json'
-        }
-      });
-
+      const res = await http.get(`/api/study-posts/${studyPostId}`);
       if (!res.ok) {
-        alert('데이터 로딩 실패');
+        const err = await safeJson(res);
+        alert(`데이터 로딩 실패: ${err?.message || res.status}`);
         return;
       }
-
       const data = await res.json();
       title = data.result.title;
       content = data.result.content;
@@ -49,28 +40,22 @@
   // 수정 요청
   async function updateStudy(e: Event) {
     e.preventDefault();
-
-    const token = localStorage.getItem('accessToken') || '';
-    const accessToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-
-    const res = await fetch(`${baseUrl}/api/study-posts/${studyPostId}`, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': accessToken,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ title, content })
-    });
-
-    if (!res.ok) {
-      alert('수정 실패');
-      return;
+    try {
+      const res = await http.patch(`/api/study-posts/${studyPostId}`, { title, content });
+      if (!res.ok) {
+        const err = await safeJson(res);
+        alert(`수정 실패: ${err?.message || res.status}`);
+        return;
+      }
+      alert('스터디 글이 수정되었습니다!');
+      goto(`/studies/${studyPostId}`);
+    } catch (err) {
+      console.error('❌ 수정 요청 오류:', err);
+      alert('네트워크 오류로 수정에 실패했습니다.');
     }
-
-    alert('스터디 글이 수정되었습니다!');
-    goto(`/studies/${studyPostId}`);
   }
 </script>
+
 
 <div class="max-w-3xl mx-auto px-4 py-12">
   <div class="bg-white shadow-md rounded-lg p-8">
