@@ -135,11 +135,11 @@
 
 
   <!-- ✅ 스터디 목록 카드 -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
   {#each studies as study (study.studyPostId)}
     <button
       type="button"
-      class="w-full text-left border rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer"
+      class="w-full text-left bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition cursor-pointer"
       on:click={() => goToDetail(study.studyPostId)}
     >
       <div class="mb-3">
@@ -166,6 +166,7 @@
     </button>
   {/each}
 </div>
+
 
 <!-- ✅ 페이지버튼 -->
 <div class="mt-10 flex justify-center gap-2">
