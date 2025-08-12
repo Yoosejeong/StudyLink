@@ -109,24 +109,30 @@
     </div>
   </div>
 
-  <div class="mb-6 flex gap-4 justify-center">
+<div class="mb-6 flex gap-4 justify-start">
+  <!-- 전체보기 -->
   <button
     on:click={() => filterByStatus(null)}
-    class="px-4 py-2 rounded border"
-    class:bg-blue-500={!currentStatus}
-    class:text-white={!currentStatus}
+    class={`flex items-center gap-2 px-6 py-3 rounded-full text-sm font-medium transition-all border-2
+      ${!currentStatus
+        ? 'bg-gray-100 border-gray-200 text-gray-800'
+        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
   >
     전체보기
   </button>
+
+  <!-- 모집중만 보기 -->
   <button
     on:click={() => filterByStatus('RECRUITING')}
-    class="px-4 py-2 rounded border"
-    class:bg-blue-500={currentStatus === 'RECRUITING'}
-    class:text-white={currentStatus === 'RECRUITING'}
+    class={`flex items-center gap-2 px-6 py-3 rounded-full text-sm font-medium transition-all border-2
+      ${currentStatus === 'RECRUITING'
+        ? 'bg-teal-50 border-teal-300 text-teal-700'
+        : 'bg-white border-teal-200 text-teal-600 hover:bg-teal-50'}`}
   >
-    모집중만 보기
+    👀 모집중만 보기
   </button>
 </div>
+
 
   <!-- ✅ 스터디 목록 카드 -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
