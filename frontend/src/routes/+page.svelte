@@ -167,19 +167,19 @@
   {/each}
 </div>
 
-
-  <!-- ✅ 페이지버튼 -->
-  <div class="mt-10 flex justify-center gap-2">
+<!-- ✅ 페이지버튼 -->
+<div class="mt-10 flex justify-center gap-2">
   {#each Array(totalPages).fill(0).map((_, i) => i) as page}
     <button
       on:click={() => goToPage(page)}
-      class="px-4 py-2 border rounded"
-      class:bg-blue-500={page === currentPage}
-      class:text-white={page === currentPage}
-      class:text-gray-800={page !== currentPage}
+      class={`px-4 py-2 border rounded transition
+        ${page === currentPage
+          ? 'border-gray-700 bg-gray-700 text-white opacity-95'
+          : 'border-gray-400 bg-gray-300 text-gray-900 opacity-95 hover:bg-gray-400'}`}
     >
       {page + 1}
     </button>
   {/each}
 </div>
+
 </main>
