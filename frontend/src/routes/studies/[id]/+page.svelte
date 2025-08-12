@@ -6,6 +6,7 @@
   import { isLoggedIn } from '$lib/stores/auth';
   import { http } from '$lib/api/http';
   import { registerOnReissueFail } from '$lib/api/fetchWithAuth';
+  import { ArrowLeft, Users, UserCheck, Flag } from 'lucide-svelte';
 
   type StudyPost = {
     studyPostId: number;
@@ -175,76 +176,113 @@
   <p class="text-center mt-10 text-red-500">{errorMessage}</p>
 {:else if studyPost}
   <div class="max-w-3xl mx-auto px-4 py-12">
-    <div class="bg-white shadow-md rounded-lg p-8 relative">
-      <!-- ✅ 오른쪽 상단 버튼 (자기 글만) -->
-      {#if currentUserId === studyPost.userId}
-  <div class="absolute top-4 right-4 z-10 flex items-center gap-2">
-    <button
-      class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-white hover:bg-gray-100 shadow-sm flex items-center gap-1 transition"
-      on:click={() => goto(`/studies/${studyPostId}/applications`)}
-    >
-      👥 지원자 목록
-    </button>
-
-    {#if studyPost.studyStatus === 'RECRUITING'}
-      <button
-        class="px-3 py-1.5 text-sm border border-red-300 rounded-lg bg-white hover:bg-red-50 text-red-600 shadow-sm transition"
-        on:click={handleCloseRecruitment}
-      >
-        🔒 모집 종료하기
-      </button>
-    {/if}
-  </div>
-{/if}
-
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">{studyPost.title}</h1>
-      <p class="text-gray-600 mb-6">
-        작성자: <span class="font-medium">{studyPost.nickname}</span> |
-        등록일: <span>{new Date(studyPost.createdAt).toLocaleString()}</span>
-      </p>
-
-      <div class="mb-6">
-        <label class="block text-sm font-medium text-gray-700 mb-1">스터디 소개</label>
-        <div class="border border-gray-300 rounded-md p-4 whitespace-pre-line text-gray-800 bg-gray-50">
-          {studyPost.content}
-        </div>
-      </div>
-
-      <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700">최대 인원</label>
-        <p class="mt-1 text-gray-800">{studyPost.maxPeople}명</p>
-      </div>
-
-      <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700">현재 승인 인원</label>
-        <p class="mt-1 text-gray-800">{studyPost.acceptedPeople}명</p>
-      </div>
-
-      <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700">모집 상태</label>
-        <p class="mt-1 text-gray-800">
-          {studyPost.studyStatus === 'RECRUITING' ? '모집 중' : '모집 종료'}
-        </p>
-      </div>
-
-      <div class="flex justify-between items-center mt-8">
+    <div class="bg-white shadow-md rounded-lg p-8">
+      <!-- 인라인 뒤로가기 -->
+      <div class="mb-3">
         <button
-          class="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300"
+          type="button"
+          class="inline-flex items-center gap-1 text-gray-500 hover:text-gray-700 text-sm"
           on:click={() => goto('/')}
         >
-          목록으로 돌아가기
+          <ArrowLeft class="h-5 w-5" />
+          <span>목록</span>
         </button>
+      </div>
+
+
+    <div class="bg-white shadow-md rounded-lg p-8">
+      <!-- 헤더: 제목 + (작성자 전용) 버튼 -->
+      <div class="mb-2 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 leading-snug sm:max-w-xl">
+          {studyPost.title}
+        </h1>
 
         {#if currentUserId === studyPost.userId}
-          <div class="flex space-x-3">
+          <div class="mt-1 flex shrink-0 items-center gap-2 sm:mt-0">
             <button
-              class="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300"
+              class="px-3 py-1.5 text-sm rounded-full border border-gray-300 bg-white text-gray-800 shadow-sm hover:bg-gray-50 transition"
+              on:click={() => goto(`/studies/${studyPostId}/applications`)}
+            >
+              👥 지원자 목록
+            </button>
+
+            {#if studyPost.studyStatus === 'RECRUITING'}
+              <button
+                class="px-3 py-1.5 text-sm rounded-full border border-red-300 bg-white text-red-600 shadow-sm hover:bg-red-50 transition"
+                on:click={handleCloseRecruitment}
+              >
+                🔒 모집 종료하기
+              </button>
+            {/if}
+          </div>
+        {/if}
+      </div>
+
+      <!-- 작성자 · 날짜 -->
+      <div class="text-sm md:text-base text-gray-600">
+        작성자 <span class="font-medium text-gray-800">{studyPost.nickname}</span>
+        <span class="mx-2 text-gray-300">·</span>
+        등록일 <span class="text-gray-700">{new Date(studyPost.createdAt).toLocaleString()}</span>
+      </div>
+
+      <!-- 구분선 -->
+      <div class="my-6 h-px bg-gray-200"></div>
+
+      <!-- 스터디 소개 -->
+      <section class="mb-8">
+        <h2 class="mb-2 text-sm font-semibold text-gray-700">스터디 소개</h2>
+        <div class="whitespace-pre-line rounded-xl border border-gray-200 bg-white/70 p-5 leading-relaxed text-gray-900">
+          {studyPost.content}
+        </div>
+      </section>
+
+      <!-- 메타 정보 (타일) -->
+      <section class="grid gap-4 sm:grid-cols-3">
+        <div class="rounded-xl border border-gray-200 bg-white p-4">
+          <div class="flex items-center justify-between">
+            <span class="inline-flex items-center gap-2 text-sm text-gray-600">
+              <Users class="h-4 w-4" /> 최대 인원
+            </span>
+            <span class="text-base font-semibold text-gray-900">{studyPost.maxPeople}명</span>
+          </div>
+        </div>
+
+        <div class="rounded-xl border border-gray-200 bg-white p-4">
+          <div class="flex items-center justify-between">
+            <span class="inline-flex items-center gap-2 text-sm text-gray-600">
+              <UserCheck class="h-4 w-4" /> 승인 인원
+            </span>
+            <span class="text-base font-semibold text-gray-900">{studyPost.acceptedPeople}명</span>
+          </div>
+        </div>
+
+        <div class="rounded-xl border border-gray-200 bg-white p-4">
+          <div class="flex items-center justify-between">
+            <span class="inline-flex items-center gap-2 text-sm text-gray-600">
+              <Flag class="h-4 w-4" /> 모집 상태
+            </span>
+            <span class={`rounded-full border px-2.5 py-1 text-sm font-medium
+              ${studyPost.studyStatus === 'RECRUITING'
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                : 'border-gray-300 bg-gray-100 text-gray-700'}`}>
+              {studyPost.studyStatus === 'RECRUITING' ? '모집 중' : '모집 종료'}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 하단 액션 (목록 버튼 제거, 우측 정렬) -->
+      <div class="mt-8 flex items-center justify-end">
+        {#if currentUserId === studyPost.userId}
+          <div class="flex gap-3">
+            <button
+              class="px-4 py-2 text-sm rounded-full border border-gray-300 bg-white text-gray-800 shadow-sm hover:bg-gray-50 transition"
               on:click={handleEdit}
             >
               수정하기
             </button>
             <button
-              class="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300"
+              class="px-4 py-2 text-sm rounded-full border border-red-300 bg-white text-red-600 shadow-sm hover:bg-red-50 transition"
               on:click={handleDelete}
             >
               삭제하기
@@ -252,17 +290,33 @@
           </div>
         {:else}
           {#if hasApplied}
-            <div class="flex items-center space-x-3 bg-green-50 border border-green-300 px-4 py-2 rounded-lg">
-              <span class="text-green-600 font-semibold">이미 지원한 스터디입니다.</span>
-              {#if applicationStatus}
-                <span class="text-sm text-green-600 bg-white px-2 py-0.5 rounded-full border border-green-300">
-                  상태: {applicationStatus}
-                </span>
+            <div class="flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-4 py-3">
+              {#if applicationStatus === 'ACCEPTED'}
+                <span class="text-green-600">✔</span>
+              {:else if applicationStatus === 'REJECTED'}
+                <span class="text-red-600">✖</span>
+              {:else}
+                <span class="text-blue-600">⏳</span>
               {/if}
+              <span class="font-medium text-gray-800">이미 지원한 스터디입니다.</span>
+              <span
+                class="rounded-full px-2 py-0.5 text-xs font-medium
+                       {applicationStatus === 'ACCEPTED'
+                         ? 'bg-green-100 text-green-700'
+                         : applicationStatus === 'REJECTED'
+                           ? 'bg-red-100 text-red-700'
+                           : 'bg-blue-100 text-blue-700'}"
+              >
+                {applicationStatus === 'ACCEPTED'
+                  ? '승인됨'
+                  : applicationStatus === 'REJECTED'
+                    ? '거절됨'
+                    : '진행중'}
+              </span>
             </div>
           {:else if studyPost.studyStatus === 'RECRUITING'}
             <button
-              class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              class="px-4 py-2 text-sm rounded-full border border-blue-300 bg-white text-blue-600 shadow-sm hover:bg-blue-50 transition"
               on:click={handleApply}
             >
               지원하기
@@ -272,4 +326,6 @@
       </div>
     </div>
   </div>
+  </div>
+
 {/if}
