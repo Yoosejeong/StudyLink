@@ -26,19 +26,9 @@ public class StudyPostConverter {
                 .title(studyPost.getTitle())
                 .content(studyPost.getContent())
                 .maxPeople(studyPost.getMaxPeople())
+                .acceptedPeople(studyPost.getAcceptedPeople())
                 .studyStatus(studyPost.getStudyStatus())
                 .createdAt(studyPost.getCreatedAt())
-                .updatedAt(studyPost.getUpdatedAt())
-                .build();
-    }
-
-    public static StudyPostResponseDTO.GetStudyPostListResponse toGetStudyPostList(StudyPost studyPost){
-        return StudyPostResponseDTO.GetStudyPostListResponse.builder()
-                .studyPostId(studyPost.getId())
-                .title(studyPost.getTitle())
-                .nickname(studyPost.getUser().getNickname())
-                .maxPeople(studyPost.getMaxPeople())
-                .studyStatus(studyPost.getStudyStatus())
                 .updatedAt(studyPost.getUpdatedAt())
                 .build();
     }
