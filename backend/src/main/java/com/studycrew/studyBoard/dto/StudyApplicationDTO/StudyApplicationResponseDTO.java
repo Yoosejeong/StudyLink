@@ -30,6 +30,7 @@ public class StudyApplicationResponseDTO {
         private String nickname;
         private ApplicationStatus applicationStatus;
         private LocalDateTime appliedAt;
+        private String profileUrl;
     }
 
     @Getter
