@@ -39,4 +39,10 @@ public class User extends BaseEntity  {
 
     private String role;
 
+    private String profileUrl;
+
+    public void changeProfileUrl(String key) {
+        this.profileUrl = key;
+    }
+
 }
