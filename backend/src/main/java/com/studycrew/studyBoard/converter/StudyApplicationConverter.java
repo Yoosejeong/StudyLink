@@ -34,6 +34,7 @@ public class StudyApplicationConverter {
                 .appliedAt(studyApplication.getCreatedAt())
                 .userId(studyApplication.getUser().getId())
                 .nickname(studyApplication.getUser().getNickname())
+                .profileUrl(studyApplication.getUser().getProfileUrl())
                 .build();
     }
 

@@ -3,6 +3,7 @@
 	import { page } from '$app/stores';
 	import { Check, X, Calendar, User } from 'lucide-svelte';
 	import { http } from '$lib/api/http';
+	import { ensurePresignedUrls, getPresignedUrl } from '$lib/stores/presignCache';
 
 	$: studyPostId = $page.params.id;
 
@@ -12,6 +13,7 @@
 		nickname: string;
 		applicationStatus: 'PENDING' | 'ACCEPTED' | 'REJECTED';
 		appliedAt: string;
+		profileUrl: string | null; // <- key
 	};
 
 	let applicants: Applicant[] = [];
@@ -25,12 +27,15 @@
 		try {
 			const res = await http.get(`/api/study-posts/${studyPostId}/applications`);
 			if (!res.ok) {
-				const err = await safeJson(res);
-				errorMessage = err?.message || `조회 실패 (code: ${res.status})`;
+				errorMessage = (await safeMsg(res)) ?? `조회 실패 (code: ${res.status})`;
 				return;
 			}
 			const data = await res.json();
-			applicants = data.result ?? [];
+			applicants = (data?.result as Applicant[]) ?? [];
+
+			// ✅ presign은 key들만 모아서 배치 요청
+			const keys = applicants.map((a) => a.profileUrl);
+			await ensurePresignedUrls(keys);
 		} catch {
 			errorMessage = '네트워크 오류 발생';
 		} finally {
@@ -38,64 +43,65 @@
 		}
 	}
 
-	async function handleApprove(appId: number) {
-		if (busyId) return;
-		busyId = appId;
-		try {
-			const res = await http.patch(`/api/study-applications/${appId}/approve`);
-			if (!res.ok) {
-				const err = await safeJson(res);
-				alert(`승인 실패: ${err?.message || res.status}`);
-				return;
-			}
-			// 승인 완료 → 상태 갱신 → 버튼 자동 숨김
-			applicants = applicants.map((a) =>
-				a.studyApplicationId === appId ? { ...a, applicationStatus: 'ACCEPTED' } : a
-			);
-		} finally {
-			busyId = null;
-		}
+	// 전역 캐시에서 해당 key의 presigned URL 조회
+	function avatarSrc(a: Applicant) {
+		return getPresignedUrl(a.profileUrl);
 	}
-
-	async function handleReject(appId: number) {
-		if (busyId) return;
-		const ok = confirm('정말 거절하시겠습니까?');
-		if (!ok) return;
-
-		busyId = appId;
-		try {
-			const res = await http.patch(`/api/study-applications/${appId}/reject`);
-			if (!res.ok) {
-				const err = await safeJson(res);
-				alert(`거절 실패: ${err?.message || res.status}`);
-				return;
-			}
-			// 거절 완료 → 상태 갱신 → 버튼 자동 숨김
-			applicants = applicants.map((a) =>
-				a.studyApplicationId === appId ? { ...a, applicationStatus: 'REJECTED' } : a
-			);
-		} finally {
-			busyId = null;
-		}
+	function initials(name: string) {
+		return (name ?? '').slice(0, 2) || '?';
 	}
-
-	// 본문이 없을 수도 있으니 안전 파서
-	async function safeJson(res: Response) {
-		const text = await res.text();
-		if (!text) return null;
-		try {
-			return JSON.parse(text);
-		} catch {
-			return null;
-		}
-	}
-
-	const statusPill = (s: Applicant['applicationStatus']) =>
-		s === 'APPROVED'
+	const pill = (s: Applicant['applicationStatus']) =>
+		s === 'ACCEPTED'
 			? 'bg-green-100 text-green-800'
 			: s === 'REJECTED'
 				? 'bg-red-100 text-red-800'
 				: 'bg-blue-100 text-blue-800';
+
+	async function handleApprove(id: number) {
+		if (busyId) return;
+		busyId = id;
+		try {
+			const res = await http.patch(`/api/study-applications/${id}/approve`);
+			if (!res.ok) {
+				alert((await safeMsg(res)) ?? '승인 실패');
+				return;
+			}
+			applicants = applicants.map((a) =>
+				a.studyApplicationId === id ? { ...a, applicationStatus: 'ACCEPTED' } : a
+			);
+		} finally {
+			busyId = null;
+		}
+	}
+
+	async function handleReject(id: number) {
+		if (busyId) return;
+		if (!confirm('정말 거절하시겠습니까?')) return;
+		busyId = id;
+		try {
+			const res = await http.patch(`/api/study-applications/${id}/reject`);
+			if (!res.ok) {
+				alert((await safeMsg(res)) ?? '거절 실패');
+				return;
+			}
+			applicants = applicants.map((a) =>
+				a.studyApplicationId === id ? { ...a, applicationStatus: 'REJECTED' } : a
+			);
+		} finally {
+			busyId = null;
+		}
+	}
+
+	async function safeMsg(res: Response) {
+		const text = await res.text();
+		if (!text) return null;
+		try {
+			const j = JSON.parse(text);
+			return j?.message ?? null;
+		} catch {
+			return null;
+		}
+	}
 </script>
 
 {#if isLoading}
@@ -104,13 +110,15 @@
 	<p class="mt-10 text-center text-red-500">{errorMessage}</p>
 {:else}
 	<div class="container mx-auto p-6">
-		<div class="mx-auto max-w-6xl rounded-xl border bg-white shadow-lg">
-			<div class="border-b p-6">
+		<div class="mx-auto max-w-6xl rounded-2xl bg-white shadow-xl">
+			<div class="border-b border-gray-100 p-6">
 				<h2 class="flex items-center gap-2 text-xl font-bold">
 					<User class="h-5 w-5" />
 					스터디 지원자 목록
 				</h2>
-				<p class="mt-1 text-sm text-gray-500">총 {applicants.length}명이 지원했습니다</p>
+				<p class="mt-1 text-sm text-gray-500">
+					총 {applicants.length}명이 지원했습니다
+				</p>
 			</div>
 
 			<div class="space-y-4 p-6">
@@ -119,61 +127,56 @@
 				{:else}
 					{#each applicants as applicant}
 						<div
-							class="flex w-full items-center justify-between rounded-lg border p-4 transition-colors hover:bg-gray-50"
+							class="flex w-full items-center justify-between rounded-xl bg-white p-4 shadow-sm transition hover:shadow-md"
 						>
-							<!-- 왼쪽 -->
+							<!-- 아바타 + 닉네임 -->
 							<div class="flex flex-1 items-center gap-4">
-								<div
-									class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-sm font-semibold text-gray-700"
-								>
-									{applicant.nickname.slice(0, 2)}
-								</div>
+								{#if avatarSrc(applicant)}
+									<img
+										src={avatarSrc(applicant)}
+										alt="profile"
+										class="h-12 w-12 shrink-0 rounded-full object-cover"
+									/>
+								{:else}
+									<div
+										class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gray-200 text-sm font-semibold text-gray-700"
+									>
+										{initials(applicant.nickname)}
+									</div>
+								{/if}
+
 								<div class="min-w-0 flex-1">
 									<div class="mb-1 flex items-center gap-2">
-										<h3 class="text-lg font-semibold">{applicant.nickname}</h3>
+										<h3 class="truncate text-lg font-semibold">{applicant.nickname}</h3>
 										<span
-											class="rounded px-2 py-0.5 text-xs
-                        {applicant.applicationStatus === 'ACCEPTED'
-												? 'bg-green-100 text-green-800'
-												: applicant.applicationStatus === 'REJECTED'
-													? 'bg-red-100 text-red-800'
-													: 'bg-blue-100 text-blue-800'}"
+											class={`rounded px-2 py-0.5 text-xs ${pill(applicant.applicationStatus)}`}
 										>
 											{applicant.applicationStatus}
 										</span>
 									</div>
+									<p class="text-sm text-gray-500">
+										{new Date(applicant.appliedAt).toLocaleDateString('ko-KR')}
+									</p>
 								</div>
 							</div>
 
-							<!-- 오른쪽 -->
-							<div class="flex items-center gap-3">
-								<div class="hidden items-center gap-1 text-sm text-gray-500 sm:flex">
-									<Calendar class="h-4 w-4" />
-									{new Date(applicant.appliedAt).toLocaleDateString('ko-KR')}
-								</div>
-
-								<!-- 처리 여부에 따라 UI 분기 -->
+							<!-- 승인/거절 버튼 -->
+							<div class="flex items-center gap-2">
 								{#if applicant.applicationStatus === 'PENDING'}
-									<div class="flex gap-2">
-										<button
-											class="flex h-8 w-8 items-center justify-center rounded border hover:border-green-200 hover:bg-green-50 disabled:opacity-50"
-											on:click={() => handleApprove(applicant.studyApplicationId)}
-											disabled={busyId === applicant.studyApplicationId}
-											title="승인"
-										>
-											<Check class="h-4 w-4 text-green-600" />
-										</button>
-										<button
-											class="flex h-8 w-8 items-center justify-center rounded border hover:border-red-200 hover:bg-red-50 disabled:opacity-50"
-											on:click={() => handleReject(applicant.studyApplicationId)}
-											disabled={busyId === applicant.studyApplicationId}
-											title="거절"
-										>
-											<X class="h-4 w-4 text-red-600" />
-										</button>
-									</div>
+									<button
+										class="flex h-8 w-8 items-center justify-center rounded-full bg-green-50 hover:bg-green-100"
+										on:click={() => handleApprove(applicant.studyApplicationId)}
+									>
+										<Check class="h-4 w-4 text-green-600" />
+									</button>
+									<button
+										class="flex h-8 w-8 items-center justify-center rounded-full bg-red-50 hover:bg-red-100"
+										on:click={() => handleReject(applicant.studyApplicationId)}
+									>
+										<X class="h-4 w-4 text-red-600" />
+									</button>
 								{:else}
-									<div class="rounded border bg-gray-50 px-2 py-1 text-sm text-gray-500">
+									<div class="rounded bg-gray-100 px-2 py-1 text-sm text-gray-500">
 										이미 처리된 지원입니다.
 									</div>
 								{/if}
