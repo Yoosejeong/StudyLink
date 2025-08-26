@@ -48,7 +48,7 @@
 
   // 서버에서 presigned GET 재발급
   async function renewAvatar(): Promise<boolean> {
-    const res = await fetchWithAuth('/api/s3/presign/profile', { method:'GET' });
+    const res = await fetchWithAuth('/api/s3/presign/me', { method:'GET' });
     if (!res.ok) return false;
     const env: ApiEnvelope<HeaderProfile> = await res.json();
     const url = env?.result?.profileUrl ?? env?.result?.profileURL ?? null;
@@ -172,7 +172,7 @@
     const filename = `${crypto.randomUUID()}_avatar.${extFromType(file.type)}`;
 
     // 1) presign PUT (서버에서 presign만 생성)
-    const putRes = await fetchWithAuth('/api/s3/presign/put', {
+    const putRes = await fetchWithAuth('/api/s3/presign/upload', {
       method:'POST',
       headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify({ filename, contentType:file.type, contentLength:file.size })
@@ -196,7 +196,7 @@
 
     // 3) presign GET → 공식 URL로 교체 + 캐시 저장
     try {
-      const getRes = await fetchWithAuth('/api/s3/presign/profile', { method: 'GET' });
+      const getRes = await fetchWithAuth('/api/s3/presign/me', { method: 'GET' });
       if (getRes.ok) {
         const envGet: ApiEnvelope<PresignGetResult> = await getRes.json();
         const officialUrl = envGet?.result?.url ?? null;
@@ -243,7 +243,7 @@
           <!-- 아바타 -->
           <div class="relative" data-avatar>
             {#if avatarUrl}
-              <!-- ✅ 여기서 브라우저가 S3로 직접 GET 요청 -->
+              <!-- 브라우저가 S3로 직접 GET 요청 -->
               <img
                 src={avatarUrl}
                 alt="내 프로필"
