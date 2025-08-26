@@ -9,8 +9,11 @@ import com.studycrew.studyBoard.entity.User;
 import com.studycrew.studyBoard.repository.UserRepository;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -30,10 +33,12 @@ import static com.studycrew.studyBoard.dto.UserDTO.UserResponseDTO.*;
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Slf4j
 public class S3Service {
     private final S3Presigner preSigner;
     private final S3Props props;
     private final PresignProps presign;
+    private final S3Client s3;
     private final UserRepository userRepository;
     private final com.github.benmanes.caffeine.cache.Cache<String, Entry> presignedGetCache;
     private static final Duration SKEW = Duration.ofSeconds(30);
@@ -77,13 +82,6 @@ public class S3Service {
 
         // Content-Type은 PUT 시 presign과 동일해야 함
         headers.putIfAbsent("Content-Type", req.getContentType());
-        User user = userRepository.findById(userId).orElseThrow(() -> new UserHandler(ErrorStatus._USER_NOT_FOUND));
-        String oldKey = user.getProfileUrl();
-        user.changeProfileUrl(key);
-
-        if (oldKey != null) {
-            presignedGetCache.invalidate(oldKey);
-        }
 
         return PresignPutResponse.builder()
                 .method("PUT")
@@ -169,7 +167,6 @@ public class S3Service {
         return items;
     }
 
-
     @Transactional(readOnly = true)
     public headerProfileDTO getMeHeader(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new UserHandler(ErrorStatus._USER_NOT_FOUND));
@@ -182,5 +179,32 @@ public class S3Service {
         return headerProfileDTO.builder()
                 .profileUrl(url)
                 .expiresAt(exp).build();
+    }
+
+    @Transactional
+    public void confirmProfile(Long userId, String newKey) {
+        User user = userRepository.findById(userId).orElseThrow(() ->
+                new UserHandler(ErrorStatus._USER_NOT_FOUND));
+        String oldKey = user.getProfileUrl();
+
+        if (Objects.equals(oldKey, newKey)) return;
+
+        // 1) DB 갱신
+        user.changeProfileUrl(newKey);
+
+        // 2) 캐시 무효화
+        if (oldKey != null) presignedGetCache.invalidate(oldKey);
+
+        // 3) S3 삭제 (실패해도 롤백 X, 경고만)
+        if (oldKey != null) {
+            try {
+                s3.deleteObject(DeleteObjectRequest.builder()
+                        .bucket(props.bucket())
+                        .key(oldKey)
+                        .build());
+            } catch (Exception e) {
+                log.warn("[S3] failed to delete old profile key={} : {}", oldKey, e.getMessage());
+            }
+        }
     }
 }
