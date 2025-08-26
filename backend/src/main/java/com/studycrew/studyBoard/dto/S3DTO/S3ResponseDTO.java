@@ -30,4 +30,14 @@ public class S3ResponseDTO {
         private String url;
         private Instant expiresAt;
     }
+
+    @Builder
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class PresignGetItemResponse {
+        private String key;
+        private String url;
+        private Instant expiresAt;
+    }
 }
