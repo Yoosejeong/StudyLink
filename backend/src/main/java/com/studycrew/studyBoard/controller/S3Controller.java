@@ -7,6 +7,7 @@ import com.studycrew.studyBoard.entity.User;
 import com.studycrew.studyBoard.service.S3Service;
 import com.studycrew.studyBoard.service.user.UserQueryService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -54,4 +55,13 @@ public class S3Controller {
         List<PresignGetItemResponse> responseDTO = s3Service.batchPresignGet(keys);
         return ApiResponse.of(SuccessStatus._PROFILE_RETRIEVED, responseDTO);
     }
+
+    @PostMapping("/presign/confirm")
+    public ApiResponse<Void> confirmProfile(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+                                            @RequestBody @Valid ConfirmProfileRequest req) {
+        User user = userQueryService.getUserByEmail(customUserDetails.getUsername());
+        s3Service.confirmProfile(user.getId(), req.getNewKey());
+        return ApiResponse.of(SuccessStatus._PROFILE_UPDATED);
+    }
+
 }
