@@ -166,55 +166,60 @@
   }
 
   async function uploadAvatar() {
-    if (!file) { message = '파일을 선택하세요.'; return; }
-    uploading = true; message = '프리사인 발급 중...';
+  if (!file) { message = '파일을 선택하세요.'; return; }
+  uploading = true; message = '프리사인 발급 중…';
 
-    const filename = `${crypto.randomUUID()}_avatar.${extFromType(file.type)}`;
+  const filename = `${crypto.randomUUID()}_avatar.${extFromType(file.type)}`;
 
-    // 1) presign PUT (서버에서 presign만 생성)
-    const putRes = await fetchWithAuth('/api/s3/presign/upload', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({ filename, contentType:file.type, contentLength:file.size })
-    });
-    if (!putRes.ok) { uploading = false; message = `presign 실패: ${putRes.status}`; return; }
-    const envPut: ApiEnvelope<PresignPutResult> = await putRes.json();
-    const putUrl = envPut?.result?.url;
-    const headers = envPut?.result?.headers ?? {};
-    const key = envPut?.result?.key;
-    if (!putUrl || !/^https?:\/\//.test(putUrl) || !key) {
-      uploading = false; message = 'presign 데이터 이상'; return;
-    }
-
-    // 2) S3 업로드 (브라우저가 S3로 직접 PUT 요청 )
-    try {
-      message = 'S3 업로드 중...';
-      await xhrPutWithProgress(putUrl, file, headers);
-    } catch (e:any) {
-      uploading = false; message = `업로드 실패: ${e?.message ?? e}`; return;
-    }
-
-    // 3) presign GET → 공식 URL로 교체 + 캐시 저장
-    try {
-      const getRes = await fetchWithAuth('/api/s3/presign/me', { method: 'GET' });
-      if (getRes.ok) {
-        const envGet: ApiEnvelope<PresignGetResult> = await getRes.json();
-        const officialUrl = envGet?.result?.url ?? null;
-        const exp = envGet?.result?.expiresAt ?? null;
-        if (officialUrl) {
-          avatarUrl = officialUrl;
-          avatarExpiresAt = exp ?? null;
-          if (officialUrl && exp) writeAvatarCache(officialUrl, exp); // ★ 캐시에 저장
-        }
-      } else {
-        await renewAvatar(); // 실패 시 서버 재조회
-      }
-    } finally {
-      closeModal();
-    }
-
-    uploading = false; message = '완료!';
+  // 1) presign PUT 
+  const putRes = await fetchWithAuth('/api/s3/presign/upload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ filename, contentType: file.type, contentLength: file.size })
+  });
+  if (!putRes.ok) { uploading = false; message = `presign 실패: ${putRes.status}`; return; }
+  const envPut: ApiEnvelope<PresignPutResult> = await putRes.json();
+  const putUrl = envPut?.result?.url;
+  const headers = envPut?.result?.headers ?? {};
+  const key = envPut?.result?.key;
+  if (!putUrl || !/^https?:\/\//.test(putUrl) || !key) {
+    uploading = false; message = 'presign 데이터 이상'; return;
   }
+
+  // 2) 브라우저가 S3로 직접 업로드
+  try {
+    message = 'S3 업로드 중…';
+    await xhrPutWithProgress(putUrl, file, headers);
+  } catch (e: any) {
+    uploading = false; message = `업로드 실패: ${e?.message ?? e}`; return;
+  }
+
+  // 3) 서버에 업로드 성공 확정(confirm) 알리기 → DB profileUrl 교체 + 캐시 무효화 + 이전 객체 삭제
+  message = '업로드 확인 중…';
+  const confirmRes = await fetchWithAuth('/api/s3/presign/confirm', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ newKey: key })
+  });
+  if (!confirmRes.ok) {
+    uploading = false;
+    message = `업로드는 됐지만 프로필 갱신 실패: ${confirmRes.status}`;
+    return;
+  }
+
+  // 4) 로컬 캐시 비우고 새 presigned GET 재발급
+  clearAvatarCache();
+  const ok = await renewAvatar(); 
+  if (!ok) {
+    message = '새 URL 갱신 실패.';
+  } else {
+    message = '완료!';
+  }
+
+  uploading = false;
+  closeModal();
+}
+
 </script>
 
 <header class="bg-white shadow-sm" >
