@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.regions.providers.AwsRegionProvider;
+import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 @Configuration
@@ -17,6 +18,15 @@ public class S3Config {
     public S3Presigner s3Presigner(AwsCredentialsProvider credentialsProvider,
                                    AwsRegionProvider regionProvider) {
         return S3Presigner.builder()
+                .credentialsProvider(credentialsProvider)
+                .region(regionProvider.getRegion())
+                .build();
+    }
+
+    @Bean
+    public S3Client s3Client(AwsCredentialsProvider credentialsProvider,
+                             AwsRegionProvider regionProvider) {
+        return S3Client.builder()
                 .credentialsProvider(credentialsProvider)
                 .region(regionProvider.getRegion())
                 .build();
