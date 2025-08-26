@@ -38,7 +38,8 @@ public enum SuccessStatus implements BaseCode {
 
     //S3 관련 응답
     _PROFILE_UPLOAD_SUCCESS(HttpStatus.OK, "S32000", "프로필 사진 업로드를 성공했습니다."),
-    _PROFILE_RETRIEVED(HttpStatus.OK, "S32001", "프로필 사진 조회를 성공했습니다.");
+    _PROFILE_RETRIEVED(HttpStatus.OK, "S32001", "프로필 사진 조회를 성공했습니다."),
+    _PROFILE_UPDATED(HttpStatus.OK, "S32002", "프로필 사진 업데이트를 성공했습니다.");;
 
     private final HttpStatus httpStatus;
     private final String code;
