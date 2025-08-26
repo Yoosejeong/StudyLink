@@ -18,4 +18,13 @@ public class S3RequestDTO {
         @NotBlank
         private String contentType;
     }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ConfirmProfileRequest {
+        @NotBlank
+        String newKey;
+    }
 }
