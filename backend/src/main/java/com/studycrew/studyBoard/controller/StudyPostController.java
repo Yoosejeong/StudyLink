@@ -104,4 +104,11 @@ public class StudyPostController {
         GetStudyPost responseDTO = StudyPostConverter.toGetStudyPost(studyPost);
         return ApiResponse.of(SuccessStatus._STUDY_POST_CLOSED, responseDTO);
     }
+
+    @Operation(summary = "스터디 제목으로 검색", description = "스터디 모집글을 제목으로 검색합니다.")
+    @GetMapping("/api/study-posts/search")
+    public ApiResponse<Page<StudyPostResponseDTO.GetStudyPostListResponse>>searchTitleStudyPost(@RequestParam String rawKeyword, @RequestParam StudyStatus status, @PageableDefault(size = 9) Pageable pageable){
+        Page<GetStudyPostListResponse> responseDTO = studyPostQueryService.searchTitle(rawKeyword, status, pageable);
+        return ApiResponse.of(SuccessStatus._STUDY_POST_RETRIEVED, responseDTO);
+    }
 }
