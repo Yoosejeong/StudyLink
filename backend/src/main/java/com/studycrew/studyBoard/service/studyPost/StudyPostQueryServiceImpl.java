@@ -28,7 +28,8 @@ public class StudyPostQueryServiceImpl implements StudyPostQueryService {
     }
 
     @Override
-    public Page<GetStudyPostListResponse> getStudyPostList(StudyStatus status, Pageable pageable) {
-        return studyPostRepository.searchByStatusAndNotDeleted(status, pageable);
+    public Page<GetStudyPostListResponse> getStudyPostList(String rawKeyword, StudyStatus status, Pageable pageable) {
+        return studyPostRepository.searchByStatusAndNotDeleted(rawKeyword, status, pageable);
     }
+
 }

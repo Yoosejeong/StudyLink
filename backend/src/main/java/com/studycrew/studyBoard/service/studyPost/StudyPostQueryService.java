@@ -9,5 +9,5 @@ import org.springframework.data.domain.Pageable;
 
 public interface StudyPostQueryService {
     StudyPost getStudyPost(Long studyPostId);
-    Page<GetStudyPostListResponse> getStudyPostList(StudyStatus status, Pageable pageable);
+    Page<GetStudyPostListResponse> getStudyPostList(String rawKeyword, StudyStatus status, Pageable pageable);
 }
