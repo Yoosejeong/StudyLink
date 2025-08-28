@@ -130,8 +130,9 @@ class StudyPostCommandServiceImplTest {
         }
 
         StudyStatus status = null;
+        String rawKeyword = null;
         Pageable pageable = PageRequest.of(0, 10);
-        Page<GetStudyPostListResponse> studyPostList = studyPostQueryService.getStudyPostList(status, pageable);
+        Page<GetStudyPostListResponse> studyPostList = studyPostQueryService.getStudyPostList(rawKeyword, status, pageable);
         assertThat(studyPostList.getTotalElements()).isEqualTo(3);
 
     }
@@ -212,6 +213,8 @@ class StudyPostCommandServiceImplTest {
 
     @Test
     void 스터디글_모집중만_전체조회() {
+        String rawKeyword = null;
+
         User user = getUser();
         userRepository.save(user);
         StudyPost studyPost = getStudyPost(user, 1);
@@ -223,7 +226,7 @@ class StudyPostCommandServiceImplTest {
         studyPostCommandService.closeStudyPost(studyPost2.getId(), user);
 
         Pageable pageable = PageRequest.of(0, 10);
-        Page<GetStudyPostListResponse> studyPostList = studyPostQueryService.getStudyPostList(StudyStatus.RECRUITING,
+        Page<GetStudyPostListResponse> studyPostList = studyPostQueryService.getStudyPostList(rawKeyword, StudyStatus.RECRUITING,
                 pageable);
 
         assertThat(studyPostList.getTotalElements()).isEqualTo(1);
