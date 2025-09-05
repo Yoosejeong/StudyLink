@@ -18,7 +18,6 @@ function selectMissOrStale(keys: string[]): string[] {
 }
 
 function upsert(items: Array<{ key: string; url: string; expiresAt: string }>) {
-  console.log('[presign][UPsert]', items.map(i => ({key: i.key, date: i.expiresAt, url: i.url.slice(0,80)+'...'})));
   const m = get(cache);
   for (const it of items) {
     const expMs = new Date(it.expiresAt).getTime();
