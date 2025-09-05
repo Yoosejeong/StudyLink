@@ -10,5 +10,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface StudyPostRepository extends StudyPostRepositoryCustom, JpaRepository<StudyPost, Long> {
+    @EntityGraph(attributePaths = "user")
     Optional<StudyPost> findByIdAndDeletedFalse(Long id);
 }
