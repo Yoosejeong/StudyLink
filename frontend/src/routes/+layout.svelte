@@ -3,7 +3,7 @@
   import Header from '$lib/components/Header.svelte';
   import Footer from '$lib/components/Footer.svelte';
   import { goto } from '$app/navigation';
-  import { isLoggedIn } from '$lib/stores/auth'; // ✅ store import
+  import { isLoggedIn } from '$lib/stores/auth'; 
   import { onMount } from 'svelte';
 
   onMount(() => {
@@ -27,7 +27,7 @@
         return;
       }
       localStorage.removeItem('accessToken');
-      isLoggedIn.set(false); // ✅ 상태 업데이트
+      isLoggedIn.set(false); 
       alert('로그아웃 완료!');
       goto('/');
     } catch (err) {
