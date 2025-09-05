@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.ServletWebRequest;
@@ -24,14 +25,21 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @Slf4j
 @RestControllerAdvice(annotations = {RestController.class})
 public class ExceptionAdvice extends ResponseEntityExceptionHandler {
-    @org.springframework.web.bind.annotation.ExceptionHandler
-    public ResponseEntity<Object> validation(ConstraintViolationException e, WebRequest request) {
-        String errorMessage = e.getConstraintViolations().stream()
-                .map(constraintViolation -> constraintViolation.getMessage())
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("ConstraintViolationException 추출 도중 에러 발생"));
+    @ExceptionHandler(jakarta.validation.ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<Object> handleConstraintViolation(
+            ConstraintViolationException e, WebRequest request) {
 
-        return handleExceptionInternalConstraint(e, ErrorStatus.valueOf(errorMessage), HttpHeaders.EMPTY,request);
+        Map<String, String> errors = new LinkedHashMap<>();
+        e.getConstraintViolations().forEach(v -> {
+            String path = v.getPropertyPath().toString();
+            String name = path.contains(".") ? path.substring(path.lastIndexOf('.') + 1) : path;
+            errors.put(name, v.getMessage());
+        });
+
+        return handleExceptionInternalArgs(
+                e, HttpHeaders.EMPTY, ErrorStatus._BAD_REQUEST, request, errors
+        );
     }
 
 

@@ -4,6 +4,7 @@ import com.studycrew.studyBoard.apiPayload.ApiResponse;
 import com.studycrew.studyBoard.apiPayload.code.status.SuccessStatus;
 import com.studycrew.studyBoard.converter.StudyPostConverter;
 import com.studycrew.studyBoard.dto.CustomUserDetails;
+import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO.StudyPostCreate;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO.StudyPostRequestUpdate;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO;
@@ -18,6 +19,8 @@ import com.studycrew.studyBoard.service.user.UserQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,18 +28,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "스터디 모집글", description = "스터디 모집글 관련 API")
 @RestController
 @RequiredArgsConstructor
+@Validated
 public class StudyPostController {
 
     private final StudyPostCommandService studyPostCommandService;
@@ -88,10 +86,11 @@ public class StudyPostController {
 
     @Operation(summary = "스터디 모집글 목록 조회", description = "스터디 모집글을 페이징하여 조회합니다.")
     @GetMapping("/api/study-posts")
-    public ApiResponse<Page<StudyPostResponseDTO.GetStudyPostListResponse>> getStudyPostList(@RequestParam(required = false) StudyStatus status,
+    public ApiResponse<Page<StudyPostResponseDTO.GetStudyPostListResponse>> getStudyPostList(@RequestParam(required = false) @Size(min = 2, max = 50, message = "검색어는 2~50자 사이여야합니다.") String rawKeyword,
+                                                                                             @RequestParam(required = false) StudyStatus status,
                                                                                              @PageableDefault(size = 9)
                                                             Pageable pageable) {
-        Page<GetStudyPostListResponse> studyPostList = studyPostQueryService.getStudyPostList(status, pageable);
+        Page<GetStudyPostListResponse> studyPostList = studyPostQueryService.getStudyPostList(rawKeyword, status , pageable);
         return ApiResponse.of(SuccessStatus._STUDY_POST_LIST_RETRIEVED, studyPostList);
     }
 
@@ -104,4 +103,5 @@ public class StudyPostController {
         GetStudyPost responseDTO = StudyPostConverter.toGetStudyPost(studyPost);
         return ApiResponse.of(SuccessStatus._STUDY_POST_CLOSED, responseDTO);
     }
+
 }

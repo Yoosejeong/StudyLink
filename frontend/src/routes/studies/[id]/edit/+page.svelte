@@ -3,7 +3,7 @@
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { get } from 'svelte/store';
-  import { http } from '$lib/api/http'; // ✅ reissue 자동
+  import { http } from '$lib/api/http'; 
 
   let title = '';
   let content = '';
