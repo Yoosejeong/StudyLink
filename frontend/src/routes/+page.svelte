@@ -17,66 +17,97 @@
   let studies: Study[] = [];
   let totalPages = 1;
   let currentPage = 0;
-  let currentStatus: string | null = null;  // 상태 필터 ('RECRUITING' or null)
+  let currentStatus: string | null = null;   // 'RECRUITING' | null
+  let keyword = '';                           // 검색어(입력값)
 
   const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
   const unsubscribe = page.subscribe(async ($page) => {
-    const pageParam = Number($page.url.searchParams.get('page') ?? '0');
-    currentPage = pageParam;
-
+    // URL 쿼리 → 로컬 상태 동기화
+    const pageParam   = Number($page.url.searchParams.get('page') ?? '0');
     const statusParam = $page.url.searchParams.get('status');
+    const kwParam     = $page.url.searchParams.get('rawKeyword') ?? '';
+
+    currentPage   = pageParam;
     currentStatus = statusParam;
+    keyword       = kwParam;   // 입력창에도 반영
 
     try {
-      // status 쿼리 파라미터가 있을 때만 붙임
       const url = new URL(`${baseUrl}/api/study-posts`);
       url.searchParams.set('page', String(pageParam));
-      if (statusParam) {
-        url.searchParams.set('status', statusParam);
+      if (statusParam) url.searchParams.set('status', statusParam);
+
+      const trimmed = kwParam.trim();
+      if (trimmed.length >= 2) {
+        url.searchParams.set('rawKeyword', trimmed);   // 2~50자만 서버에 전달
       }
-      const res = await fetch(url.toString());
+      const res  = await fetch(url.toString());
       const data = await res.json();
 
-      studies = data.result?.content ?? [];
+      studies    = data.result?.content ?? [];
       totalPages = data.result?.totalPages ?? 1;
     } catch (err) {
       console.error('❌ 목록 불러오기 실패', err);
     }
   });
 
-  onDestroy(() => {
-    unsubscribe();
-  });
+  onDestroy(() => unsubscribe());
 
   function goToDetail(id: number) {
     goto(`/studies/${id}`);
   }
 
-  // 페이지 이동 시 현재 상태 필터 유지해서 쿼리 업데이트
-  function goToPage(page: number) {
+  // 검색 실행
+  function doSearch() {
     const params = new URLSearchParams();
-    params.set('page', String(page));
-    if (currentStatus) {
-      params.set('status', currentStatus);
-    }
+    params.set('page', '0');                          // 검색 시 첫 페이지로
+    if (currentStatus) params.set('status', currentStatus);
+
+    const trimmed = keyword.trim();
+    if (trimmed.length >= 2) params.set('rawKeyword', trimmed); // 2자 미만이면 전송 안 함
     goto(`/?${params.toString()}`);
   }
 
-  // 상태 필터 버튼 클릭 핸들러
+  // Enter로 검색
+  function onSearchKeydown(e: KeyboardEvent) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      doSearch();
+    }
+  }
+
+  // 검색어 초기화
+  function clearSearch() {
+    keyword = '';
+    const params = new URLSearchParams();
+    params.set('page', '0');
+    if (currentStatus) params.set('status', currentStatus);
+    goto(`/?${params.toString()}`);
+  }
+
+  // 페이지 이동 (검색/상태 유지)
+  function goToPage(page: number) {
+    const params = new URLSearchParams();
+    params.set('page', String(page));
+    if (currentStatus) params.set('status', currentStatus);
+    const trimmed = keyword.trim();
+    if (trimmed.length >= 2) params.set('rawKeyword', trimmed);
+    goto(`/?${params.toString()}`);
+  }
+
+  // 상태 필터 변경 (검색 유지)
   function filterByStatus(status: string | null) {
     const params = new URLSearchParams();
-    params.set('page', '0');  // 필터 변경 시 첫 페이지로 이동
-    if (status) {
-      params.set('status', status);
-    }
+    params.set('page', '0');
+    if (status) params.set('status', status);
+    const trimmed = keyword.trim();
+    if (trimmed.length >= 2) params.set('rawKeyword', trimmed);
     goto(`/?${params.toString()}`);
   }
 </script>
 
-
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-  <!-- 히어로 -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"> 
+    <!-- ✅ 히어로 섹션 -->
   <div class="bg-gradient-to-r from-yellow-300 to-yellow-400 rounded-3xl mx-4 mb-16 overflow-hidden">
     <div class="relative px-8 py-12 md:px-16 md:py-16">
       <div class="flex flex-col lg:flex-row items-center justify-between">
@@ -109,64 +140,93 @@
     </div>
   </div>
 
-<div class="mb-6 flex gap-4 justify-start">
-  <!-- 전체보기 -->
-  <button
-    on:click={() => filterByStatus(null)}
-    class={`flex items-center gap-2 px-6 py-3 rounded-full text-sm font-medium transition-all border-2
-      ${!currentStatus
-        ? 'bg-gray-100 border-gray-200 text-gray-800'
-        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
-  >
-    전체보기
-  </button>
-
-  <!-- 모집중만 보기 -->
-  <button
-    on:click={() => filterByStatus('RECRUITING')}
-    class={`flex items-center gap-2 px-6 py-3 rounded-full text-sm font-medium transition-all border-2
-      ${currentStatus === 'RECRUITING'
-        ? 'bg-teal-50 border-teal-300 text-teal-700'
-        : 'bg-white border-teal-200 text-teal-600 hover:bg-teal-50'}`}
-  >
-    👀 모집중만 보기
-  </button>
-</div>
-
-
-  <!-- ✅ 스터디 목록 카드 -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-  {#each studies as study (study.studyPostId)}
+ <!-- 상태 필터 + 검색 바 (한 줄 정렬) -->
+<div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <!-- 왼쪽: 상태 필터 -->
+  <div class="flex gap-3">
     <button
-      type="button"
-      class="w-full text-left bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition cursor-pointer"
-      on:click={() => goToDetail(study.studyPostId)}
+      on:click={() => filterByStatus(null)}
+      class={`flex items-center gap-2 px-6 py-3 rounded-full text-sm font-medium transition-all border-2
+        ${!currentStatus
+          ? 'bg-gray-100 border-gray-200 text-gray-800'
+          : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
     >
-      <div class="mb-3">
-        <span
-          class="inline-block px-2 py-1 rounded text-xs"
-          class:bg-yellow-100={study.studyStatus === 'RECRUITING'}
-          class:text-yellow-800={study.studyStatus === 'RECRUITING'}
-          class:bg-gray-300={study.studyStatus === 'CLOSED'}
-          class:text-gray-800={study.studyStatus === 'CLOSED'}
-        >
-          {study.studyStatus}
-        </span>
-      </div>
-      <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2 leading-tight">
-        {study.title}
-      </h3>
-      <div class="flex items-center mb-1 text-sm text-gray-600">
-        <User class="w-4 h-4 text-blue-600" />
-        <span class="ml-1 font-medium">{study.nickname}</span>
-      </div>
-      <div class="text-sm text-gray-500">
-        인원 {study.acceptedPeople} / {study.maxPeople}
-      </div>
+      전체보기
     </button>
-  {/each}
+
+    <button
+      on:click={() => filterByStatus('RECRUITING')}
+      class={`flex items-center gap-2 px-6 py-3 rounded-full text-sm font-medium transition-all border-2
+        ${currentStatus === 'RECRUITING'
+          ? 'bg-teal-50 border-teal-300 text-teal-700'
+          : 'bg-white border-teal-200 text-teal-600 hover:bg-teal-50'}`}
+    >
+      👀 모집중만 보기
+    </button>
+  </div>
+
+  <!-- 오른쪽: 검색 바 -->
+  <div class="flex items-center gap-2 sm:ml-auto">
+    <input
+      type="text"
+      bind:value={keyword}
+      on:keydown={onSearchKeydown}
+      placeholder="제목으로 검색하세요.(2~50자)"
+      class="w-56 sm:w-64 md:w-72 rounded-full border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+    />
+    {#if keyword.trim().length > 0}
+      <button
+        class="px-3 py-2 text-sm rounded-full border border-gray-300 bg-white hover:bg-gray-50"
+        on:click={clearSearch}
+        aria-label="검색어 지우기"
+      >지우기</button>
+    {/if}
+    <button
+      class="px-3 py-2 text-sm rounded-full bg-gray-600 text-white hover:bg-blue-700 disabled:bg-gray-300"
+      on:click={doSearch}
+      disabled={keyword.trim().length > 0 && keyword.trim().length < 2}
+    >검색</button>
+  </div>
 </div>
 
+  <!-- 목록 -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    {#if studies.length === 0}
+      <div class="col-span-full text-center text-gray-500 py-12">
+        검색 결과가 없어요.
+      </div>
+    {:else}
+      {#each studies as study (study.studyPostId)}
+        <button
+          type="button"
+          class="w-full text-left bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition cursor-pointer"
+          on:click={() => goToDetail(study.studyPostId)}
+        >
+          <div class="mb-3">
+            <span
+              class="inline-block px-2 py-1 rounded text-xs"
+              class:bg-yellow-100={study.studyStatus === 'RECRUITING'}
+              class:text-yellow-800={study.studyStatus === 'RECRUITING'}
+              class:bg-gray-300={study.studyStatus === 'CLOSED'}
+              class:text-gray-800={study.studyStatus === 'CLOSED'}
+            >
+              {study.studyStatus}
+            </span>
+          </div>
+          <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2 leading-tight">
+            {study.title}
+          </h3>
+          <div class="flex items-center mb-1 text-sm text-gray-600">
+            <User class="w-4 h-4 text-blue-600" />
+            <span class="ml-1 font-medium">{study.nickname}</span>
+          </div>
+          <div class="text-sm text-gray-500">
+            인원 {study.acceptedPeople} / {study.maxPeople}
+          </div>
+        </button>
+      {/each}
+    {/if}
+  </div>
 
 <!-- ✅ 페이지버튼 -->
 <div class="mt-10 flex justify-center gap-2">
@@ -182,5 +242,4 @@
     </button>
   {/each}
 </div>
-
-</main>
+</main> 
