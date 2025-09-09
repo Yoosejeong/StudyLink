@@ -14,6 +14,7 @@ public class StudyPostConverter {
                 .title(dto.getTitle())
                 .content(dto.getContent())
                 .maxPeople(dto.getMaxPeople())
+                .category(dto.getCategory())
                 .studyStatus(StudyStatus.RECRUITING)
                 .build();
     }
@@ -28,6 +29,7 @@ public class StudyPostConverter {
                 .maxPeople(studyPost.getMaxPeople())
                 .acceptedPeople(studyPost.getAcceptedPeople())
                 .studyStatus(studyPost.getStudyStatus())
+                .category(studyPost.getCategory())
                 .createdAt(studyPost.getCreatedAt())
                 .updatedAt(studyPost.getUpdatedAt())
                 .build();
