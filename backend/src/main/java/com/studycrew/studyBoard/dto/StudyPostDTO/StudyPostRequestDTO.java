@@ -1,5 +1,6 @@
 package com.studycrew.studyBoard.dto.StudyPostDTO;
 
+import com.studycrew.studyBoard.enums.Category;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,6 +15,7 @@ public class StudyPostRequestDTO {
     public static class StudyPostCreate{
         private String title;
         private String content;
+        private Category category;
         private int maxPeople;
     }
 

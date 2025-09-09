@@ -1,6 +1,7 @@
 package com.studycrew.studyBoard.dto.StudyPostDTO;
 
 import com.querydsl.core.annotations.QueryProjection;
+import com.studycrew.studyBoard.enums.Category;
 import com.studycrew.studyBoard.enums.StudyStatus;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
@@ -23,11 +24,12 @@ public class StudyPostResponseDTO {
         private int maxPeople;
         private int acceptedPeople;
         private StudyStatus studyStatus;
+        private Category category;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
     }
 
-    @Builder
+    //@Builder
     @NoArgsConstructor
     @Getter
     public static class GetStudyPostListResponse{
@@ -37,18 +39,20 @@ public class StudyPostResponseDTO {
         private int maxPeople;
         private int acceptedPeople;
         private StudyStatus studyStatus;
+        private Category category;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
 
         @QueryProjection
         public GetStudyPostListResponse(Long studyPostId, String title, String nickname, int maxPeople,
-                                        int acceptedPeople, StudyStatus studyStatus, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                                        int acceptedPeople, StudyStatus studyStatus, Category category, LocalDateTime createdAt, LocalDateTime updatedAt) {
             this.studyPostId = studyPostId;
             this.title = title;
             this.nickname = nickname;
             this.maxPeople = maxPeople;
             this.acceptedPeople = acceptedPeople;
             this.studyStatus = studyStatus;
+            this.category = category;
             this.createdAt = createdAt;
             this.updatedAt = updatedAt;
         }

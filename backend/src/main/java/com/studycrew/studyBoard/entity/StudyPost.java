@@ -2,6 +2,7 @@ package com.studycrew.studyBoard.entity;
 
 import com.studycrew.studyBoard.apiPayload.code.status.ErrorStatus;
 import com.studycrew.studyBoard.apiPayload.exception.handler.StudyPostHandler;
+import com.studycrew.studyBoard.enums.Category;
 import com.studycrew.studyBoard.enums.StudyStatus;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -51,6 +52,9 @@ public class StudyPost extends BaseEntity {
     private boolean deleted = false;
 
     private LocalDateTime deletedAt;
+
+    @Enumerated(EnumType.STRING)
+    private Category category;
 
     public void update(String title, String content) {
         if (title != null) {
