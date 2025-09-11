@@ -2,19 +2,16 @@ package com.studycrew.studyBoard.entity;
 
 import com.studycrew.studyBoard.apiPayload.code.status.ErrorStatus;
 import com.studycrew.studyBoard.apiPayload.exception.handler.StudyPostHandler;
+import com.studycrew.studyBoard.entity.mapping.StudyPostTag;
 import com.studycrew.studyBoard.enums.Category;
 import com.studycrew.studyBoard.enums.StudyStatus;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -56,6 +53,10 @@ public class StudyPost extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private Category category;
 
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<StudyPostTag> postTags = new ArrayList<>();
+
     public void update(String title, String content) {
         if (title != null) {
             System.out.println("title : " + title);
@@ -84,5 +85,14 @@ public class StudyPost extends BaseEntity {
     public void delete() {
         this.deleted = true;
         this.deletedAt = LocalDateTime.now();
+    }
+
+    public void addTag(Tag tag) {
+        this.postTags.add(
+                StudyPostTag.builder()
+                        .post(this)
+                        .tag(tag)
+                        .build()
+        );
     }
 }
