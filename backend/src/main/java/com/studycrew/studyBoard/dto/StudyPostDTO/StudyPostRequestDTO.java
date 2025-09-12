@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 public class StudyPostRequestDTO {
 
     @Builder
@@ -17,6 +19,7 @@ public class StudyPostRequestDTO {
         private String content;
         private Category category;
         private int maxPeople;
+        private List<String> tags;
     }
 
     @Builder
