@@ -6,6 +6,8 @@ import com.studycrew.studyBoard.entity.StudyPost;
 import com.studycrew.studyBoard.entity.User;
 import com.studycrew.studyBoard.enums.StudyStatus;
 
+import java.util.List;
+
 public class StudyPostConverter {
 
     public static StudyPost toStudyPost(StudyPostCreate dto, User user){
@@ -20,6 +22,9 @@ public class StudyPostConverter {
     }
 
     public static StudyPostResponseDTO.GetStudyPost toGetStudyPost(StudyPost studyPost){
+        List<String> tagNames = studyPost.getPostTags().stream()
+                .map(pt -> pt.getTag().getName())
+                .toList();
         return StudyPostResponseDTO.GetStudyPost.builder()
                 .studyPostId(studyPost.getId())
                 .userId(studyPost.getUser().getId())
@@ -31,6 +36,7 @@ public class StudyPostConverter {
                 .studyStatus(studyPost.getStudyStatus())
                 .category(studyPost.getCategory())
                 .createdAt(studyPost.getCreatedAt())
+                .tags(tagNames)
                 .updatedAt(studyPost.getUpdatedAt())
                 .build();
     }
