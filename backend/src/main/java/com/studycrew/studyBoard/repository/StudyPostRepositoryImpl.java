@@ -1,15 +1,25 @@
 package com.studycrew.studyBoard.repository;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.studycrew.studyBoard.dto.StudyPostDTO.QStudyPostResponseDTO_GetStudyPostListResponse;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.GetStudyPostListResponse;
 import com.studycrew.studyBoard.entity.QStudyPost;
+import com.studycrew.studyBoard.entity.QTag;
 import com.studycrew.studyBoard.entity.QUser;
+import com.studycrew.studyBoard.entity.mapping.QStudyPostTag;
 import com.studycrew.studyBoard.enums.StudyStatus;
 import jakarta.persistence.EntityManager;
+import java.util.LinkedHashMap;
+
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +37,9 @@ public class StudyPostRepositoryImpl implements StudyPostRepositoryCustom{
     public Page<GetStudyPostListResponse> searchByStatusAndNotDeleted(String rawKeyword, StudyStatus status, Pageable pageable) {
         QStudyPost studyPost = QStudyPost.studyPost;
         QUser user = QUser.user;
+        QStudyPostTag spt = QStudyPostTag.studyPostTag;
+        QTag tag = QTag.tag;
+
 
         BooleanBuilder where = new BooleanBuilder()
                 .and(studyPost.deleted.isFalse());
@@ -58,13 +71,40 @@ public class StudyPostRepositoryImpl implements StudyPostRepositoryCustom{
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        // total (불필요한 조인 제거)
         Long total = queryFactory
                 .select(studyPost.id.count())
                 .from(studyPost)
                 .where(where)
                 .fetchOne();
 
+        if (!content.isEmpty()) {
+            List<Long> ids = content.stream()
+                    .map(GetStudyPostListResponse::getStudyPostId)
+                    .toList();
+
+            List<Tuple> rows = queryFactory
+                    .select(spt.post.id, tag.name)
+                    .from(spt)
+                    .join(spt.tag, tag)
+                    .where(spt.post.id.in(ids))
+                    .fetch();
+
+            Map<Long, List<String>> tagMap = rows.stream()
+                    .collect(Collectors.groupingBy(
+                            t -> t.get(spt.post.id),
+                            LinkedHashMap::new,
+                            Collectors.mapping(t -> t.get(tag.name), Collectors.collectingAndThen(
+                                    Collectors.toList(),
+                                    list -> list.stream()
+                                            .filter(Objects::nonNull)
+                                            .distinct()
+                                            .collect(Collectors.toList())
+                            ))
+                    ));
+
+            content.forEach(dto ->
+                    dto.attachTags(tagMap.getOrDefault(dto.getStudyPostId(), Collections.emptyList())));
+        }
         return new PageImpl<>(content, pageable, total == null ? 0L : total);
     }
 
