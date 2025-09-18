@@ -33,6 +33,7 @@
 		acceptedPeople: number;
 		category: CategoryCode;
 		studyStatus: 'RECRUITING' | 'CLOSED';
+		tags: string[];
 		updatedAt: string;
 	}
 
@@ -253,6 +254,26 @@
 					<h3 class="mb-2 line-clamp-2 leading-tight font-semibold text-gray-900">
 						{study.title}
 					</h3>
+
+					<!-- ✅ 태그 뱃지 -->
+					{#if study.tags?.length}
+						<div class="mb-2 flex flex-wrap gap-2">
+							{#each study.tags.slice(0, 3) as tag}
+								<span
+									class="inline-block rounded-full border border-gray-300 bg-white px-2 py-0.5 text-xs text-gray-900"
+								>
+									#{tag}
+								</span>
+							{/each}
+							{#if study.tags.length > 3}
+								<span
+									class="inline-block rounded-full border border-gray-300 bg-white px-2 py-0.5 text-xs text-gray-900"
+								>
+									+{study.tags.length - 3}
+								</span>
+							{/if}
+						</div>
+					{/if}
 					<div class="mb-1 flex items-center text-sm text-gray-600">
 						<User class="h-4 w-4 text-blue-600" />
 						<span class="ml-1 font-medium">{study.nickname}</span>

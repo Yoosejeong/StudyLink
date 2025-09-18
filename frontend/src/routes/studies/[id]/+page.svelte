@@ -39,6 +39,7 @@
 		acceptedPeople: number;
 		studyStatus: 'RECRUITING' | 'CLOSED';
 		category: { code: CategoryCode; label: string } | CategoryCode | string;
+		tags?: string[];
 		createdAt: string;
 		updatedAt: string;
 	};
@@ -255,6 +256,22 @@
 				</div>
 			</section>
 
+			{#if studyPost.tags && studyPost.tags.length}
+				<!-- 태그 영역 -->
+				<section class="mb-6">
+					<h2 class="mb-2 text-sm font-semibold text-gray-700">태그</h2>
+					<div class="flex flex-wrap gap-2">
+						{#each studyPost.tags as t}
+							<span
+								class="inline-flex items-center gap-1 rounded-full border border-gray-300 bg-white px-3 py-1 text-sm text-gray-800"
+								title={t}
+							>
+								#{t}
+							</span>
+						{/each}
+					</div>
+				</section>
+			{/if}
 			<!-- 메타 정보 (타일) -->
 			<section class="grid gap-4 sm:grid-cols-3">
 				<div class="rounded-xl border border-gray-200 bg-white p-4">
