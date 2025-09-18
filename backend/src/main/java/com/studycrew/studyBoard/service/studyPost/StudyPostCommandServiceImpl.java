@@ -7,11 +7,14 @@ import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO.StudyPostCr
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO.StudyPostRequestUpdate;
 import com.studycrew.studyBoard.entity.StudyApplication;
 import com.studycrew.studyBoard.entity.StudyPost;
+import com.studycrew.studyBoard.entity.Tag;
 import com.studycrew.studyBoard.entity.User;
 import com.studycrew.studyBoard.enums.ApplicationStatus;
 import com.studycrew.studyBoard.repository.StudyApplicationRepository;
 import com.studycrew.studyBoard.repository.StudyPostRepository;
 import java.util.List;
+
+import com.studycrew.studyBoard.repository.TagRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,9 +28,24 @@ public class StudyPostCommandServiceImpl implements StudyPostCommandService {
 
     private final StudyPostRepository studyPostRepository;
     private final StudyApplicationRepository studyApplicationRepository;
+    private final TagRepository tagRepository;
 
     public StudyPost createStudyPost(StudyPostCreate dto, User user){
         StudyPost studyPost = StudyPostConverter.toStudyPost(dto, user);
+
+        if (dto.getTags() != null) {
+            List<Tag> tags = dto.getTags().stream()
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .map(name ->
+                            tagRepository.findByName(name)
+                                    .orElseGet(() -> tagRepository.save(
+                                            Tag.builder().name(name).build()))
+                    )
+                    .toList();
+
+            tags.forEach(studyPost::addTag);
+        }
         return studyPostRepository.save(studyPost);
     }
 
