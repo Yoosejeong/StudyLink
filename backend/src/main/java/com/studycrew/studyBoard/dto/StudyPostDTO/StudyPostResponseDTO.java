@@ -49,7 +49,7 @@ public class StudyPostResponseDTO {
 
         @QueryProjection
         public GetStudyPostListResponse(Long studyPostId, String title, String nickname, int maxPeople,
-                                        int acceptedPeople, StudyStatus studyStatus, Category category, List<String> tags, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                                        int acceptedPeople, StudyStatus studyStatus, Category category, LocalDateTime createdAt, LocalDateTime updatedAt) {
             this.studyPostId = studyPostId;
             this.title = title;
             this.nickname = nickname;
@@ -57,7 +57,6 @@ public class StudyPostResponseDTO {
             this.acceptedPeople = acceptedPeople;
             this.studyStatus = studyStatus;
             this.category = category;
-            this.tags = tags;
             this.createdAt = createdAt;
             this.updatedAt = updatedAt;
         }
