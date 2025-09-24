@@ -5,7 +5,7 @@ import com.studycrew.studyBoard.jwt.CustomLogoutFilter;
 import com.studycrew.studyBoard.jwt.JWTFilter;
 import com.studycrew.studyBoard.jwt.JWTUtil;
 import com.studycrew.studyBoard.jwt.LoginFilter;
-import com.studycrew.studyBoard.repository.RefreshRepository;
+import com.studycrew.studyBoard.service.RefreshService;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +30,7 @@ public class SecurityConfig {
 
     private final AuthenticationConfiguration authenticationConfiguration;
     private final JWTUtil jwtUtil;
-    private final RefreshRepository refreshRepository;
+    private final RefreshService refreshService;
     private final ObjectMapper objectMapper;
 
     @Bean
@@ -96,14 +96,14 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         http
-                .addFilterAt(new LoginFilter("/api/login", authenticationManager(authenticationConfiguration), jwtUtil, refreshRepository, objectMapper), UsernamePasswordAuthenticationFilter.class);
+                .addFilterAt(new LoginFilter("/api/login", authenticationManager(authenticationConfiguration), jwtUtil, refreshService, objectMapper), UsernamePasswordAuthenticationFilter.class);
         http
                 .addFilterBefore(new JWTFilter(jwtUtil, objectMapper), LoginFilter.class);
         http
                 .logout((logout) -> logout.disable());
 
         http
-                .addFilterBefore(new CustomLogoutFilter(jwtUtil, refreshRepository), LogoutFilter.class);
+                .addFilterBefore(new CustomLogoutFilter(jwtUtil, refreshService), LogoutFilter.class);
         return http.build();
     }
 }

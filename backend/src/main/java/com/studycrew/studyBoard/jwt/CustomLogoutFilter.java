@@ -1,7 +1,6 @@
 package com.studycrew.studyBoard.jwt;
 
-import com.studycrew.studyBoard.entity.Refresh;
-import com.studycrew.studyBoard.repository.RefreshRepository;
+import com.studycrew.studyBoard.service.RefreshService;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -18,7 +17,7 @@ import org.springframework.web.filter.GenericFilterBean;
 public class CustomLogoutFilter extends GenericFilterBean {
 
     private final JWTUtil jwtUtil;
-    private final RefreshRepository refreshRepository;
+    private final RefreshService refreshService;
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -76,8 +75,14 @@ public class CustomLogoutFilter extends GenericFilterBean {
             return;
         }
 
+        String email = jwtUtil.getEmail(refresh);
+        if (email == null) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+
         //DB에 저장되어 있는지 확인
-        Boolean isExist = refreshRepository.existsByRefreshToken(refresh);
+        Boolean isExist = refreshService.isValid(email, refresh);
         if (!isExist) {
 
             //response status code
@@ -85,9 +90,8 @@ public class CustomLogoutFilter extends GenericFilterBean {
             return;
         }
 
-        //로그아웃 진행
-        //Refresh 토큰 DB에서 제거
-        refreshRepository.deleteByRefreshToken(refresh);
+        //로그아웃 진행 : Redis 키 제거 + 쿠키 제거
+        refreshService.revoke(email);
 
         //Refresh 토큰 Cookie 값 0
         Cookie cookie = new Cookie("refresh", null);
