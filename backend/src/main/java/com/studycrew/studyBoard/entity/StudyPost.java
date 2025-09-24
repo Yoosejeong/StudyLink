@@ -23,7 +23,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
 @AllArgsConstructor
-@Table(name = "study_posts")
+@Table(name = "study_posts",
+        indexes = {
+                @Index(name = "ix_posts_deleted_created",
+                        columnList = "deleted, created_at DESC, id DESC"),
+        })
 public class StudyPost extends BaseEntity {
 
     @Id
