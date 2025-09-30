@@ -260,14 +260,14 @@
 						<div class="mb-2 flex flex-wrap gap-2">
 							{#each study.tags.slice(0, 3) as tag}
 								<span
-									class="inline-block rounded-full border border-gray-300 bg-white px-2 py-0.5 text-xs text-gray-900"
+									class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600"
 								>
 									#{tag}
 								</span>
 							{/each}
 							{#if study.tags.length > 3}
 								<span
-									class="inline-block rounded-full border border-gray-300 bg-white px-2 py-0.5 text-xs text-gray-900"
+									class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600"
 								>
 									+{study.tags.length - 3}
 								</span>
