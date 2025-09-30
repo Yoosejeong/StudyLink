@@ -1,3 +1,4 @@
+<!-- src/routes/studies/[id]/+page.svelte -->
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
@@ -6,7 +7,8 @@
 	import { isLoggedIn } from '$lib/stores/auth';
 	import { http } from '$lib/api/http';
 	import { registerOnReissueFail } from '$lib/api/fetchWithAuth';
-	import { ArrowLeft, Users, UserCheck, Flag } from 'lucide-svelte';
+	import { ArrowLeft, Users, UserCheck, CheckCircle, XCircle, Clock, MoreVertical } from 'lucide-svelte';
+	import { slide } from 'svelte/transition';
 
 	type CategoryCode =
 		| 'BACKEND'
@@ -52,11 +54,15 @@
 	let studyPost: StudyPost | null = null;
 	let currentUserId: number | null = null;
 	let currentUserNickname: string | null = null;
+
 	let isLoading = true;
 	let errorMessage = '';
 	$: studyPostId = $page.params.id;
+
 	let hasApplied = false;
-	let applicationStatus: string | null = null;
+	let applicationStatus: 'PENDING' | 'ACCEPTED' | 'REJECTED' | null = null;
+
+	let isMenuOpen = false;
 
 	registerOnReissueFail(() => {
 		localStorage.removeItem('accessToken');
@@ -72,12 +78,15 @@
 			return;
 		}
 
-		await fetchUser();
-		await fetchStudyPost();
-		await checkApplicationStatus();
+		await Promise.all([
+			fetchUser(),
+			fetchStudyPost(),
+			checkApplicationStatus()
+		]);
 	});
 
 	function handleEdit() {
+		isMenuOpen = false;
 		goto(`/studies/${studyPostId}/edit`);
 	}
 
@@ -146,6 +155,7 @@
 	}
 
 	async function handleDelete() {
+		isMenuOpen = false;
 		const confirmed = confirm('정말 삭제하시겠습니까?');
 		if (!confirmed) return;
 
@@ -165,6 +175,7 @@
 	}
 
 	async function handleCloseRecruitment() {
+		isMenuOpen = false;
 		const ok = confirm('정말 모집을 종료하시겠습니까?');
 		if (!ok) return;
 
@@ -176,7 +187,6 @@
 				return;
 			}
 			alert('모집이 종료되었습니다.');
-			// UI 갱신
 			if (studyPost) studyPost.studyStatus = 'CLOSED';
 		} catch (e) {
 			console.error('모집 종료 요청 오류:', e);
@@ -195,197 +205,217 @@
 		}
 	}
 
+	function closeMenu() {
+		isMenuOpen = false;
+	}
+
 	$: categoryLabel = studyPost
 		? typeof studyPost.category === 'object'
 			? studyPost.category.label
 			: (CAT_LABEL[studyPost.category as CategoryCode] ?? (studyPost.category as string))
 		: '';
+
+	$: remainingSeats = studyPost ? studyPost.maxPeople - studyPost.acceptedPeople : 0;
 </script>
 
 {#if isLoading}
-	<p class="mt-10 text-center text-gray-500">불러오는 중...</p>
+	<div class="flex h-64 items-center justify-center">
+		<p class="text-gray-500">스터디 정보를 불러오는 중입니다...</p>
+	</div>
 {:else if errorMessage}
-	<p class="mt-10 text-center text-red-500">{errorMessage}</p>
+	<div class="flex h-64 flex-col items-center justify-center gap-4">
+		<p class="text-red-500">{errorMessage}</p>
+		<button
+			on:click={() => goto('/')}
+			class="rounded-md bg-gray-200 px-4 py-2 text-sm text-gray-800 hover:bg-gray-300"
+		>
+			홈으로 돌아가기
+		</button>
+	</div>
 {:else if studyPost}
-	<div class="mx-auto max-w-3xl px-4 py-12">
-		<div class="rounded-lg bg-white p-8 shadow-md">
-			<!-- 인라인 뒤로가기 -->
-			<div class="mb-3">
+	<div class="mx-auto max-w-3xl px-4 py-12 font-sans" use:clickOutside={closeMenu}>
+		<div class="rounded-2xl bg-white p-6 shadow-lg sm:p-8">
+			<!-- 뒤로가기 버튼 -->
+			<div class="mb-4">
 				<button
 					type="button"
-					class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+					class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800"
 					on:click={() => goto('/')}
 				>
-					<ArrowLeft class="h-5 w-5" />
-					<span>목록</span>
+					<ArrowLeft class="h-4 w-4" />
+					<span>목록으로</span>
 				</button>
 			</div>
 
-			<!-- 헤더: 카테고리 라벨 + 제목  -->
-			<div class="mb-2 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-				<div class="flex-1">
-					<div class="mb-1">
-						<span class="ml-2 inline-block rounded bg-indigo-100 px-2 py-1 text-xs text-indigo-800">
-							{categoryLabel}
-						</span>
-					</div>
-
-					<h1 class="text-3xl leading-snug font-extrabold text-gray-900 sm:max-w-xl md:text-4xl">
-						{studyPost.title}
-					</h1>
+			<!-- 헤더: 카테고리, 제목, 작성자 메뉴 -->
+			<header class="relative mb-6">
+				<div class="mb-3">
+					<span class="rounded bg-indigo-100 px-2.5 py-1 text-xs font-semibold text-indigo-800">
+						{categoryLabel}
+					</span>
 				</div>
-			</div>
+				<h1 class="mb-3 text-3xl font-bold text-gray-900 sm:text-4xl">
+					{studyPost.title}
+				</h1>
+				<div class="flex items-center justify-between text-sm text-gray-500">
+					<div>
+						<span>{studyPost.nickname}</span>
+						<span class="mx-2">·</span>
+						<span>{new Date(studyPost.createdAt).toLocaleDateString()}</span>
+					</div>
+				</div>
 
-			<!-- 작성자 · 날짜 -->
-			<div class="text-sm text-gray-600 md:text-base">
-				작성자 <span class="font-medium text-gray-800">{studyPost.nickname}</span>
-				<span class="mx-2 text-gray-300">·</span>
-				등록일 <span class="text-gray-700">{new Date(studyPost.createdAt).toLocaleString()}</span>
-			</div>
+				<!-- 작성자 메뉴 (햄버거 버튼) -->
+				{#if currentUserId === studyPost.userId}
+					<div class="absolute right-0 top-0">
+						<button
+							on:click|stopPropagation={() => (isMenuOpen = !isMenuOpen)}
+							class="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+							aria-label="게시물 관리 메뉴"
+						>
+							<MoreVertical class="h-5 w-5" />
+						</button>
+						{#if isMenuOpen}
+							<div
+								transition:slide={{ duration: 150 }}
+								class="absolute right-0 mt-2 w-40 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+							>
+								{#if studyPost.studyStatus === 'RECRUITING'}
+									<button
+										on:click={handleCloseRecruitment}
+										class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+									>
+										🔒 모집 종료
+									</button>
+								{/if}
+								<button
+									on:click={handleEdit}
+									class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+								>
+									✏️ 수정
+								</button>
+								<button
+									on:click={handleDelete}
+									class="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+								>
+									🗑️ 삭제
+								</button>
+							</div>
+						{/if}
+					</div>
+				{/if}
+			</header>
 
 			<!-- 구분선 -->
-			<div class="my-6 h-px bg-gray-200"></div>
+			<hr class="my-6 border-gray-200" />
 
 			<!-- 스터디 소개 -->
 			<section class="mb-8">
-				<h2 class="mb-2 text-sm font-semibold text-gray-700">스터디 소개</h2>
+				<h2 class="mb-3 text-lg font-semibold text-gray-800">스터디 소개</h2>
 				<div
-					class="rounded-xl border border-gray-200 bg-white/70 p-5 leading-relaxed whitespace-pre-line text-gray-900"
+					class="prose prose-sm max-w-none rounded-lg border border-gray-200 bg-gray-50/50 p-5 leading-relaxed text-gray-700 whitespace-pre-wrap"
 				>
 					{studyPost.content}
 				</div>
 			</section>
 
-			{#if studyPost.tags && studyPost.tags.length}
-				<!-- 태그 영역 -->
-				<section class="mb-6">
-					<h2 class="mb-2 text-sm font-semibold text-gray-700">태그</h2>
+			<!-- 태그 -->
+			{#if studyPost.tags && studyPost.tags.length > 0}
+				<section class="mb-8">
 					<div class="flex flex-wrap gap-2">
-						{#each studyPost.tags as t}
+						{#each studyPost.tags as tag}
 							<span
-								class="inline-flex items-center gap-1 rounded-full border border-gray-300 bg-white px-3 py-1 text-sm text-gray-800"
-								title={t}
+								class="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600"
 							>
-								#{t}
+								#{tag}
 							</span>
 						{/each}
 					</div>
 				</section>
 			{/if}
-			<!-- 메타 정보 (타일) -->
-			<section class="grid gap-4 sm:grid-cols-3">
-				<div class="rounded-xl border border-gray-200 bg-white p-4">
-					<div class="flex items-center justify-between">
-						<span class="inline-flex items-center gap-2 text-sm text-gray-600">
-							<Users class="h-4 w-4" /> 최대 인원
-						</span>
-						<span class="text-base font-semibold text-gray-900">{studyPost.maxPeople}명</span>
+			
+			<!-- 모집 현황 -->
+			<div class="my-8 rounded-lg border border-gray-200 bg-white p-5">
+				<div class="flex items-center justify-between">
+					<div class="flex items-center gap-6 text-gray-600">
+						<div class="flex items-center gap-2">
+							<Users class="h-5 w-5" />
+							<span>모집인원 <strong class="text-gray-900">{studyPost.maxPeople}</strong>명</span>
+						</div>
+						<div class="flex items-center gap-2">
+							<UserCheck class="h-5 w-5" />
+							<span>현재 승인인원 <strong class="text-gray-900">{studyPost.acceptedPeople}</strong>명</span>
+						</div>
+					</div>
+					<div class="text-right">
+						<span class="text-gray-600">남은 자리 </span>
+						<strong class="text-lg font-bold text-emerald-600">{remainingSeats}</strong><span class="text-emerald-600">명</span>
 					</div>
 				</div>
+			</div>
 
-				<div class="rounded-xl border border-gray-200 bg-white p-4">
-					<div class="flex items-center justify-between">
-						<span class="inline-flex items-center gap-2 text-sm text-gray-600">
-							<UserCheck class="h-4 w-4" /> 승인 인원
-						</span>
-						<span class="text-base font-semibold text-gray-900">{studyPost.acceptedPeople}명</span>
-					</div>
-				</div>
-
-				<div class="rounded-xl border border-gray-200 bg-white p-4">
-					<div class="flex items-center justify-between">
-						<span class="inline-flex items-center gap-2 text-sm text-gray-600">
-							<Flag class="h-4 w-4" /> 모집 상태
-						</span>
-						<span
-							class={`rounded-full border px-2.5 py-1 text-sm font-medium
-              ${
-								studyPost.studyStatus === 'RECRUITING'
-									? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-									: 'border-gray-300 bg-gray-100 text-gray-700'
-							}`}
-						>
-							{studyPost.studyStatus === 'RECRUITING' ? '모집 중' : '모집 종료'}
-						</span>
-					</div>
-				</div>
-			</section>
-
-			<!-- 하단 액션: 좌/우 배치 -->
-			<div class="mt-8 flex items-center justify-between">
-				<!-- 좌측: 작성자 전용 운영 버튼 -->
-				<div class="flex items-center gap-2">
-					{#if currentUserId === studyPost.userId}
-						<button
-							class="rounded-full border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 shadow-sm transition hover:bg-gray-50"
-							on:click={() => goto(`/studies/${studyPostId}/applications`)}
-						>
-							👥 지원자 목록
-						</button>
-
-						{#if studyPost.studyStatus === 'RECRUITING'}
-							<button
-								class="rounded-full border border-red-300 bg-white px-3 py-1.5 text-sm text-red-600 shadow-sm transition hover:bg-red-50"
-								on:click={handleCloseRecruitment}
-							>
-								🔒 모집 종료하기
-							</button>
-						{/if}
-					{/if}
-				</div>
-
-				<!-- 우측: 수정/삭제 또는 지원/상태 -->
-				<div class="flex items-center gap-3">
-					{#if currentUserId === studyPost.userId}
-						<button
-							class="rounded-full border border-gray-300 bg-white px-4 py-2 text-sm text-gray-800 shadow-sm transition hover:bg-gray-50"
-							on:click={handleEdit}
-						>
-							수정하기
-						</button>
-						<button
-							class="rounded-full border border-red-300 bg-white px-4 py-2 text-sm text-red-600 shadow-sm transition hover:bg-red-50"
-							on:click={handleDelete}
-						>
-							삭제하기
-						</button>
-					{:else if hasApplied}
+			<!-- 하단 액션 버튼 -->
+			<div class="mt-8">
+				{#if currentUserId === studyPost.userId}
+					<!-- 작성자: 지원자 목록 보기 -->
+					<button
+						on:click={() => goto(`/studies/${studyPostId}/applications`)}
+						class="flex w-full items-center justify-center gap-2 rounded-lg bg-gray-800 px-5 py-4 text-base font-bold text-white shadow-md transition hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+					>
+						<Users class="h-5 w-5" />
+						<span>지원자 목록 보기</span>
+					</button>
+				{:else}
+					<!-- 지원자 -->
+					{#if hasApplied}
+						{@const statusInfo = {
+							ACCEPTED: { text: '스터디에 참여중입니다', icon: CheckCircle, color: 'green' },
+							REJECTED: { text: '아쉽지만, 참여가 거절되었습니다', icon: XCircle, color: 'red' },
+							PENDING: { text: '지원서 검토 결과를 기다리는 중', icon: Clock, color: 'blue' }
+						}[applicationStatus || 'PENDING']}
 						<div
-							class="flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-4 py-3"
+							class={`flex w-full items-center justify-center gap-3 rounded-lg border bg-gray-50 px-5 py-4 text-base font-semibold
+								${
+									statusInfo.color === 'green' ? 'border-green-200 text-green-700' :
+									statusInfo.color === 'red' ? 'border-red-200 text-red-700' :
+									'border-blue-200 text-blue-700'
+								}`}
 						>
-							{#if applicationStatus === 'ACCEPTED'}
-								<span class="text-green-600">✔</span>
-							{:else if applicationStatus === 'REJECTED'}
-								<span class="text-red-600">✖</span>
-							{:else}
-								<span class="text-blue-600">⏳</span>
-							{/if}
-							<span class="font-medium text-gray-800">이미 지원한 스터디입니다.</span>
-							<span
-								class="rounded-full px-2 py-0.5 text-xs font-medium
-                {applicationStatus === 'ACCEPTED'
-									? 'bg-green-100 text-green-700'
-									: applicationStatus === 'REJECTED'
-										? 'bg-red-100 text-red-700'
-										: 'bg-blue-100 text-blue-700'}"
-							>
-								{applicationStatus === 'ACCEPTED'
-									? '승인됨'
-									: applicationStatus === 'REJECTED'
-										? '거절됨'
-										: '진행중'}
-							</span>
+							<svelte:component this={statusInfo.icon} class="h-6 w-6" />
+							<span>{statusInfo.text}</span>
 						</div>
 					{:else if studyPost.studyStatus === 'RECRUITING'}
 						<button
-							class="rounded-full border border-blue-300 bg-white px-4 py-2 text-sm text-blue-600 shadow-sm transition hover:bg-blue-50"
 							on:click={handleApply}
+							class="w-full rounded-lg bg-blue-600 px-5 py-4 text-base font-bold text-white shadow-md transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
 						>
-							지원하기
+							스터디 지원하기
 						</button>
+					{:else}
+						<div
+							class="w-full cursor-not-allowed rounded-lg bg-gray-200 px-5 py-4 text-center text-base font-bold text-gray-500"
+						>
+							모집이 마감되었습니다
+						</div>
 					{/if}
-				</div>
+				{/if}
 			</div>
+
 		</div>
 	</div>
 {/if}
+
+<script context="module">
+  // 외부 클릭 시 메뉴 닫기 액션
+  function clickOutside(node, handler) {
+    const handleClick = event => {
+      if (node && !node.contains(event.target) && !event.defaultPrevented) {
+        handler();
+      }
+    };
+    document.addEventListener('click', handleClick, true);
+    return {
+      destroy() { document.removeEventListener('click', handleClick, true); }
+    };
+  }
+</script>
