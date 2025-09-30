@@ -1,0 +1,21 @@
+services:
+  redis:
+    image: redis:latest
+    ports:
+      - 6379:6379
+    restart: always
+    container_name: studylink-redis
+  studylink-backend:
+    image: studylink-back:local
+    ports:
+      - 8080:8080
+    depends_on:
+      - redis
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: studylink-backend
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    env_file:
+      - ./backend/.env.prod
