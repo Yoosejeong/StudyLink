@@ -1,10 +1,10 @@
 package com.studycrew.studyBoard.service;
 
-import com.studycrew.studyBoard.entity.Refresh;
 import com.studycrew.studyBoard.jwt.JWTUtil;
-import com.studycrew.studyBoard.repository.RefreshRepository;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+
+import java.time.Duration;
 import java.util.Date;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,33 +16,39 @@ import org.springframework.transaction.annotation.Transactional;
 public class TokenService {
 
     private final JWTUtil jwtUtil;
-    private final RefreshRepository refreshRepository;
+    private final RefreshService refreshService;
 
     public String reissueAccessToken(String refreshToken, HttpServletResponse response) {
+
         if (refreshToken == null) {
             throw new IllegalArgumentException("Refresh token is null");
         }
 
-        jwtUtil.isExpired(refreshToken); // 만료 시 예외 발생
-
-        String category = jwtUtil.getCategory(refreshToken);
-        if (!"refresh".equals(category)) {
-            throw new IllegalArgumentException("Invalid token category");
+        // 만료 시 예외 발생
+        if (jwtUtil.isExpired(refreshToken)) {
+            throw new IllegalArgumentException("Refresh token expired");
         }
 
-        boolean exists = refreshRepository.existsByRefreshToken(refreshToken);
-        if (!exists) {
-            throw new IllegalArgumentException("Refresh token not found in DB");
+        String category = jwtUtil.getCategory(refreshToken);
+
+        if (!"refresh".equals(category)) {
+            throw new IllegalArgumentException("Invalid token category");
         }
 
         String email = jwtUtil.getEmail(refreshToken);
         String role = jwtUtil.getRole(refreshToken);
 
+        // Redis에 저장된 현재 refresh와 동일한지 확인
+        if (!refreshService.isValid(email, refreshToken)) {
+            // 토큰 재사용/탈취 의심 → 강제 로그아웃 유도
+            throw new IllegalArgumentException("일치하지 않는 토큰입니다.");
+        }
+
         String newAccess = jwtUtil.createJwt("access", email, role, 600000L);
         String newRefresh = jwtUtil.createJwt("refresh", email, role, 86400000L);
 
-        refreshRepository.deleteByRefreshToken(refreshToken);
-        addRefreshEntity(email, newRefresh, 86400000L);
+        //redis에 refresh 저장
+        refreshService.rotate(email, newRefresh, Duration.ofDays(1));
 
         response.addCookie(createCookie("refresh", newRefresh));
 
@@ -58,20 +64,5 @@ public class TokenService {
         cookie.setHttpOnly(true);
 
         return cookie;
-    }
-
-
-
-    private void addRefreshEntity(String email, String refreshToken, Long expiredMs) {
-
-        Date date = new Date(System.currentTimeMillis() + expiredMs);
-
-        Refresh refresh = Refresh.builder()
-                .email(email)
-                .refreshToken(refreshToken)
-                .expiration(date.toString())
-                .build();
-
-        refreshRepository.save(refresh);
     }
 }
