@@ -59,5 +59,12 @@ public class UserController {
         return ApiResponse.of(SuccessStatus._USER_NICKNAME_UPDATED, responseDTO);
     }
 
+    @Operation(summary = "회원 닉네임 중복 검사", description = "회원의 닉네임 중복을 검사합니다.")
+    @GetMapping("/api/nickname/check")
+    public ApiResponse<UserResponseDTO.checkNicknameDTO> changeNickname(@RequestParam String nickname){
+        boolean available = userQueryService.checkNickname(nickname);
+        checkNicknameDTO responseDTO = UserConverter.checkNicknameDTO(available);
+        return ApiResponse.of(SuccessStatus._USER_NICKNAME_CHECKED, responseDTO);
+    }
 
 }

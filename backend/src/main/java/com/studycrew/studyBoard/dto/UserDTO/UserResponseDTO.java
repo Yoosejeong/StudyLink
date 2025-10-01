@@ -38,4 +38,12 @@ public class UserResponseDTO {
         String nickname;
     }
 
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class checkNicknameDTO{
+        boolean available;
+    }
+
 }

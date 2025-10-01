@@ -24,4 +24,11 @@ public class UserConverter {
                 .build();
     }
 
+    public static UserResponseDTO.checkNicknameDTO checkNicknameDTO(boolean available) {
+        return UserResponseDTO.checkNicknameDTO
+                .builder()
+                .available(available)
+                .build();
+    }
+
 }

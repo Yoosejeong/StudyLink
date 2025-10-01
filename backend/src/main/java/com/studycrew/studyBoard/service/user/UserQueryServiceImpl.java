@@ -21,4 +21,8 @@ public class UserQueryServiceImpl implements UserQueryService {
                 .orElseThrow(() -> new UserHandler(ErrorStatus._USER_NOT_FOUND));
     }
 
+    @Override
+    public boolean checkNickname(String nickname) {
+        return !userRepository.existsByNickname(nickname);
+    }
 }

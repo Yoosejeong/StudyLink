@@ -17,6 +17,8 @@ public enum SuccessStatus implements BaseCode {
     _USER_LOGIN_SUCCESS(HttpStatus.OK, "USER2000", "로그인에 성공했습니다."),
     _USER_CREATED(HttpStatus.CREATED, "USER2010", "회원가입을 성공했습니다."),
     _USER_NICKNAME_UPDATED(HttpStatus.OK, "USER2001", "닉네임 변경을 성공했습니다."),
+    _USER_NICKNAME_CHECKED(HttpStatus.OK, "USER2002", "닉네임 중복 확인을 성공했습니다."),
+
     //토큰 관련 응답
     _USER_REISSUED(HttpStatus.OK, "AUTH2000", "Access 토큰이 재발급되었습니다."),
 
