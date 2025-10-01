@@ -42,4 +42,8 @@ public class User extends BaseEntity  {
         this.profileUrl = key;
     }
 
+    public void changeNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
 }
