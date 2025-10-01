@@ -26,7 +26,6 @@ public class UserResponseDTO {
     @AllArgsConstructor
     public static class headerProfileDTO{
         String profileUrl;
-        Instant expiresAt;
     }
 
     @Builder
