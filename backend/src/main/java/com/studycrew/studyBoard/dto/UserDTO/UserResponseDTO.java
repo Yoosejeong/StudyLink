@@ -29,4 +29,13 @@ public class UserResponseDTO {
         Instant expiresAt;
     }
 
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class updateNicknameDTO{
+        Long userId;
+        String nickname;
+    }
+
 }
