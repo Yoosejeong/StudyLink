@@ -13,7 +13,7 @@ import static com.studycrew.studyBoard.dto.UserDTO.UserRequestDTO.UserSignUpRequ
 import static com.studycrew.studyBoard.dto.UserDTO.UserRequestDTO.updateNicknameRequest;
 
 @Service
-@Transactional(readOnly = true)
+@Transactional
 @RequiredArgsConstructor
 public class UserCommandServiceImpl implements UserCommandService {
 
@@ -21,7 +21,7 @@ public class UserCommandServiceImpl implements UserCommandService {
 
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    @Transactional
+    @Override
     public void joinProcess(UserSignUpRequestDTO joinRequestDTO) {
 
         if (userRepository.existsByEmail(joinRequestDTO.getEmail())) {
@@ -43,9 +43,12 @@ public class UserCommandServiceImpl implements UserCommandService {
         userRepository.save(user);
     }
 
-    @Transactional
+    @Override
     public User updateNickname(User user,updateNicknameRequest requestDTO) {
         String nickname = requestDTO.getNickname();
+        if (userRepository.existsByNickname(nickname)) {
+            throw new UserHandler(ErrorStatus._NICKNAME_DUPLICATED);
+        }
         user.changeNickname(nickname);
         return user;
     }
