@@ -9,6 +9,7 @@
 	const PRESIGN_ME_URL = '/api/s3/presign/me';
 	const PRESIGN_UPLOAD_URL = '/api/s3/presign/upload';
 	const PRESIGN_CONFIRM_URL = '/api/s3/presign/confirm';
+	const CHECK_NICKNAME_URL = '/api/nickname/check';
 
 	// ✅ 모달 상태
 	let successOpen = false;
@@ -42,6 +43,9 @@
 		headers?: Record<string, string>;
 		key: string;
 		expiresAt: string;
+	};
+	type CheckNicknameDto = {
+		available: boolean;
 	};
 
 	// ---- 화면 상태 ----
@@ -141,12 +145,17 @@
 
 	// ---- 닉네임 유효성/저장 ----
 	const nicknameRule = { max: 20, regex: /^[a-zA-Z0-9가-힣_ ]+$/ }; // 공백 허용 예시
+
+	let checking = false; // ✅ 추가: 중복확인 로딩
+	let available: boolean | null = null; // ✅ 추가: 사용 가능 여부 (null=미확인)
+	let checkTimer: ReturnType<typeof setTimeout> | null = null; // ✅ 추가: 디바운스 타이머
+
 	$: trimmed = (nickname ?? '').trim();
 	$: dirty = trimmed !== currentNickname;
 	$: validLen = !dirty || trimmed.length <= nicknameRule.max;
 	$: validRegex = !dirty || nicknameRule.regex.test(trimmed);
 	$: invalid = dirty && !(validLen && validRegex);
-	$: canSubmit = dirty && !invalid && !submitting;
+	$: canSubmit = dirty && !invalid && available !== false && !submitting;
 
 	async function saveNickname() {
 		if (!canSubmit) return;
@@ -154,18 +163,59 @@
 		errorMsg = '';
 		try {
 			const res = await http.patch(PATCH_NICKNAME_URL, { nickname: trimmed });
+
+			if (res.status === 409) {
+				// ✅ 중복 충돌
+				const msg = await safeMessage(res);
+				available = false; // UI에 반영
+				errorMsg = msg ?? '이미 사용 중인 닉네임입니다.';
+				return;
+			}
 			if (!res.ok) {
 				errorMsg = (await safeMessage(res)) ?? `변경 실패 (${res.status})`;
 				return;
 			}
 			currentNickname = trimmed;
 			openSuccess('닉네임이 변경되었습니다.');
-
 		} catch {
 			errorMsg = '네트워크 오류';
 		} finally {
 			submitting = false;
 		}
+	}
+
+	// ✅ 디바운스 중복확인 함수
+	async function debouncedCheckNickname() {
+		// 현재 닉네임과 같으면 검사 불필요
+		if (!dirty) {
+			available = true;
+			return;
+		}
+
+		// 로컬 규칙 불일치면 API 안 감
+		if (!validLen || !validRegex) {
+			available = null;
+			return;
+		}
+
+		if (checkTimer) clearTimeout(checkTimer);
+		checking = true;
+		checkTimer = setTimeout(async () => {
+			try {
+				const url = `${CHECK_NICKNAME_URL}?nickname=${encodeURIComponent(trimmed)}`;
+				const res = await http.get(url);
+				if (!res.ok) {
+					available = null;
+					return;
+				}
+				const env = (await res.json()) as ApiEnvelope<CheckNicknameDto>;
+				available = Boolean(env?.result?.available);
+			} catch {
+				available = null;
+			} finally {
+				checking = false;
+			}
+		}, 400); // 300~500ms 권장
 	}
 
 	async function safeMessage(res: Response) {
@@ -375,6 +425,7 @@
 					bind:value={nickname}
 					maxlength={nicknameRule.max}
 					placeholder="최대 20자, 영문/숫자/한글/밑줄/공백"
+					on:input={debouncedCheckNickname}
 				/>
 				<div class="mt-1 flex justify-between text-xs">
 					<span class={invalid && trimmed !== currentNickname ? 'text-red-600' : 'text-gray-500'}>
@@ -384,8 +435,14 @@
 							영문/숫자/한글/밑줄(_)과 공백만 사용할 수 있습니다.
 						{:else if !dirty}
 							현재 닉네임과 동일합니다.
+						{:else if checking}
+							중복 확인 중…
+						{:else if available === true}
+							사용 가능한 닉네임이에요.
+						{:else if available === false}
+							이미 사용 중인 닉네임입니다.
 						{:else}
-							사용 가능한 닉네임입니다.
+							닉네임을 입력하면 자동으로 중복 확인합니다.
 						{/if}
 					</span>
 					<span class="text-gray-400">{trimmed.length} / {nicknameRule.max}</span>
@@ -409,37 +466,55 @@
 	</div>
 </div>
 {#if successOpen}
-  <div class="fixed inset-0 z-[100] flex items-center justify-center">
-    <!-- 오버레이 -->
-    <div class="absolute inset-0 bg-black/40" on:click={closeSuccess}></div>
+	<div class="fixed inset-0 z-[100] flex items-center justify-center">
+		<!-- 오버레이 -->
+		<div class="absolute inset-0 bg-black/40" on:click={closeSuccess}></div>
 
-    <!-- 모달 -->
-    <div class="relative z-[110] w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl
-                animate-[fadeIn_.15s_ease-out]">
-      <!-- 아이콘 원 -->
-      <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
-        <!-- 체크 아이콘 -->
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M20 6 9 17l-5-5"/>
-        </svg>
-      </div>
+		<!-- 모달 -->
+		<div
+			class="relative z-[110] w-full max-w-sm animate-[fadeIn_.15s_ease-out] rounded-2xl bg-white p-6
+                shadow-2xl"
+		>
+			<!-- 아이콘 원 -->
+			<div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
+				<!-- 체크 아이콘 -->
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					class="h-6 w-6 text-emerald-600"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+				>
+					<path d="M20 6 9 17l-5-5" />
+				</svg>
+			</div>
 
-      <h3 class="mt-4 text-center text-lg font-semibold text-gray-900">{successTitle}</h3>
-      <div class="mt-6">
-        <button
-          class="w-full rounded-xl bg-black px-4 py-2.5 text-white font-medium hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-black/30"
-          on:click={() => { successAction?.(); closeSuccess(); }}
-        >
-          확인
-        </button>
-      </div>
-    </div>
-  </div>
+			<h3 class="mt-4 text-center text-lg font-semibold text-gray-900">{successTitle}</h3>
+			<div class="mt-6">
+				<button
+					class="w-full rounded-xl bg-black px-4 py-2.5 font-medium text-white hover:bg-gray-900 focus:ring-2 focus:ring-black/30 focus:outline-none"
+					on:click={() => {
+						successAction?.();
+						closeSuccess();
+					}}
+				>
+					확인
+				</button>
+			</div>
+		</div>
+	</div>
 {/if}
 
 <style>
-  @keyframes fadeIn {
-    from { transform: translateY(6px); opacity: 0 }
-    to   { transform: translateY(0);   opacity: 1 }
-  }
+	@keyframes fadeIn {
+		from {
+			transform: translateY(6px);
+			opacity: 0;
+		}
+		to {
+			transform: translateY(0);
+			opacity: 1;
+		}
+	}
 </style>
