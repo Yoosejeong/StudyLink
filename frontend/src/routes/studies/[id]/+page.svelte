@@ -1,15 +1,23 @@
 <!-- src/routes/studies/[id]/+page.svelte -->
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { get } from 'svelte/store';
-	import { isLoggedIn } from '$lib/stores/auth';
 	import { http } from '$lib/api/http';
-	import { registerOnReissueFail } from '$lib/api/fetchWithAuth';
-	import { ArrowLeft, Users, UserCheck, CheckCircle, XCircle, Clock, MoreVertical } from 'lucide-svelte';
+	import { clickOutside } from '$lib/actions/clickOutside';
+	import {
+		ArrowLeft,
+		Users,
+		UserCheck,
+		CheckCircle,
+		XCircle,
+		Clock,
+		MoreVertical
+	} from 'lucide-svelte';
 	import { slide } from 'svelte/transition';
 
+	// ✅ load(+page.ts)에서 넘어오는 데이터
+	export let data: { studyPost: StudyPost; id: string; authRequired?: boolean };
+	
 	type CategoryCode =
 		| 'BACKEND'
 		| 'FRONTEND'
@@ -46,43 +54,42 @@
 		updatedAt: string;
 	};
 
-	type CurrentUser = {
-		userId: number;
-		nickname: string;
-	};
+	type CurrentUser = { userId: number; nickname: string };
 
-	let studyPost: StudyPost | null = null;
+	// ✅ load에서 받은 값으로 고정
+	const studyPost = data.studyPost;
+	const studyPostId = data.id;
+
+	// 클라이언트에서만 필요한 상태들
 	let currentUserId: number | null = null;
 	let currentUserNickname: string | null = null;
-
-	let isLoading = true;
-	let errorMessage = '';
-	$: studyPostId = $page.params.id;
 
 	let hasApplied = false;
 	let applicationStatus: 'PENDING' | 'ACCEPTED' | 'REJECTED' | null = null;
 
 	let isMenuOpen = false;
 
-	registerOnReissueFail(() => {
-		localStorage.removeItem('accessToken');
-		isLoggedIn.set(false);
-		alert('세션이 만료되었습니다. 다시 로그인해주세요.');
+	// 🔶 로그인 유도 모달 상태/핸들러
+	let showAuthModal = false;
+	function openAuthModal() {
+		showAuthModal = true;
+	}
+	function closeAuthModal() {
+		showAuthModal = false;
+	}
+	function goAuth() {
+		showAuthModal = false;
 		goto('/auth');
-	});
+	}
 
+	// 페이지 진입 시 내 정보 / 지원 여부 조회
 	onMount(async () => {
-		if (!get(isLoggedIn)) {
-			alert('로그인 후 이용해주세요.');
-			goto('/auth');
+		// load에서 401/403이 나왔을 때: 모달 띄우고 종료
+		if (data.authRequired) {
+			openAuthModal();
 			return;
 		}
-
-		await Promise.all([
-			fetchUser(),
-			fetchStudyPost(),
-			checkApplicationStatus()
-		]);
+		await Promise.all([fetchUser(), checkApplicationStatus()]);
 	});
 
 	function handleEdit() {
@@ -90,9 +97,19 @@
 		goto(`/studies/${studyPostId}/edit`);
 	}
 
+	// 🔶 공통 권한 가드
+	function redirectOnAuthError(res: Response): boolean {
+		if (res.status === 401 || res.status === 403) {
+			openAuthModal();
+			return true;
+		}
+		return false;
+	}
+
 	async function fetchUser() {
 		try {
 			const res = await http.get('/api/users');
+			if (redirectOnAuthError(res)) return;
 			if (res.ok) {
 				const data: { result: CurrentUser } = await res.json();
 				currentUserId = data.result.userId;
@@ -108,6 +125,7 @@
 	async function handleApply() {
 		try {
 			const res = await http.post(`/api/study-posts/${studyPostId}/applications`);
+			if (redirectOnAuthError(res)) return;
 			if (!res.ok) {
 				const errorData = await safeJson(res);
 				alert(`지원 실패: ${errorData?.message || res.status}`);
@@ -124,6 +142,7 @@
 	async function checkApplicationStatus() {
 		try {
 			const res = await http.get(`/api/study-applications/check?studyPostId=${studyPostId}`);
+			if (redirectOnAuthError(res)) return;
 			if (res.ok) {
 				const data = await res.json();
 				hasApplied = data.result.hasApplied;
@@ -133,24 +152,6 @@
 			}
 		} catch (err) {
 			console.error('지원 여부 요청 오류', err);
-		}
-	}
-
-	async function fetchStudyPost() {
-		try {
-			const res = await http.get(`/api/study-posts/${studyPostId}`);
-			if (!res.ok) {
-				const errorData = await safeJson(res);
-				errorMessage = errorData?.message || `조회 실패 (code: ${res.status})`;
-				return;
-			}
-			const data = await res.json();
-			studyPost = data.result;
-		} catch (err) {
-			console.error(err);
-			errorMessage = '네트워크 오류 발생';
-		} finally {
-			isLoading = false;
 		}
 	}
 
@@ -187,7 +188,8 @@
 				return;
 			}
 			alert('모집이 종료되었습니다.');
-			if (studyPost) studyPost.studyStatus = 'CLOSED';
+			// 즉시 화면 반영
+			studyPost.studyStatus = 'CLOSED';
 		} catch (e) {
 			console.error('모집 종료 요청 오류:', e);
 			alert('네트워크 오류로 모집 종료에 실패했습니다.');
@@ -209,6 +211,7 @@
 		isMenuOpen = false;
 	}
 
+	// 파생값
 	$: categoryLabel = studyPost
 		? typeof studyPost.category === 'object'
 			? studyPost.category.label
@@ -218,21 +221,28 @@
 	$: remainingSeats = studyPost ? studyPost.maxPeople - studyPost.acceptedPeople : 0;
 </script>
 
-{#if isLoading}
-	<div class="flex h-64 items-center justify-center">
-		<p class="text-gray-500">스터디 정보를 불러오는 중입니다...</p>
+{#if showAuthModal}
+	<!-- 🔶 로그인 안내 모달 -->
+	<div class="fixed inset-0 z-50 flex items-center justify-center">
+		<div class="absolute inset-0 bg-black/40"></div>
+		<div class="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+			<h3 class="mb-2 text-lg font-bold text-gray-900">로그인이 필요합니다</h3>
+			<p class="mb-5 text-sm text-gray-600">
+				해당 기능을 사용하려면 로그인이 필요해요.
+			</p>
+			<div class="flex justify-end gap-2">
+				<button
+					class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+					on:click={goAuth}
+				>
+					로그인하기
+				</button>
+			</div>
+		</div>
 	</div>
-{:else if errorMessage}
-	<div class="flex h-64 flex-col items-center justify-center gap-4">
-		<p class="text-red-500">{errorMessage}</p>
-		<button
-			on:click={() => goto('/')}
-			class="rounded-md bg-gray-200 px-4 py-2 text-sm text-gray-800 hover:bg-gray-300"
-		>
-			홈으로 돌아가기
-		</button>
-	</div>
-{:else if studyPost}
+{/if}
+
+{#if studyPost}
 	<div class="mx-auto max-w-3xl px-4 py-12 font-sans" use:clickOutside={closeMenu}>
 		<div class="rounded-2xl bg-white p-6 shadow-lg sm:p-8">
 			<!-- 뒤로가기 버튼 -->
@@ -265,9 +275,9 @@
 					</div>
 				</div>
 
-				<!-- 작성자 메뉴 (햄버거 버튼) -->
+				<!-- 작성자 메뉴 -->
 				{#if currentUserId === studyPost.userId}
-					<div class="absolute right-0 top-0">
+					<div class="absolute top-0 right-0">
 						<button
 							on:click|stopPropagation={() => (isMenuOpen = !isMenuOpen)}
 							class="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-800"
@@ -278,7 +288,7 @@
 						{#if isMenuOpen}
 							<div
 								transition:slide={{ duration: 150 }}
-								class="absolute right-0 mt-2 w-40 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+								class="ring-opacity-5 absolute right-0 mt-2 w-40 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black focus:outline-none"
 							>
 								{#if studyPost.studyStatus === 'RECRUITING'}
 									<button
@@ -306,14 +316,13 @@
 				{/if}
 			</header>
 
-			<!-- 구분선 -->
 			<hr class="my-6 border-gray-200" />
 
 			<!-- 스터디 소개 -->
 			<section class="mb-8">
 				<h2 class="mb-3 text-lg font-semibold text-gray-800">스터디 소개</h2>
 				<div
-					class="prose prose-sm max-w-none rounded-lg border border-gray-200 bg-gray-50/50 p-5 leading-relaxed text-gray-700 whitespace-pre-wrap"
+					class="prose prose-sm max-w-none rounded-lg border border-gray-200 bg-gray-50/50 p-5 leading-relaxed whitespace-pre-wrap text-gray-700"
 				>
 					{studyPost.content}
 				</div>
@@ -324,16 +333,14 @@
 				<section class="mb-8">
 					<div class="flex flex-wrap gap-2">
 						{#each studyPost.tags as tag}
-							<span
-								class="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600"
-							>
+							<span class="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600">
 								#{tag}
 							</span>
 						{/each}
 					</div>
 				</section>
 			{/if}
-			
+
 			<!-- 모집 현황 -->
 			<div class="my-8 rounded-lg border border-gray-200 bg-white p-5">
 				<div class="flex items-center justify-between">
@@ -344,78 +351,71 @@
 						</div>
 						<div class="flex items-center gap-2">
 							<UserCheck class="h-5 w-5" />
-							<span>현재 승인인원 <strong class="text-gray-900">{studyPost.acceptedPeople}</strong>명</span>
+							<span
+								>현재 승인인원 <strong class="text-gray-900">{studyPost.acceptedPeople}</strong
+								>명</span
+							>
 						</div>
 					</div>
 					<div class="text-right">
 						<span class="text-gray-600">남은 자리 </span>
-						<strong class="text-lg font-bold text-emerald-600">{remainingSeats}</strong><span class="text-emerald-600">명</span>
+						<strong class="text-lg font-bold text-emerald-600">{remainingSeats}</strong><span
+							class="text-emerald-600">명</span
+						>
 					</div>
 				</div>
 			</div>
 
-			<!-- 하단 액션 버튼 -->
+			<!-- 하단 액션 -->
 			<div class="mt-8">
 				{#if currentUserId === studyPost.userId}
-					<!-- 작성자: 지원자 목록 보기 -->
 					<button
 						on:click={() => goto(`/studies/${studyPostId}/applications`)}
-						class="flex w-full items-center justify-center gap-2 rounded-lg bg-gray-800 px-5 py-4 text-base font-bold text-white shadow-md transition hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+						class="flex w-full items-center justify-center gap-2 rounded-lg bg-gray-800 px-5 py-4 text-base font-bold text-white shadow-md transition hover:bg-gray-900 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none"
 					>
 						<Users class="h-5 w-5" />
 						<span>지원자 목록 보기</span>
 					</button>
-				{:else}
-					<!-- 지원자 -->
-					{#if hasApplied}
-						{@const statusInfo = {
-							ACCEPTED: { text: '스터디에 참여중입니다', icon: CheckCircle, color: 'green' },
-							REJECTED: { text: '아쉽지만, 참여가 거절되었습니다', icon: XCircle, color: 'red' },
-							PENDING: { text: '지원서 검토 결과를 기다리는 중', icon: Clock, color: 'blue' }
-						}[applicationStatus || 'PENDING']}
-						<div
-							class={`flex w-full items-center justify-center gap-3 rounded-lg border bg-gray-50 px-5 py-4 text-base font-semibold
-								${
-									statusInfo.color === 'green' ? 'border-green-200 text-green-700' :
-									statusInfo.color === 'red' ? 'border-red-200 text-red-700' :
-									'border-blue-200 text-blue-700'
+				{:else if hasApplied}
+					{@const statusInfo = {
+						ACCEPTED: { text: '스터디에 참여중입니다', icon: CheckCircle, color: 'green' },
+						REJECTED: { text: '아쉽지만, 참여가 거절되었습니다', icon: XCircle, color: 'red' },
+						PENDING: { text: '지원서 검토 결과를 기다리는 중', icon: Clock, color: 'blue' }
+					}[applicationStatus || 'PENDING']}
+					<div
+						class={`flex w-full items-center justify-center gap-3 rounded-lg border bg-gray-50 px-5 py-4 text-base font-semibold
+                ${
+									statusInfo.color === 'green'
+										? 'border-green-200 text-green-700'
+										: statusInfo.color === 'red'
+											? 'border-red-200 text-red-700'
+											: 'border-blue-200 text-blue-700'
 								}`}
-						>
-							<svelte:component this={statusInfo.icon} class="h-6 w-6" />
-							<span>{statusInfo.text}</span>
-						</div>
-					{:else if studyPost.studyStatus === 'RECRUITING'}
-						<button
-							on:click={handleApply}
-							class="w-full rounded-lg bg-blue-600 px-5 py-4 text-base font-bold text-white shadow-md transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-						>
-							스터디 지원하기
-						</button>
-					{:else}
-						<div
-							class="w-full cursor-not-allowed rounded-lg bg-gray-200 px-5 py-4 text-center text-base font-bold text-gray-500"
-						>
-							모집이 마감되었습니다
-						</div>
-					{/if}
+					>
+						<svelte:component this={statusInfo.icon} class="h-6 w-6" />
+						<span>{statusInfo.text}</span>
+					</div>
+				{:else if studyPost.studyStatus === 'RECRUITING'}
+					<button
+						on:click={handleApply}
+						class="w-full rounded-lg bg-blue-600 px-5 py-4 text-base font-bold text-white shadow-md transition hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+					>
+						스터디 지원하기
+					</button>
+				{:else}
+					<div
+						class="w-full cursor-not-allowed rounded-lg bg-gray-200 px-5 py-4 text-center text-base font-bold text-gray-500"
+					>
+						모집이 마감되었습니다
+					</div>
 				{/if}
 			</div>
-
 		</div>
 	</div>
-{/if}
 
-<script context="module">
-  // 외부 클릭 시 메뉴 닫기 액션
-  function clickOutside(node, handler) {
-    const handleClick = event => {
-      if (node && !node.contains(event.target) && !event.defaultPrevented) {
-        handler();
-      }
-    };
-    document.addEventListener('click', handleClick, true);
-    return {
-      destroy() { document.removeEventListener('click', handleClick, true); }
-    };
-  }
-</script>
+{:else if !showAuthModal}
+  <!-- 글 데이터가 없고 모달도 안 보이는 경우(예: 일시적 오류) -->
+  <div class="mx-auto max-w-3xl px-4 py-24 text-center text-gray-500">
+    데이터를 불러오지 못했습니다.
+  </div>
+{/if}
