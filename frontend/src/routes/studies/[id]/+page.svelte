@@ -15,9 +15,11 @@
 	} from 'lucide-svelte';
 	import { slide } from 'svelte/transition';
 
+	const DEFAULT_AVATAR = '/avatars/default.jpg';
+
 	// ✅ load(+page.ts)에서 넘어오는 데이터
 	export let data: { studyPost: StudyPost; id: string; authRequired?: boolean };
-	
+
 	type CategoryCode =
 		| 'BACKEND'
 		| 'FRONTEND'
@@ -50,6 +52,7 @@
 		studyStatus: 'RECRUITING' | 'CLOSED';
 		category: { code: CategoryCode; label: string } | CategoryCode | string;
 		tags?: string[];
+		profileUrl?: string | null;
 		createdAt: string;
 		updatedAt: string;
 	};
@@ -227,9 +230,7 @@
 		<div class="absolute inset-0 bg-black/40"></div>
 		<div class="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
 			<h3 class="mb-2 text-lg font-bold text-gray-900">로그인이 필요합니다</h3>
-			<p class="mb-5 text-sm text-gray-600">
-				해당 기능을 사용하려면 로그인이 필요해요.
-			</p>
+			<p class="mb-5 text-sm text-gray-600">해당 기능을 사용하려면 로그인이 필요해요.</p>
 			<div class="flex justify-end gap-2">
 				<button
 					class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
@@ -267,10 +268,18 @@
 				<h1 class="mb-3 text-3xl font-bold text-gray-900 sm:text-4xl">
 					{studyPost.title}
 				</h1>
+				<!-- 아바타 + 닉네임 + 날짜 -->
 				<div class="flex items-center justify-between text-sm text-gray-500">
-					<div>
-						<span>{studyPost.nickname}</span>
-						<span class="mx-2">·</span>
+					<div class="flex items-center gap-2">
+						<img
+							src={studyPost.profileUrl ?? DEFAULT_AVATAR}
+							alt="작성자 프로필"
+							class="h-7 w-7 rounded-full object-cover"
+							loading="lazy"
+							decoding="async"
+						/>
+						<span class="font-medium text-gray-700">{studyPost.nickname}</span>
+						<span class="mx-2 text-gray-400">·</span>
 						<span>{new Date(studyPost.createdAt).toLocaleDateString()}</span>
 					</div>
 				</div>
@@ -412,10 +421,9 @@
 			</div>
 		</div>
 	</div>
-
 {:else if !showAuthModal}
-  <!-- 글 데이터가 없고 모달도 안 보이는 경우(예: 일시적 오류) -->
-  <div class="mx-auto max-w-3xl px-4 py-24 text-center text-gray-500">
-    데이터를 불러오지 못했습니다.
-  </div>
+	<!-- 글 데이터가 없고 모달도 안 보이는 경우(예: 일시적 오류) -->
+	<div class="mx-auto max-w-3xl px-4 py-24 text-center text-gray-500">
+		데이터를 불러오지 못했습니다.
+	</div>
 {/if}

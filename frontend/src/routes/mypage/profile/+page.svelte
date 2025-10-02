@@ -34,8 +34,6 @@
 	type MeDto = { userId: number; email?: string; username: string; nickname: string };
 	type HeaderProfile = {
 		profileUrl?: string | null;
-		profileURL?: string | null;
-		expiresAt?: string | null;
 	};
 	type PresignPutResult = {
 		method: 'PUT';
@@ -61,55 +59,12 @@
 
 	// 아바타
 	let avatarUrl: string | null = null;
-	let avatarExpiresAt: string | null = null;
-
-	// presigned GET 로컬 캐시 (만료 전까지 재사용)
-	const LS_KEY = 'meAvatarPresigned';
-	const SAFETY_MS = 30_000;
-
-	function readAvatarCache() {
-		try {
-			const raw = localStorage.getItem(LS_KEY);
-			if (!raw) return null;
-			const c = JSON.parse(raw) as { url: string; exp: number };
-			if (!c?.url || !c?.exp) return null;
-			if (Date.now() + SAFETY_MS >= c.exp) return null;
-			return c;
-		} catch {
-			return null;
-		}
-	}
-	function writeAvatarCache(url: string, expISO: string) {
-		try {
-			localStorage.setItem(LS_KEY, JSON.stringify({ url, exp: new Date(expISO).getTime() }));
-		} catch {}
-	}
-	function clearAvatarCache() {
-		localStorage.removeItem(LS_KEY);
-	}
-
-	// 서버에서 presigned GET 재발급
-	async function renewAvatar(): Promise<boolean> {
-		const res = await http.get(PRESIGN_ME_URL);
-		if (!res.ok) return false;
-		const env: ApiEnvelope<HeaderProfile> = await res.json();
-		const url = env?.result?.profileUrl ?? env?.result?.profileURL ?? null;
-		const exp = env?.result?.expiresAt ?? null;
-		if (!url || !exp) return false;
-		avatarUrl = url;
-		avatarExpiresAt = exp;
-		writeAvatarCache(url, exp);
-		return true;
-	}
 
 	async function loadAvatar() {
-		const cached = readAvatarCache();
-		if (cached) {
-			avatarUrl = cached.url;
-			avatarExpiresAt = new Date(cached.exp).toISOString();
-			return;
-		}
-		await renewAvatar();
+		const r = await http.get(PRESIGN_ME_URL);
+		if (!r.ok) return;
+		const env = (await r.json()) as ApiEnvelope<HeaderProfile>;
+		avatarUrl = env?.result?.profileUrl ?? null;
 	}
 
 	// ---- 초기 로딩 ----
@@ -327,9 +282,8 @@
 				return;
 			}
 
-			// 4) 캐시 비우고 새 URL
-			clearAvatarCache();
-			await renewAvatar();
+			// 4) 새 URL 반영
+            await loadAvatar();
 			bumpAvatar();
 			openSuccess('프로필 이미지가 변경되었습니다.');
 		} catch (e) {
@@ -340,13 +294,8 @@
 		}
 	}
 
-	// presigned URL 만료 시 1회 재발급
-	let renewing = false;
-	async function onImgError() {
-		if (renewing) return;
-		renewing = true;
-		await renewAvatar();
-		renewing = false;
+	function onImgError(e: Event) {
+		(e.target as HTMLImageElement).src = DEFAULT_AVATAR;
 	}
 </script>
 
