@@ -28,7 +28,6 @@ public class StudyPostResponseDTO {
         private StudyStatus studyStatus;
         private Category category;
         private List<String> tags;
-        private String profileUrl;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
     }
