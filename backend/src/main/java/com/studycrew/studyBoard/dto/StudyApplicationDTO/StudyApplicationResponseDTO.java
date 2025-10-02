@@ -45,7 +45,6 @@ public class StudyApplicationResponseDTO {
         private boolean deleted;
         private ApplicationStatus applicationStatus;
         private LocalDateTime appliedAt;
-        private String profileUrl;
     }
 
     @Getter
