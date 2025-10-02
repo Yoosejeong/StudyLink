@@ -6,6 +6,7 @@ import com.studycrew.studyBoard.config.props.PresignProps;
 import com.studycrew.studyBoard.config.props.S3Props;
 import com.studycrew.studyBoard.entity.User;
 import com.studycrew.studyBoard.repository.UserRepository;
+import com.studycrew.studyBoard.util.S3UrlUtil;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,14 +39,7 @@ public class S3Service {
     private final PresignProps presign;
     private final S3Client s3;
     private final UserRepository userRepository;
-
-    public String buildPublicUrl(String key) {
-        if (key == null || key.isBlank()) return null;
-
-        return "https://" + props.bucket()
-                + ".s3." + props.region()
-                + ".amazonaws.com/" + key;
-    }
+    private final S3UrlUtil s3UrlUtil;
 
     /**
      * 업로드용 Presigned PUT URL 발급
@@ -101,7 +95,7 @@ public class S3Service {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserHandler(ErrorStatus._USER_NOT_FOUND));
 
-        String url = buildPublicUrl(user.getProfileUrl());
+        String url = s3UrlUtil.buildPublicUrl(user.getProfileKey());
 
         return headerProfileDTO.builder()
                 .profileUrl(url)
@@ -113,7 +107,7 @@ public class S3Service {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserHandler(ErrorStatus._USER_NOT_FOUND));
 
-        String oldKey = user.getProfileUrl();
+        String oldKey = user.getProfileKey();
         if (Objects.equals(oldKey, newKey)) return;
 
         user.changeProfileUrl(newKey);
