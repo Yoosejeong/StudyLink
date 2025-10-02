@@ -28,9 +28,31 @@ public class StudyPostResponseDTO {
         private StudyStatus studyStatus;
         private Category category;
         private List<String> tags;
+        private String profileUrl;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
     }
+
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Getter
+    public static class GetStudyPostAndProfile{
+        private Long studyPostId;
+        private Long userId;
+        private String title;
+        private String nickname;
+        private String content;
+        private int maxPeople;
+        private int acceptedPeople;
+        private StudyStatus studyStatus;
+        private Category category;
+        private List<String> tags;
+        private String profileUrl;
+        private LocalDateTime createdAt;
+        private LocalDateTime updatedAt;
+    }
+
 
     //@Builder
     @NoArgsConstructor
@@ -43,13 +65,15 @@ public class StudyPostResponseDTO {
         private int acceptedPeople;
         private StudyStatus studyStatus;
         private Category category;
+        private String profileKey;
+        private String profileUrl;
         private List<String> tags;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
 
         @QueryProjection
         public GetStudyPostListResponse(Long studyPostId, String title, String nickname, int maxPeople,
-                                        int acceptedPeople, StudyStatus studyStatus, Category category, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                                        int acceptedPeople, StudyStatus studyStatus, Category category, String profileKey, LocalDateTime createdAt, LocalDateTime updatedAt) {
             this.studyPostId = studyPostId;
             this.title = title;
             this.nickname = nickname;
@@ -57,12 +81,17 @@ public class StudyPostResponseDTO {
             this.acceptedPeople = acceptedPeople;
             this.studyStatus = studyStatus;
             this.category = category;
+            this.profileKey = profileKey;
             this.createdAt = createdAt;
             this.updatedAt = updatedAt;
         }
 
         public void attachTags(List<String> tags) {
             this.tags = tags;
+        }
+
+        public void setProfileUrl(String url){
+            this.profileUrl = url;
         }
     }
 
