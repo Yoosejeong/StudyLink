@@ -36,10 +36,10 @@ public class User extends BaseEntity  {
 
     private String role;
 
-    private String profileUrl;
+    private String profileKey;
 
     public void changeProfileUrl(String key) {
-        this.profileUrl = key;
+        this.profileKey = key;
     }
 
     public void changeNickname(String nickname) {
