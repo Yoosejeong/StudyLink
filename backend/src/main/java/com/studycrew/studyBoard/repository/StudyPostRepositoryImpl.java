@@ -61,7 +61,7 @@ public class StudyPostRepositoryImpl implements StudyPostRepositoryCustom{
                 .select(new QStudyPostResponseDTO_GetStudyPostListResponse(
                         studyPost.id, studyPost.title, user.nickname,
                         studyPost.maxPeople, studyPost.acceptedPeople,
-                        studyPost.studyStatus, studyPost.category, studyPost.createdAt, studyPost.updatedAt
+                        studyPost.studyStatus, studyPost.category, user.profileKey, studyPost.createdAt, studyPost.updatedAt
                 ))
                 .from(studyPost)
                 .leftJoin(studyPost.user, user)

@@ -27,14 +27,14 @@ public class StudyApplicationConverter {
                 .build();
     }
 
-    public static StudyApplicationListResponse toApplicationList(StudyApplication studyApplication){
+    public static StudyApplicationListResponse toApplicationList(StudyApplication studyApplication, String url){
         return StudyApplicationListResponse.builder()
                 .applicationStatus(studyApplication.getApplicationStatus())
                 .studyApplicationId(studyApplication.getId())
                 .appliedAt(studyApplication.getCreatedAt())
                 .userId(studyApplication.getUser().getId())
                 .nickname(studyApplication.getUser().getNickname())
-                .profileUrl(studyApplication.getUser().getProfileUrl())
+                .profileUrl(url)
                 .build();
     }
 

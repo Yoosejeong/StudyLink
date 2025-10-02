@@ -41,4 +41,25 @@ public class StudyPostConverter {
                 .build();
     }
 
+    public static StudyPostResponseDTO.GetStudyPostAndProfile toGetStudyPostAndProfile(StudyPost studyPost, String url){
+        List<String> tagNames = studyPost.getPostTags().stream()
+                .map(pt -> pt.getTag().getName())
+                .toList();
+        return StudyPostResponseDTO.GetStudyPostAndProfile.builder()
+                .studyPostId(studyPost.getId())
+                .userId(studyPost.getUser().getId())
+                .nickname(studyPost.getUser().getNickname())
+                .title(studyPost.getTitle())
+                .content(studyPost.getContent())
+                .maxPeople(studyPost.getMaxPeople())
+                .acceptedPeople(studyPost.getAcceptedPeople())
+                .studyStatus(studyPost.getStudyStatus())
+                .category(studyPost.getCategory())
+                .createdAt(studyPost.getCreatedAt())
+                .profileUrl(url)
+                .tags(tagNames)
+                .updatedAt(studyPost.getUpdatedAt())
+                .build();
+    }
+
 }
