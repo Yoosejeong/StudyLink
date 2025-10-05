@@ -1,37 +1,63 @@
-HELP.md
-.gradle
-build/
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
+# ==================================
+# 공통
+.DS_Store
+Thumbs.db
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-
-### VS Code ###
+# VS Code
 .vscode/
+
+# 환경 변수
+.env
+.env.*
+!.env.example
+!.env.test
+
+# ==================================
+# Frontend
+/frontend/node_modules/
+/frontend/.output
+/frontend/.svelte-kit
+/frontend/.vercel
+/frontend/.netlify
+/frontend/.wrangler
+/frontend/build
+/frontend/vite.config.js.timestamp-*
+/frontend/vite.config.ts.timestamp-*
+
+# ==================================
+# Backend
+/backend/HELP.md
+/backend/.gradle
+/backend/build/
+/backend/nbbuild/
+/backend/dist/
+/backend/.nb-gradle/
+/backend/nbproject/private/
+/backend/.idea
+/backend/*.iws
+/backend/*.iml
+/backend/*.ipr
+/backend/out/
+/backend/.apt_generated
+/backend/.classpath
+/backend/.factorypath
+/backend/.project
+/backend/.settings
+/backend/.springBeans
+/backend/.sts4-cache
+/backend/bin/
+/backend/src/main/resources/application.yml
+/backend/src/main/resources/application-*.yml
+/backend/src/main/resources/application.properties
+/backend/src/main/resources/application-*.properties
+
+# Gradle wrapper는 포함
+!/backend/gradle/wrapper/gradle-wrapper.jar
+
+# src 안 build, bin, out 은 포함
+!/backend/**/src/main/**/build/
+!/backend/**/src/test/**/build/
+!/backend/**/src/main/**/bin/
+!/backend/**/src/test/**/bin/
+!/backend/**/src/main/**/out/
+!/backend/**/src/test/**/out/
