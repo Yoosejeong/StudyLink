@@ -8,3 +8,11 @@ const getInitialLoginState = () => {
 };
 
 export const isLoggedIn = writable<boolean>(getInitialLoginState());
+
+// 전역 로그아웃 함수
+export function logout() {
+  try {
+    localStorage.removeItem('accessToken');
+  } catch {}
+  isLoggedIn.set(false);
+}

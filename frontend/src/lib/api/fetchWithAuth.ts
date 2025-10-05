@@ -1,5 +1,6 @@
 // src/lib/api/fetchWithAuth.ts
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { logout } from '$lib/stores/auth';
 
 // 우리 API 오리진(프로토콜+호스트+포트)
 const API_ORIGIN = new URL(API_BASE_URL).origin;
@@ -82,6 +83,7 @@ export async function fetchWithAuth(
     // 재발급
     const newAccess = await reissueAccessToken();
     if (!newAccess) {
+      logout();
       onReissueFail?.();
       return first;
     }
