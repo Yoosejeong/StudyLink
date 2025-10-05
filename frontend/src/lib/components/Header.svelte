@@ -4,6 +4,7 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { http } from '$lib/api/http';
 	import { avatarVersion } from '$lib/stores/avatar';
+  import { registerOnReissueFail } from '$lib/api/fetchWithAuth';
 
 	// 기본 프로필
 	const DEFAULT_AVATAR = '/avatars/default.jpg';
@@ -83,14 +84,24 @@
 	onMount(() => {
 		const unsubLogin = isLoggedIn.subscribe((v) => {
 			if (v) void loadAvatar();
-			else avatarUrl = null;
+			else {
+        menuOpen = false;      // ✅ 로그아웃되면 즉시 닫기
+        avatarUrl = null;
+      }
 		});
 		const unsubVer = avatarVersion.subscribe(() => {
 			void loadAvatar();
 		});
+
+    // ✅ 재발급 실패 시 라우팅/메뉴 정리
+    const offReissue = registerOnReissueFail(() => {
+      menuOpen = false;
+    });
+
 		onDestroy(() => {
 			unsubLogin();
 			unsubVer();
+      offReissue && offReissue()
 		});
 	});
 

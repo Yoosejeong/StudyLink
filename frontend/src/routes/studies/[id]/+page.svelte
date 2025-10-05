@@ -57,7 +57,10 @@
 		updatedAt: string;
 	};
 
-	type CurrentUser = { userId: number; nickname: string };
+	type CurrentUser = {
+		userId: number;
+		nickname: string;
+	};
 
 	// ✅ load에서 받은 값으로 고정
 	const studyPost = data.studyPost;
