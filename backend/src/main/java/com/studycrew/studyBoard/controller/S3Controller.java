@@ -17,7 +17,6 @@ import java.util.Map;
 
 import static com.studycrew.studyBoard.dto.S3DTO.S3RequestDTO.*;
 import static com.studycrew.studyBoard.dto.S3DTO.S3ResponseDTO.*;
-import static com.studycrew.studyBoard.dto.S3DTO.S3ResponseDTO.PresignGetItemResponse;
 import static com.studycrew.studyBoard.dto.UserDTO.UserResponseDTO.*;
 
 @RestController
@@ -40,19 +39,6 @@ public class S3Controller {
         String email = customUserDetails.getUsername();
         User user = userQueryService.getUserByEmail(email);
         headerProfileDTO responseDTO = s3Service.getMeHeader(user.getId());
-        return ApiResponse.of(SuccessStatus._PROFILE_RETRIEVED, responseDTO);
-    }
-
-    @GetMapping("/presign/object")
-    public ApiResponse<PresignGetResponse> getPresigned(@RequestParam("key") String key) {
-        PresignGetResponse responseDTO = s3Service.presignGetCached(key);
-        return ApiResponse.of(SuccessStatus._PROFILE_RETRIEVED, responseDTO);
-    }
-
-    @PostMapping("/presign/objects")
-    public ApiResponse<List<PresignGetItemResponse>> batchPresigned(@RequestBody Map<String, List<String>> body) {
-        var keys = body.getOrDefault("keys", List.of());
-        List<PresignGetItemResponse> responseDTO = s3Service.batchPresignGet(keys);
         return ApiResponse.of(SuccessStatus._PROFILE_RETRIEVED, responseDTO);
     }
 

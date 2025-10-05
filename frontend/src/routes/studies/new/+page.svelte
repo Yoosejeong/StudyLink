@@ -5,7 +5,6 @@
   import { isLoggedIn } from '$lib/stores/auth';
   import { http } from '$lib/api/http';
 
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
   // 앞의 #들 제거 + trim
   const stripHash = (s: string) => s.replace(/^#+/, '').trim();

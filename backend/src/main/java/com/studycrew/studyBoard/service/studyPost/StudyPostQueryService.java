@@ -7,7 +7,9 @@ import com.studycrew.studyBoard.enums.StudyStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import static com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.*;
+
 public interface StudyPostQueryService {
-    StudyPost getStudyPost(Long studyPostId);
+    GetStudyPostAndProfile getStudyPost(Long studyPostId);
     Page<GetStudyPostListResponse> getStudyPostList(String rawKeyword, StudyStatus status, Pageable pageable);
 }

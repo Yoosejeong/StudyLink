@@ -5,6 +5,7 @@ import com.studycrew.studyBoard.apiPayload.exception.handler.StudyApplicationHan
 import com.studycrew.studyBoard.apiPayload.exception.handler.StudyPostHandler;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO.StudyPostRequestUpdate;
+import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.GetStudyPostListResponse;
 import com.studycrew.studyBoard.entity.StudyApplication;
 import com.studycrew.studyBoard.entity.StudyPost;
@@ -99,11 +100,11 @@ class StudyPostCommandServiceImplTest {
         User user = userRepository.save(getUser());
         StudyPost post = studyPostRepository.save(getStudyPost(user, 1));
 
-        StudyPost findPost = studyPostQueryService.getStudyPost(post.getId());
+        StudyPostResponseDTO.GetStudyPostAndProfile findPost = studyPostQueryService.getStudyPost(post.getId());
 
         assertThat(findPost.getTitle()).isEqualTo(post.getTitle());
         assertThat(findPost.getContent()).isEqualTo(post.getContent());
-        assertThat(findPost.getUser().getId()).isEqualTo(user.getId());
+        assertThat(findPost.getUserId()).isEqualTo(user.getId());
     }
 
     @Test

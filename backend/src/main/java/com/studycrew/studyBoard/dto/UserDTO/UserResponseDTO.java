@@ -26,7 +26,23 @@ public class UserResponseDTO {
     @AllArgsConstructor
     public static class headerProfileDTO{
         String profileUrl;
-        Instant expiresAt;
+    }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class updateNicknameDTO{
+        Long userId;
+        String nickname;
+    }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class checkNicknameDTO{
+        boolean available;
     }
 
 }

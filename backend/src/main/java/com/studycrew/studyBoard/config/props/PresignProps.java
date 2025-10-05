@@ -5,5 +5,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.time.Duration;
 
 @ConfigurationProperties(prefix = "app.s3.presign")
-public record PresignProps(Duration putTtl, Duration getTtl) {
+public record PresignProps(Duration putTtl) {
 }

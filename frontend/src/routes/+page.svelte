@@ -33,6 +33,8 @@
 		acceptedPeople: number;
 		category: CategoryCode;
 		studyStatus: 'RECRUITING' | 'CLOSED';
+		profileKey?: string | null; // S3 key
+		profileUrl?: string | nll;
 		tags: string[];
 		updatedAt: string;
 	}
@@ -42,6 +44,23 @@
 	let currentPage = 0;
 	let currentStatus: string | null = null; // 'RECRUITING' | null
 	let keyword = ''; // 검색어(입력값)
+	
+	// ✅ 기본 이미지 경로
+	const DEFAULT_AVATAR = '/avatars/default.jpg';
+
+	// ✅ 이미지 src 선택 (공개 URL 우선)
+	function avatarSrc(s: Study) {
+  		return s.prpofileUrl || undefined;
+	}
+
+	// ✅ 이미지 로딩 실패 시 폴백
+	function onImgError(e: Event) {
+  		const img = e.target as HTMLImageElement;
+  		// 이미 기본 아바타면 더 바꾸지 않음(무한 onerror 방지)
+  		if (!img.src.endsWith(DEFAULT_AVATAR)) {
+    		img.src = DEFAULT_AVATAR;
+  		}
+	}
 
 	const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -274,9 +293,17 @@
 							{/if}
 						</div>
 					{/if}
-					<div class="mb-1 flex items-center text-sm text-gray-600">
-						<User class="h-4 w-4 text-blue-600" />
-						<span class="ml-1 font-medium">{study.nickname}</span>
+					<!-- ✅ 프로필 아바타 + 닉네임 -->
+					<div class="mb-1 flex items-center gap-2 text-sm text-gray-600">
+						<img
+							src={study.profileUrl ?? DEFAULT_AVATAR}
+							alt="프로필"
+							class="h-5 w-5 rounded-full object-cover ring-1 ring-gray-200"
+							loading="lazy"
+							decoding="async"
+							on:error={onImgError}
+						/>
+						<span class="font-medium">{study.nickname}</span>
 					</div>
 					<div class="text-sm text-gray-500">
 						인원 {study.acceptedPeople} / {study.maxPeople}

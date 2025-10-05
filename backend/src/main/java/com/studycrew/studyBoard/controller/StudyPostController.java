@@ -78,9 +78,8 @@ public class StudyPostController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "스터디글이 존재하지 않습니다.")
     })
     @GetMapping("/api/study-posts/{studyPostId}")
-    public ApiResponse<StudyPostResponseDTO.GetStudyPost> getStudyPost(@PathVariable("studyPostId") Long studyPostId){
-        StudyPost studyPost = studyPostQueryService.getStudyPost(studyPostId);
-        GetStudyPost responseDTO = StudyPostConverter.toGetStudyPost(studyPost);
+    public ApiResponse<StudyPostResponseDTO.GetStudyPostAndProfile> getStudyPost(@PathVariable("studyPostId") Long studyPostId){
+        StudyPostResponseDTO.GetStudyPostAndProfile responseDTO = studyPostQueryService.getStudyPost(studyPostId);
         return ApiResponse.of(SuccessStatus._STUDY_POST_RETRIEVED, responseDTO);
     }
 

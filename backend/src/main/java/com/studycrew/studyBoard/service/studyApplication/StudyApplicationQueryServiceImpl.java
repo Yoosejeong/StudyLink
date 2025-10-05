@@ -10,6 +10,8 @@ import com.studycrew.studyBoard.repository.StudyApplicationRepository;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import com.studycrew.studyBoard.util.S3UrlUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,13 +26,18 @@ import static com.studycrew.studyBoard.dto.StudyApplicationDTO.StudyApplicationR
 public class StudyApplicationQueryServiceImpl implements StudyApplicationQueryService{
 
     private final StudyApplicationRepository studyApplicationRepository;
+    private final S3UrlUtil s3UrlUtil;
 
     @Override
     public List<StudyApplicationListResponse> findAllApplicants(Long studyPostId) {
         List<StudyApplication> studyApplicationList = studyApplicationRepository.findByStudyPostId(studyPostId);
         return studyApplicationList.stream()
-                .map(StudyApplicationConverter::toApplicationList)
-                .collect(Collectors.toList());
+                .map(app -> {
+                    String key = app.getUser().getProfileKey();
+                    String url = s3UrlUtil.buildPublicUrl(key);
+                    return StudyApplicationConverter.toApplicationList(app, url);
+                })
+                .toList();
     }
 
     @Override

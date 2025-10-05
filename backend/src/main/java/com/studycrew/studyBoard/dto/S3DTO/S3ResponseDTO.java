@@ -21,23 +21,4 @@ public class S3ResponseDTO {
         private String key;
         private Instant expiresAt;
     }
-
-    @Builder
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class PresignGetResponse {
-        private String url;
-        private Instant expiresAt;
-    }
-
-    @Builder
-    @Getter
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class PresignGetItemResponse {
-        private String key;
-        private String url;
-        private Instant expiresAt;
-    }
 }
