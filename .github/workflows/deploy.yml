@@ -51,9 +51,11 @@ jobs:
       uses: aws-actions/amazon-ecr-login@v2
         
     - name: Docker 이미지 생성
+      working-directory: backend
       run: docker build -t studylink .
 
     - name: Docker 이미지에 Tag 붙이기
+      working-directory: backend
       run: docker tag ${{ steps.login-ecr.outputs.registry }}/studylink:latest
 
     - name: ECR에 Docker 이미지 Push하기
