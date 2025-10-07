@@ -22,10 +22,13 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
 
-    - name: Write application.yml
+    - name: resoreces 디렉토리 생성
+      run: mkdir -p backend/src/main/resources
+
+    - name: application.yml 생성
       run: echo "${{ secrets.APPLICATION_YML }}" > backend/src/main/resources/application.yml
       
-    - name: Write application-dev.yml
+    - name: application-dev.yml 생성
       run: echo "${{ secrets.APPLICATION_DEV_YML }}" > backend/src/main/resources/application-dev.yml
       
 
