@@ -70,7 +70,7 @@ jobs:
         script_stop: true
         script: |
             REG="${{ steps.login-ecr.outputs.registry }}"
-            APP="studylink-backend                                 
+            APP="studylink-backend"                                 
             COMPOSE="/home/ubuntu/studylink-server/docker-compose.yml"
 
             # ECR 로그인 
