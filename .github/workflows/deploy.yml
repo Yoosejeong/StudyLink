@@ -28,7 +28,7 @@ jobs:
       run: echo "${{ secrets.APPLICATION_YML }}" > backend/src/main/resources/application.yml
       
     - name: application-dev.yml 생성
-      run: echo "${{ secrets.APPLICATION_DEV_YML }}" > backend/src/main/resources/application-dev.yml
+      run: echo "${{ secrets.APPLICATION_DEV }}" > backend/src/main/resources/application-dev.yml
       
 
     - name: gradlew 권한 설정
