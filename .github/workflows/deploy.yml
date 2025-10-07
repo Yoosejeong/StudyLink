@@ -28,9 +28,12 @@ jobs:
       run: echo "${{ secrets.APPLICATION_YML }}" > backend/src/main/resources/application.yml
       
     - name: application-dev.yml 생성
-      run: echo "${{ secrets.APPLICATION_DEV_YML }}" > backend/src/main/resources/application-dev.yml
-      
-
+      shell: bash
+      env:
+        APPLICATION_DEV_YML: ${{ secrets.APPLICATION_DEV }}
+      run: |
+        printf '%s' "$APPLICATION_DEV" | tr -d '\r' > backend/src/main/resources/application-dev.yml
+    
     - name: gradlew 권한 설정
       working-directory: backend
       run: chmod +x gradlew
@@ -81,4 +84,5 @@ jobs:
             docker compose -f "$COMPOSE" pull "$APP" --quiet
             docker compose -f "$COMPOSE" up -d --no-deps "$APP"
 
+            # 오래된 이미지 삭제
             docker image prune -f
