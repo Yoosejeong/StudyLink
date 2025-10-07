@@ -32,6 +32,10 @@ jobs:
       run: echo "${{ secrets.APPLICATION_DEV_YML }}" > backend/src/main/resources/application-dev.yml
       
 
+    - name: gradlew 권한 설정
+      working-directory: backend
+      run: chmod +x gradlew
+      
     - name: 테스트 및 빌드하기
       working-directory: backend
       run: ./gradlew clean build
