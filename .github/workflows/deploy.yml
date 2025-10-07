@@ -28,9 +28,13 @@ jobs:
       run: echo "${{ secrets.APPLICATION_YML }}" > backend/src/main/resources/application.yml
       
     - name: application-dev.yml 생성
-      run: echo "${{ secrets.APPLICATION_DEV }}" > backend/src/main/resources/application-dev.yml
-      
-
+      shell: bash
+      env:
+        APPLICATION_DEV_YML: ${{ secrets.APPLICATION_DEV }}
+      run: |
+        mkdir -p backend/src/main/resources
+        printf '%s' "$APPLICATION_DEV" | tr -d '\r' > backend/src/main/resources/application-dev.yml
+    
     - name: gradlew 권한 설정
       working-directory: backend
       run: chmod +x gradlew
