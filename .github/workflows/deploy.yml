@@ -81,4 +81,5 @@ jobs:
             docker compose -f "$COMPOSE" pull "$APP" --quiet
             docker compose -f "$COMPOSE" up -d --no-deps "$APP"
 
+            # 오래된 이미지 삭제
             docker image prune -f
