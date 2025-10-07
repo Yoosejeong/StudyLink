@@ -33,6 +33,7 @@ jobs:
       
 
     - name: 테스트 및 빌드하기
+      working-directory: backend
       run: ./gradlew clean build
 
     - name: AWS Resource에 접근할 수 있게 AWS credentials 설정
