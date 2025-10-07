@@ -7,6 +7,8 @@ import com.studycrew.studyBoard.jwt.JWTUtil;
 import com.studycrew.studyBoard.jwt.LoginFilter;
 import com.studycrew.studyBoard.service.RefreshService;
 import jakarta.servlet.http.HttpServletRequest;
+
+import java.util.Arrays;
 import java.util.Collections;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -58,7 +60,11 @@ public class SecurityConfig {
 
                         CorsConfiguration configuration = new CorsConfiguration();
 
-                        configuration.setAllowedOrigins(Collections.singletonList("http://localhost:5173"));
+                        configuration.setAllowedOrigins(Arrays.asList(
+                                "http://localhost:5173",
+                                "https://www.studylink.site",
+                                "https://studylink.site"
+                        ));
                         configuration.setAllowedMethods(Collections.singletonList("*"));
                         configuration.setAllowCredentials(true);
                         configuration.setAllowedHeaders(Collections.singletonList("*"));
