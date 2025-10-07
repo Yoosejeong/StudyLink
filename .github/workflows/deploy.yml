@@ -56,7 +56,7 @@ jobs:
 
     - name: Docker 이미지에 Tag 붙이기
       working-directory: backend
-      run: docker tag ${{ steps.login-ecr.outputs.registry }}/studylink:latest
+      run: docker tag studylink:latest ${{ steps.login-ecr.outputs.registry }}/studylink:latest
 
     - name: ECR에 Docker 이미지 Push하기
       run: docker push ${{ steps.login-ecr.outputs.registry }}/studylink:latest
