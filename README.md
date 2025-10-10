@@ -8,13 +8,6 @@ StudyLink는 스터디 그룹을 찾거나 팀원을 모집하는 과정을 더 
 
 **📚 API Docs:** [API 명세서 바로가기](https://api.studylink.site/swagger-ui/index.html)
 
-
-<br>
-
-## 🏗️ 시스템 아키텍처
-<img width="598" height="588" alt="스크린샷 2025-10-10 오후 8 52 10" src="https://github.com/user-attachments/assets/ab84ce8a-995b-44f9-832d-65643b8dc444" />
-
-
 <br>
 
 ## 🎯주요 기능
@@ -82,6 +75,13 @@ StudyLink는 스터디 그룹을 찾거나 팀원을 모집하는 과정을 더 
 <img width="2580" height="1548" alt="image" src="https://github.com/user-attachments/assets/3c518b84-f4f6-4bc3-901f-442972f55a8c" />
 </details>
 
+<br>
+
+## 🏗️ 시스템 아키텍처
+<img width="598" height="588" alt="스크린샷 2025-10-10 오후 8 52 10" src="https://github.com/user-attachments/assets/ab84ce8a-995b-44f9-832d-65643b8dc444" />
+
+
+<br>
 
 ## 🛠️ 기술 스택
 
