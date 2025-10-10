@@ -4,9 +4,9 @@ StudyLink는 스터디 그룹을 찾거나 팀원을 모집하는 과정을 더 
 
 <br>
 
-**🔗 Live Demo:** studylink.site 
+**🔗 Live Demo:** [https://www.studylink.site](https://www.studylink.site)
 
-**📚 API Docs:** api.studylink.site/swagger-ui/index.html#/ 
+**📚 API Docs:** [API 명세서 바로가기](https://api.studylink.site/swagger-ui/index.html)
 
 
 <br>
