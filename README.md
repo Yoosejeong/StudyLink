@@ -1,26 +1,30 @@
-# 📌 스터디 모집 플랫폼 (Backend)
+# 🚀 StudyLink: 스터디 그룹 매칭 및 관리 플랫폼
 
-스터디를 모집하고 지원할 수 있는 플랫폼입니다.
+StudyLink는 스터디 그룹을 찾거나 팀원을 모집하는 과정을 더 쉽고 효율적으로 만들기 위해 기획된 웹 애플레이션입니다. 
 
----
+<br>
 
-## ✅ 프로젝트 핵심 목표
-- **JWT 인증/인가 (Access + Refresh Token)** 흐름 설계 및 구현
-- **연관관계 설계와 N+1 문제 해결**
-  - 스터디글 전체 조회에서 `@EntityGraph`를 활용해 불필요한 쿼리를 줄임
-- 삭제 기능에서는 **Soft Delete** 적용으로 데이터 무결성을 유지하면서 논리 삭제 처리
-- **표준화된 API 응답 구조**
-  - `isSuccess`, `code`, `message`, `result` 포맷으로 일관성 유지
-  - 공통 예외 처리와 표준 에러 코드 관리
-- **Service 단위 테스트 코드 작성**
-- **API 문서화**
-  - Swagger UI 제공으로 표준 스펙 확인
----
+**🔗 Live Demo:** studylink.site 
 
-## ✅ 주요 기능 흐름
+**📚 API Docs:** api.studylink.site/swagger-ui/index.html#/ 
 
-- **회원가입 / 로그인**
-  - JWT 발급(Access/Refresh)
-  - Refresh Token으로 `/api/reissue`를 통해 토큰 재발급
-- **스터디글 CRUD**
-- **스터디 신청 / 승인 / 거절**
+
+<br>
+
+## 🏗️ 시스템 아키텍처
+<img width="598" height="588" alt="스크린샷 2025-10-10 오후 8 52 10" src="https://github.com/user-attachments/assets/ab84ce8a-995b-44f9-832d-65643b8dc444" />
+
+
+<br>
+
+## 🛠️ 기술 스택
+
+| 구분 | 기술 |
+| :--- | :--- |
+| **Backend** | `Java 21`, `Spring Boot 3`, `Spring Security`, `JPA`, `QueryDSL`, `JWT`, `JUnit5` |
+| **Database** | `MySQL (AWS RDS)`, `Redis` |
+| **Infrastructure** | `AWS (EC2, RDS, S3, VPC)`, `Docker`, `Docker Compose`, `Nginx` |
+| **CI/CD** | `GitHub Actions`, `Vercel` | 
+| **Frontend** | `SvelteKit` |
+
+<br>
