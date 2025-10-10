@@ -22,7 +22,7 @@ StudyLink는 스터디 그룹을 찾거나 팀원을 모집하는 과정을 더 
 | 구분 | 기술 |
 | :--- | :--- |
 | **Backend** | `Java 21`, `Spring Boot 3`, `Spring Security`, `JPA`, `QueryDSL`, `JWT`, `JUnit5` |
-| **Database** | `MySQL (AWS RDS)`, `Redis` |
+| **Database** | `MySQL`, `Redis` |
 | **Infrastructure** | `AWS (EC2, RDS, S3, VPC)`, `Docker`, `Docker Compose`, `Nginx` |
 | **CI/CD** | `GitHub Actions`, `Vercel` | 
 | **Frontend** | `SvelteKit` |
