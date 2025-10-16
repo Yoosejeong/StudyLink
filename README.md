@@ -72,7 +72,7 @@ StudyLink는 스터디 그룹을 찾거나 팀원을 모집하는 과정을 더 
 <br>
 사용자는 자신의 프로필 정보를 수정할 수 있습니다.
 <br><br>
-<img width="2580" height="1548" alt="image" src="https://github.com/user-attachments/assets/3c518b84-f4f6-4bc3-901f-442972f55a8c" />
+<img width="726" height="699" alt="스크린샷 2025-10-16 오후 5 38 22" src="https://github.com/user-attachments/assets/1a0382b9-15e3-4862-8239-e4debf0f873e" />
 </details>
 
 <br>
