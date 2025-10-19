@@ -101,9 +101,11 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
     private Cookie createCookie(String key, String value) {
         Cookie cookie = new Cookie(key, value);
-        cookie.setMaxAge(24 * 60 * 60);
+        cookie.setMaxAge(24*60*60);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setAttribute("SameSite", "None");
         cookie.setHttpOnly(true);
-        cookie.setAttribute("SameSite", "LAX");
         return cookie;
     }
 }

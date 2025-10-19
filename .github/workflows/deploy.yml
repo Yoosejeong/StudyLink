@@ -1,0 +1,82 @@
+
+name: Java CI with Gradle
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+
+    - name: resoreces 디렉토리 생성
+      run: mkdir -p backend/src/main/resources
+
+    - name: application.yml 생성
+      run: echo "${{ secrets.APPLICATION_YML }}" > backend/src/main/resources/application.yml
+      
+    - name: application-dev.yml 생성
+      run: echo '${{ secrets.APPLICATION_DEV }}' > backend/src/main/resources/application-dev.yml
+
+    - name: gradlew 권한 설정
+      working-directory: backend
+      run: chmod +x gradlew
+      
+    - name: 테스트 및 빌드하기
+      working-directory: backend
+      run: ./gradlew clean build -x test
+
+    - name: AWS Resource에 접근할 수 있게 AWS credentials 설정
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: ap-northeast-2
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+        
+    - name: ECR에 로그인하기
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+        
+    - name: Docker 이미지 생성
+      working-directory: backend
+      run: docker build -t studylink .
+
+    - name: Docker 이미지에 Tag 붙이기
+      working-directory: backend
+      run: docker tag studylink:latest ${{ steps.login-ecr.outputs.registry }}/studylink:latest
+
+    - name: ECR에 Docker 이미지 Push하기
+      run: docker push ${{ steps.login-ecr.outputs.registry }}/studylink:latest
+
+    - name: SSH로 EC2에 접속하기
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_PRIVATE_KEY }}
+        script_stop: true
+        script: |
+            REG="${{ steps.login-ecr.outputs.registry }}"
+            APP="studylink-backend"                                 
+            COMPOSE="/home/ubuntu/studylink-server/docker-compose.yml"
+
+            # ECR 로그인 
+            aws ecr get-login-password --region ap-northeast-2 \
+              | docker login --username AWS --password-stdin "$REG"
+
+            # 최신 이미지 당겨서 compose로 재기동
+            docker compose -f "$COMPOSE" pull "$APP" --quiet
+            docker compose -f "$COMPOSE" up -d --no-deps "$APP"
+
+            # 오래된 이미지 삭제
+            docker image prune -f
