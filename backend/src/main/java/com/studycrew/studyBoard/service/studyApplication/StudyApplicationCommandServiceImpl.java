@@ -28,6 +28,7 @@ public class StudyApplicationCommandServiceImpl implements StudyApplicationComma
     private final StudyApplicationRepository studyApplicationRepository;
     private final StudyPostCommandService studyPostCommandService;
 
+    @Override
     public StudyApplication applyStudyApplication(Long studyPostId, User user){
         StudyPost studyPost = studyPostRepository.findByIdAndDeletedFalse(studyPostId)
                 .orElseThrow(() -> new StudyPostHandler(ErrorStatus._STUDY_POST_NOT_FOUND));
