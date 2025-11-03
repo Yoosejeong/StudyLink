@@ -9,16 +9,30 @@ import com.studycrew.studyBoard.entity.StudyPost;
 import com.studycrew.studyBoard.entity.User;
 import com.studycrew.studyBoard.enums.ApplicationStatus;
 import com.studycrew.studyBoard.enums.StudyStatus;
+import com.studycrew.studyBoard.repository.StudyApplicationRepository;
 import com.studycrew.studyBoard.repository.StudyPostRepository;
 import com.studycrew.studyBoard.repository.UserRepository;
 import com.studycrew.studyBoard.service.studyApplication.StudyApplicationCommandService;
 import com.studycrew.studyBoard.service.studyApplication.StudyApplicationQueryService;
 import com.studycrew.studyBoard.service.studyPost.StudyPostCommandService;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.assertj.core.api.Assertions.*;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
+import org.checkerframework.checker.units.qual.A;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
@@ -32,9 +46,13 @@ class StudyApplicationCommandServiceImplTest {
     @Autowired
     private StudyPostRepository studyPostRepository;
     @Autowired
+    private StudyApplicationRepository studyApplicationRepository;
+    @Autowired
     private StudyApplicationQueryService studyApplicationQueryService;
     @Autowired
     private StudyPostCommandService studyPostCommandService;
+    @Autowired
+    private EntityManagerFactory emf;
 
     @Test
     void 스터디_지원하기_테스트(){
@@ -350,6 +368,96 @@ class StudyApplicationCommandServiceImplTest {
 
         assertThat(exception.getErrorReason().getCode()).isEqualTo("APPLICATION4031");
         assertThat(exception.getErrorReason().getMessage()).contains("자신의 글에는 지원할 수 없습니다.");
+    }
+    
+    @Test
+    @DisplayName("지원 취소 테스트")
+    void application_cancel_test() {
+        User user = getUser();
+        User user2 = getUser2();
+        userRepository.save(user);
+        userRepository.save(user2);
+        StudyPost studyPost = getStudyPost(user);
+        studyPostRepository.save(studyPost);
+        StudyApplication st = StudyApplication.builder()
+                .user(user2)
+                .studyPost(studyPost)
+                .applicationStatus(ApplicationStatus.PENDING)
+                .build();
+        studyApplicationRepository.save(st);
+
+        studyApplicationCommandService.cancelApplication(st.getId(), user2);
+
+        assertThat(st.getApplicationStatus()).isEqualTo(ApplicationStatus.CANCELED);
+    }
+    
+    @Test
+    @DisplayName("지원 취소와 지원 승인이 동시에 발생하면 한 쪽은 충돌(OptimisticLockException)이 발생한다")
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void optimistic_lock_concurrency_test() throws InterruptedException {
+        User user = getUser();
+        User user2 = getUser2();
+        userRepository.save(user);
+        userRepository.save(user2);
+        StudyPost studyPost = getStudyPost(user);
+        studyPostRepository.save(studyPost);
+        StudyApplication st = StudyApplication.builder()
+                .user(user2)
+                .studyPost(studyPost)
+                .applicationStatus(ApplicationStatus.PENDING)
+                .build();
+        studyApplicationRepository.save(st);
+
+        // given
+        int threadCount = 2; // 동시 실행 스레드 수
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch latch = new CountDownLatch(threadCount); // 스레드 2개가 모두 끝날 때까지 대기
+
+        AtomicInteger successCount = new AtomicInteger(0); // 성공 카운트
+        AtomicInteger conflictCount = new AtomicInteger(0); // 충돌(예외) 카운트
+
+        // when
+        // 스레드 1: 작성자가 '승인' 시도
+        executorService.submit(() -> {
+            try {
+                studyApplicationCommandService.approveStudyApplication(st.getId(), user);
+                successCount.incrementAndGet(); // 성공
+            } catch (ObjectOptimisticLockingFailureException e) {
+                conflictCount.incrementAndGet(); // 충돌
+            } catch (Exception e) {
+                e.printStackTrace(); // 기타 예외
+            } finally {
+                latch.countDown();
+            }
+        });
+
+        // 스레드 2: 지원자가 '취소' 시도
+        executorService.submit(() -> {
+            try {
+                studyApplicationCommandService.cancelApplication(st.getId(), user2);
+                successCount.incrementAndGet(); // 성공
+            } catch (ObjectOptimisticLockingFailureException e) {
+                conflictCount.incrementAndGet(); // 충돌
+            } catch (Exception e) {
+                e.printStackTrace(); // 기타 예외
+            } finally {
+                latch.countDown();
+            }
+        });
+
+        latch.await(); // 두 스레드가 모두 끝날 때까지 대기
+
+        // Then
+        // 둘 중 하나는 성공하고, 하나는 반드시 충돌해야 함
+        assertThat(successCount.get()).isEqualTo(1);
+        assertThat(conflictCount.get()).isEqualTo(1);
+
+        // 최종 DB 상태 확인
+        StudyApplication finalApplication = studyApplicationRepository.findById(st.getId()).get();
+        // 성공한 작업의 상태(APPROVED 또는 CANCELED)로 변경되었는지 확인
+        assertThat(finalApplication.getApplicationStatus()).isIn(ApplicationStatus.ACCEPTED, ApplicationStatus.CANCELED);
+        // 버전이 1 증가했는지 확인 (초기 버전 0 -> 1)
+        assertThat(finalApplication.getVersion()).isEqualTo(1);
     }
 
     private static User getUser() {
