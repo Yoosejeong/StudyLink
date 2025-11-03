@@ -71,6 +71,7 @@ public class StudyApplicationResponseDTO {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class HasAppliedResponse {
+        private Long studyApplicationId;
         private boolean hasApplied;
         private ApplicationStatus applicationStatus;
     }

@@ -19,7 +19,5 @@ public interface StudyApplicationRepository extends JpaRepository<StudyApplicati
     List<StudyApplication> findByStudyPostId(Long studyPostId);
     List<StudyApplication> findByUserId(Long userId);
     List<StudyApplication> findAllByStudyPostAndApplicationStatus(StudyPost studyPost, ApplicationStatus applicationStatus);
-    @Query("select sa.applicationStatus from StudyApplication sa " +
-            "where sa.user.id = :userId and sa.studyPost.id = :studyPostId")
-    Optional<ApplicationStatus> findStatusByUserIdAndStudyPostId(Long userId, Long studyPostId);
+    Optional<StudyApplication> findTopByUserIdAndStudyPostIdOrderByIdDesc(Long userId, Long studyPostId);
 }

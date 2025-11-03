@@ -50,11 +50,12 @@ public class StudyApplicationQueryServiceImpl implements StudyApplicationQuerySe
 
     @Override
     public HasAppliedResponse hasUserApplied(Long userId, Long studyPostId) {
-        Optional<ApplicationStatus> ApplicationStatus = studyApplicationRepository.findStatusByUserIdAndStudyPostId(
+        Optional<StudyApplication> lastApplication = studyApplicationRepository.findTopByUserIdAndStudyPostIdOrderByIdDesc(
                 userId, studyPostId);
         return HasAppliedResponse.builder()
-                .hasApplied(ApplicationStatus.isPresent())
-                .applicationStatus(ApplicationStatus.orElse(null))
+                .studyApplicationId(lastApplication.map(StudyApplication::getId).orElse(null))
+                .hasApplied(lastApplication.isPresent())
+                .applicationStatus(lastApplication.map(StudyApplication::getApplicationStatus).orElse(null))
                 .build();
     }
 }

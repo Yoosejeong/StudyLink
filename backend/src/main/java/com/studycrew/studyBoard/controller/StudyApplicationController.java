@@ -101,7 +101,7 @@ public class StudyApplicationController {
     }
 
     @Operation(summary = "스터디 지원 취소", description = "스터디 지원을 취소합니다.")
-    @PatchMapping("/api/study-application/{studyApplicationId}/cancel")
+    @PatchMapping("/api/study-applications/{studyApplicationId}/cancel")
     public ApiResponse<Void> cancelApplication(@PathVariable("studyApplicationId") Long studyApplicationId, @AuthenticationPrincipal CustomUserDetails customUserDetails) {
         String email = customUserDetails.getUsername();
         User user = userQueryService.getUserByEmail(email);
