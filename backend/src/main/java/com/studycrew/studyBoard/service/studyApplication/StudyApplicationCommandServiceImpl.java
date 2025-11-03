@@ -7,13 +7,17 @@ import com.studycrew.studyBoard.converter.StudyApplicationConverter;
 import com.studycrew.studyBoard.entity.StudyApplication;
 import com.studycrew.studyBoard.entity.StudyPost;
 import com.studycrew.studyBoard.entity.User;
+import com.studycrew.studyBoard.enums.ApplicationStatus;
 import com.studycrew.studyBoard.enums.StudyStatus;
 import com.studycrew.studyBoard.repository.StudyApplicationRepository;
 import com.studycrew.studyBoard.repository.StudyPostRepository;
 import com.studycrew.studyBoard.service.studyPost.StudyPostCommandService;
 import lombok.RequiredArgsConstructor;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +34,7 @@ public class StudyApplicationCommandServiceImpl implements StudyApplicationComma
         if (studyPost.getStudyStatus() == StudyStatus.CLOSED){
             throw new StudyPostHandler(ErrorStatus._STUDY_POST_ALREADY_CLOSED);
         }
-        if (studyApplicationRepository.existsByStudyPostAndUser(studyPost, user)) {
+        if (studyApplicationRepository.existsByStudyPostAndUserAndApplicationStatusIn(studyPost, user, List.of(ApplicationStatus.PENDING, ApplicationStatus.ACCEPTED))) {
             throw new StudyPostHandler(ErrorStatus._STUDY_APPLICATION_ALREADY_EXISTS);
         }
         if (user.equals(studyPost.getUser())) {

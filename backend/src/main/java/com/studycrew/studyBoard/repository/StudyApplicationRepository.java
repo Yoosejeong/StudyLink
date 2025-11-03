@@ -15,7 +15,7 @@ import javax.swing.text.html.Option;
 
 @Repository
 public interface StudyApplicationRepository extends JpaRepository<StudyApplication, Long> {
-    boolean existsByStudyPostAndUser(StudyPost studyPost, User user);
+    boolean existsByStudyPostAndUserAndApplicationStatusIn(StudyPost studyPost, User user, List<ApplicationStatus> applicationStatus);
     List<StudyApplication> findByStudyPostId(Long studyPostId);
     List<StudyApplication> findByUserId(Long userId);
     List<StudyApplication> findAllByStudyPostAndApplicationStatus(StudyPost studyPost, ApplicationStatus applicationStatus);
