@@ -99,4 +99,14 @@ public class StudyApplicationController {
                 studyPostId);
         return ApiResponse.of(SuccessStatus._STUDY_APPLICATION_EXISTENCE, responseDTO);
     }
+
+    @Operation(summary = "스터디 지원 취소", description = "스터디 지원을 취소합니다.")
+    @PatchMapping("/api/study-application/{studyApplicationId}/cancel")
+    public ApiResponse<Void> cancelApplication(@PathVariable("studyApplicationId") Long studyApplicationId, @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        String email = customUserDetails.getUsername();
+        User user = userQueryService.getUserByEmail(email);
+        studyApplicationCommandService.cancelApplication(studyApplicationId, user);
+        return ApiResponse.of(SuccessStatus._STUDY_APPLICATION_CANCELED);
+    }
+
 }

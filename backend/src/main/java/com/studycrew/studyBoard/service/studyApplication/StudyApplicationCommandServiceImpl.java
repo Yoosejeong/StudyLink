@@ -82,4 +82,15 @@ public class StudyApplicationCommandServiceImpl implements StudyApplicationComma
         studyApplication.reject();
         return studyApplication;
     }
+
+    @Override
+    public void cancelApplication(Long studyApplicationId, User user) {
+        StudyApplication studyApplication = studyApplicationRepository.findById(studyApplicationId)
+                .orElseThrow(() -> new StudyApplicationHandler(ErrorStatus._STUDY_APPLICATION_NOT_FOUND));
+        if (!studyApplication.getUser().getId().equals(user.getId())) {
+            throw new StudyApplicationHandler(ErrorStatus._STUDY_APPLICATION_FORBIDDEN);
+        }
+        studyApplication.cancel();
+    }
+
 }
