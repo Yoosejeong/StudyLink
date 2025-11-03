@@ -447,14 +447,14 @@ class StudyApplicationCommandServiceImplTest {
 
         latch.await(); // 두 스레드가 모두 끝날 때까지 대기
 
-        // Then
+        // then
         // 둘 중 하나는 성공하고, 하나는 반드시 충돌해야 함
         assertThat(successCount.get()).isEqualTo(1);
         assertThat(conflictCount.get()).isEqualTo(1);
 
         // 최종 DB 상태 확인
         StudyApplication finalApplication = studyApplicationRepository.findById(st.getId()).get();
-        // 성공한 작업의 상태(APPROVED 또는 CANCELED)로 변경되었는지 확인
+        // 성공한 작업의 상태(ACCEPTED 또는 CANCELED)로 변경되었는지 확인
         assertThat(finalApplication.getApplicationStatus()).isIn(ApplicationStatus.ACCEPTED, ApplicationStatus.CANCELED);
         // 버전이 1 증가했는지 확인 (초기 버전 0 -> 1)
         assertThat(finalApplication.getVersion()).isEqualTo(1);
