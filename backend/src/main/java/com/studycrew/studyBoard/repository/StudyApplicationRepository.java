@@ -20,4 +20,6 @@ public interface StudyApplicationRepository extends JpaRepository<StudyApplicati
     List<StudyApplication> findByUserId(Long userId);
     List<StudyApplication> findAllByStudyPostAndApplicationStatus(StudyPost studyPost, ApplicationStatus applicationStatus);
     Optional<StudyApplication> findTopByUserIdAndStudyPostIdOrderByIdDesc(Long userId, Long studyPostId);
+    List<StudyApplication> findAllByStudyPostIdAndApplicationStatusIn(Long studyPostId, List<ApplicationStatus> statuses
+    );
 }

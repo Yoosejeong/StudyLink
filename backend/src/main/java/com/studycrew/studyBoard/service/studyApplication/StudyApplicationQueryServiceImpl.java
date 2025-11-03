@@ -30,7 +30,13 @@ public class StudyApplicationQueryServiceImpl implements StudyApplicationQuerySe
 
     @Override
     public List<StudyApplicationListResponse> findAllApplicants(Long studyPostId) {
-        List<StudyApplication> studyApplicationList = studyApplicationRepository.findByStudyPostId(studyPostId);
+        List<ApplicationStatus> manageableStatuses = List.of(
+                ApplicationStatus.PENDING,
+                ApplicationStatus.ACCEPTED,
+                ApplicationStatus.REJECTED
+        );
+        List<StudyApplication> studyApplicationList = studyApplicationRepository
+                .findAllByStudyPostIdAndApplicationStatusIn(studyPostId, manageableStatuses);
         return studyApplicationList.stream()
                 .map(app -> {
                     String key = app.getUser().getProfileKey();
