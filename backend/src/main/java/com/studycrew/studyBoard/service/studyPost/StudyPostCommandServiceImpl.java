@@ -30,6 +30,7 @@ public class StudyPostCommandServiceImpl implements StudyPostCommandService {
     private final StudyApplicationRepository studyApplicationRepository;
     private final TagRepository tagRepository;
 
+    @Override
     public StudyPost createStudyPost(StudyPostCreate dto, User user){
         StudyPost studyPost = StudyPostConverter.toStudyPost(dto, user);
 

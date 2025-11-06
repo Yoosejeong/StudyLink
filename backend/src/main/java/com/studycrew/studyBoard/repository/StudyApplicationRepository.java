@@ -15,11 +15,11 @@ import javax.swing.text.html.Option;
 
 @Repository
 public interface StudyApplicationRepository extends JpaRepository<StudyApplication, Long> {
-    boolean existsByStudyPostAndUser(StudyPost studyPost, User user);
+    boolean existsByStudyPostAndUserAndApplicationStatusIn(StudyPost studyPost, User user, List<ApplicationStatus> applicationStatus);
     List<StudyApplication> findByStudyPostId(Long studyPostId);
     List<StudyApplication> findByUserId(Long userId);
     List<StudyApplication> findAllByStudyPostAndApplicationStatus(StudyPost studyPost, ApplicationStatus applicationStatus);
-    @Query("select sa.applicationStatus from StudyApplication sa " +
-            "where sa.user.id = :userId and sa.studyPost.id = :studyPostId")
-    Optional<ApplicationStatus> findStatusByUserIdAndStudyPostId(Long userId, Long studyPostId);
+    Optional<StudyApplication> findTopByUserIdAndStudyPostIdOrderByIdDesc(Long userId, Long studyPostId);
+    List<StudyApplication> findAllByStudyPostIdAndApplicationStatusIn(Long studyPostId, List<ApplicationStatus> statuses
+    );
 }

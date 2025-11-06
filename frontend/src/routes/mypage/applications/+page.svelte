@@ -3,11 +3,11 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { http } from '$lib/api/http';
-	import { Calendar, Flag, Check, X } from 'lucide-svelte';
+	import { Calendar, Flag, Check, X, Archive } from 'lucide-svelte';
 
 	// 서버 리턴 타입 (MyStudyApplicationResponse)
 	type StudyStatus = 'RECRUITING' | 'CLOSED';
-	type ApplicationStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED';
+	type ApplicationStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELED';
 
 	type MyStudyApplication = {
 		studyApplicationId: number;
@@ -96,7 +96,6 @@
 	</div>
 {:else}
 	<div class="mx-auto max-w-5xl px-4 py-8">
-		<!-- 헤더 -->
 		<div class="mb-6 rounded-2xl bg-white p-6 shadow-lg">
 			<div class="flex items-center justify-between">
 				<div>
@@ -104,7 +103,6 @@
 					<p class="mt-1 text-sm text-gray-500">총 {items.length}건의 지원 내역</p>
 				</div>
 
-				<!-- 필터 탭 -->
 				<div class="inline-flex rounded-full border border-gray-200 bg-gray-50 p-1">
 					<button
 						class={'rounded-full px-3 py-1.5 text-sm ' +
@@ -140,11 +138,19 @@
 					>
 						거절
 					</button>
+					<button
+						class={'rounded-full px-3 py-1.5 text-sm ' +
+							(filter === 'CANCELED'
+								? 'bg-white font-semibold shadow'
+								: 'text-gray-600 hover:bg-white')}
+						on:click={() => (filter = 'CANCELED')}
+					>
+						취소
+					</button>
 				</div>
 			</div>
 		</div>
 
-		<!-- 리스트 -->
 		<div class="space-y-4">
 			{#if filtered().length === 0}
 				<div
@@ -160,15 +166,12 @@
 						on:click={() => toDetail(it)}
 						title={it.deleted ? '삭제된 글입니다' : '상세 보기'}
 					>
-						<!-- 왼쪽 정보 -->
 						<div class="min-w-0 flex-1">
 							<div class="mb-1 flex items-center gap-2">
 								<h2 class="truncate text-lg font-semibold text-gray-900">{it.studyTitle}</h2>
-								<!-- 지원 상태 -->
 								<span class={'rounded px-2 py-0.5 text-xs ' + statusPill(it.applicationStatus)}>
 									{it.applicationStatus}
 								</span>
-								<!-- 스터디 모집 상태 -->
 								<span
 									class="inline-block rounded px-2 py-0.5 text-xs"
 									class:bg-yellow-100={it.studyStatus === 'RECRUITING'}
@@ -191,12 +194,13 @@
 							</div>
 						</div>
 
-						<!-- 오른쪽 아이콘 (상태 시각적 힌트) -->
 						<div class="ml-4 shrink-0">
 							{#if it.applicationStatus === 'ACCEPTED'}
 								<Check class="h-5 w-5 text-green-600 opacity-80 group-hover:opacity-100" />
 							{:else if it.applicationStatus === 'REJECTED'}
 								<X class="h-5 w-5 text-red-600 opacity-80 group-hover:opacity-100" />
+							{:else if it.applicationStatus === 'CANCELED'}
+								<Archive class="h-5 w-5 text-gray-500 opacity-80 group-hover:opacity-100" />
 							{:else}
 								<Flag class="h-5 w-5 text-blue-600 opacity-80 group-hover:opacity-100" />
 							{/if}
