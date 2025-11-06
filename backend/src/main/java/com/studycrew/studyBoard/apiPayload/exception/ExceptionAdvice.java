@@ -3,6 +3,7 @@ package com.studycrew.studyBoard.apiPayload.exception;
 import com.studycrew.studyBoard.apiPayload.ApiResponse;
 import com.studycrew.studyBoard.apiPayload.code.ErrorReasonDTO;
 import com.studycrew.studyBoard.apiPayload.code.status.ErrorStatus;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.util.LinkedHashMap;
@@ -13,6 +14,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -122,4 +124,17 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
                 request
         );
     }
+
+    @ExceptionHandler(value = { ObjectOptimisticLockingFailureException.class, OptimisticLockException.class })
+    public ResponseEntity<Object> handleOptimisticLockConflict(Exception e, WebRequest request) {
+
+        return handleExceptionInternalConstraint(
+                e,
+                ErrorStatus._CONFLICT,
+                HttpHeaders.EMPTY,
+                request
+        );
+    }
+
+
 }

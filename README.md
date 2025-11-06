@@ -6,7 +6,7 @@ StudyLink는 스터디 그룹을 찾거나 팀원을 모집하는 과정을 더 
 
 **🔗 Live Demo:** [https://www.studylink.site](https://www.studylink.site)
 
-**📚 API Docs:** [API 명세서 바로가기](https://api.studylink.site/swagger-ui/index.html)
+<!--  **📚 API Docs:** [API 명세서 바로가기](https://api.studylink.site/swagger-ui/index.html) -->
 
 <br>
 
@@ -49,7 +49,8 @@ StudyLink는 스터디 그룹을 찾거나 팀원을 모집하는 과정을 더 
 <br>
 스터디 작성자는 자신의 게시글에 지원한 사용자들의 목록을 확인하고, 지원을 수락하거나 거절하며 팀원 모집 과정을 직접 관리할 수 있습니다.
 <br><br>
-<img width="2490" height="772" alt="image" src="https://github.com/user-attachments/assets/bf570de0-71b6-4dbb-9278-c2956d822198" />
+<img width="2448" height="584" alt="image" src="https://github.com/user-attachments/assets/e025278d-00b3-48f2-a92a-f11d1eb51bb4" />
+
 </details>
 
 <details>
@@ -91,6 +92,7 @@ StudyLink는 스터디 그룹을 찾거나 팀원을 모집하는 과정을 더 
 | **Database** | `MySQL`, `Redis` |
 | **Infrastructure** | `AWS (EC2, RDS, S3, VPC)`, `Docker`, `Docker Compose`, `Nginx` |
 | **CI/CD** | `GitHub Actions`, `Vercel` | 
+| **Monitoring** | `Prometheus`, `Grafana`|
 | **Frontend** | `SvelteKit` |
 
 <br>

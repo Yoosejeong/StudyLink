@@ -7,4 +7,5 @@ public interface StudyApplicationCommandService {
     StudyApplication applyStudyApplication(Long studyPostId, User user);
     StudyApplication approveStudyApplication(Long studyApplicationId, User user);
     StudyApplication rejectStudyApplication(Long studyApplicationId, User user);
+    void cancelApplication(Long studyApplicationId, User user);
 }

@@ -71,7 +71,8 @@
 	let currentUserNickname: string | null = null;
 
 	let hasApplied = false;
-	let applicationStatus: 'PENDING' | 'ACCEPTED' | 'REJECTED' | null = null;
+	let applicationStatus: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELED' | null = null;
+	let currentApplicationId: number | null = null; // 
 
 	let isMenuOpen = false;
 
@@ -152,12 +153,50 @@
 			if (res.ok) {
 				const data = await res.json();
 				hasApplied = data.result.hasApplied;
+				currentApplicationId = data.result.applicationId || null;
 				applicationStatus = data.result.applicationStatus;
+				currentApplicationId = data.result.studyApplicationId || null;
 			} else {
 				console.error('지원 여부 확인 실패', res.status);
 			}
 		} catch (err) {
 			console.error('지원 여부 요청 오류', err);
+		}
+	}
+
+	async function handleCancel() {
+		if (!currentApplicationId) {
+			alert('오류: 지원서 ID를 찾을 수 없습니다. ');
+			return;
+		}
+
+		const confirmed = confirm('정말로 지원을 취소하시겠습니까?');
+		if (!confirmed) return;
+
+		try {
+			const res = await http.patch(`/api/study-applications/${currentApplicationId}/cancel`);
+			if (redirectOnAuthError(res)) return;
+
+			if (res.ok) {
+				alert('지원이 취소되었습니다.');
+				// 상태를 다시 체크해서 (CANCELED로) UI를 업데이트합니다.
+				// ('다시 지원하기' 버튼이 보이게 됩니다)
+				await checkApplicationStatus();
+			} else {
+				const errorData = await safeJson(res);
+				// 409 Conflict (낙관적 락 충돌)
+				if (res.status === 409) {
+					alert(
+						'요청 처리 중 충돌이 발생했습니다. (작성자가 방금 승인/거절했을 수 있습니다) 페이지를 새로고침합니다.'
+					);
+					window.location.reload();
+				} else {
+					alert(`취소 실패: ${errorData?.message || res.status}`);
+				}
+			}
+		} catch (err) {
+			console.error('취소 요청 오류', err);
+			alert('네트워크 오류로 취소에 실패했습니다.');
 		}
 	}
 
@@ -388,32 +427,50 @@
 						<Users class="h-5 w-5" />
 						<span>지원자 목록 보기</span>
 					</button>
-				{:else if hasApplied}
-					{@const statusInfo = {
-						ACCEPTED: { text: '스터디에 참여중입니다', icon: CheckCircle, color: 'green' },
-						REJECTED: { text: '아쉽지만, 참여가 거절되었습니다', icon: XCircle, color: 'red' },
-						PENDING: { text: '지원서 검토 결과를 기다리는 중', icon: Clock, color: 'blue' }
-					}[applicationStatus || 'PENDING']}
-					<div
-						class={`flex w-full items-center justify-center gap-3 rounded-lg border bg-gray-50 px-5 py-4 text-base font-semibold
-                ${
-									statusInfo.color === 'green'
-										? 'border-green-200 text-green-700'
-										: statusInfo.color === 'red'
-											? 'border-red-200 text-red-700'
-											: 'border-blue-200 text-blue-700'
-								}`}
-					>
-						<svelte:component this={statusInfo.icon} class="h-6 w-6" />
-						<span>{statusInfo.text}</span>
-					</div>
-				{:else if studyPost.studyStatus === 'RECRUITING'}
+				{:else if studyPost.studyStatus === 'RECRUITING' && (!hasApplied || applicationStatus === 'CANCELED')}
 					<button
 						on:click={handleApply}
 						class="w-full rounded-lg bg-blue-600 px-5 py-4 text-base font-bold text-white shadow-md transition hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
 					>
-						스터디 지원하기
+						{applicationStatus === 'CANCELED' ? '다시 지원하기' : '스터디 지원하기'}
 					</button>
+				{:else if hasApplied}
+					{#if applicationStatus === 'PENDING'}
+						<div class="flex flex-col gap-3">
+							<div
+								class="flex w-full items-center justify-center gap-3 rounded-lg border border-blue-200 bg-gray-50 px-5 py-4 text-base font-semibold text-blue-700"
+							>
+								<Clock class="h-6 w-6" />
+								<span>지원서 검토 결과를 기다리는 중</span>
+							</div>
+
+							<button
+								on:click={handleCancel}
+								class="w-full rounded-lg border border-gray-300 bg-white px-5 py-4 text-base font-bold text-gray-700 shadow-sm transition hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+							>
+								지원 취소하기
+							</button>
+						</div>
+					{:else}
+						{@const statusInfo = {
+							ACCEPTED: { text: '스터디에 참여중입니다', icon: CheckCircle, color: 'green' },
+							REJECTED: { text: '아쉽지만, 참여가 거절되었습니다', icon: XCircle, color: 'red' }
+						}[applicationStatus]}
+
+						{#if statusInfo}
+							<div
+								class={`flex w-full items-center justify-center gap-3 rounded-lg border bg-gray-50 px-5 py-4 text-base font-semibold
+						${
+							statusInfo.color === 'green'
+								? 'border-green-200 text-green-700'
+								: 'border-red-200 text-red-700'
+						}`}
+							>
+								<svelte:component this={statusInfo.icon} class="h-6 w-6" />
+								<span>{statusInfo.text}</span>
+							</div>
+						{/if}
+					{/if}
 				{:else}
 					<div
 						class="w-full cursor-not-allowed rounded-lg bg-gray-200 px-5 py-4 text-center text-base font-bold text-gray-500"

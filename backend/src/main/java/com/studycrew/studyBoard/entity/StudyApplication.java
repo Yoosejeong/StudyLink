@@ -3,15 +3,7 @@ package com.studycrew.studyBoard.entity;
 import com.studycrew.studyBoard.apiPayload.code.status.ErrorStatus;
 import com.studycrew.studyBoard.apiPayload.exception.handler.StudyApplicationHandler;
 import com.studycrew.studyBoard.enums.ApplicationStatus;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -40,6 +32,9 @@ public class StudyApplication extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private ApplicationStatus applicationStatus;
 
+    @Version
+    private Integer version;
+
     public void approve() {
         if (this.applicationStatus != ApplicationStatus.PENDING) {
             throw new StudyApplicationHandler(ErrorStatus._STUDY_APPLICATION_ALREADY_PROCESSED);
@@ -52,6 +47,13 @@ public class StudyApplication extends BaseEntity {
             throw new StudyApplicationHandler(ErrorStatus._STUDY_APPLICATION_ALREADY_PROCESSED);
         }
         this.applicationStatus = ApplicationStatus.REJECTED;
+    }
+
+    public void cancel() {
+        if (this.applicationStatus != ApplicationStatus.PENDING) {
+            throw new StudyApplicationHandler(ErrorStatus._STUDY_APPLICATION_ALREADY_PROCESSED);
+        }
+        this.applicationStatus = ApplicationStatus.CANCELED;
     }
 
 }
