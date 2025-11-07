@@ -411,7 +411,11 @@ class StudyApplicationCommandServiceImplTest {
         // given
         int threadCount = 2; // 동시 실행 스레드 수
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
-        CountDownLatch latch = new CountDownLatch(threadCount); // 스레드 2개가 모두 끝날 때까지 대기
+
+        // 출발 신호용 래치
+        CountDownLatch startLatch = new CountDownLatch(1);
+        // 종료 대기용 래치
+        CountDownLatch doneLatch = new CountDownLatch(threadCount); // 스레드 2개가 모두 끝날 때까지 대기
 
         AtomicInteger successCount = new AtomicInteger(0); // 성공 카운트
         AtomicInteger conflictCount = new AtomicInteger(0); // 충돌(예외) 카운트
@@ -420,6 +424,7 @@ class StudyApplicationCommandServiceImplTest {
         // 스레드 1: 작성자가 '승인' 시도
         executorService.submit(() -> {
             try {
+                startLatch.await();
                 studyApplicationCommandService.approveStudyApplication(st.getId(), user);
                 successCount.incrementAndGet(); // 성공
             } catch (ObjectOptimisticLockingFailureException e) {
@@ -427,13 +432,14 @@ class StudyApplicationCommandServiceImplTest {
             } catch (Exception e) {
                 e.printStackTrace(); // 기타 예외
             } finally {
-                latch.countDown();
+                doneLatch.countDown();
             }
         });
 
         // 스레드 2: 지원자가 '취소' 시도
         executorService.submit(() -> {
             try {
+                startLatch.await();
                 studyApplicationCommandService.cancelApplication(st.getId(), user2);
                 successCount.incrementAndGet(); // 성공
             } catch (ObjectOptimisticLockingFailureException e) {
@@ -441,11 +447,13 @@ class StudyApplicationCommandServiceImplTest {
             } catch (Exception e) {
                 e.printStackTrace(); // 기타 예외
             } finally {
-                latch.countDown();
+                doneLatch.countDown();
             }
         });
 
-        latch.await(); // 두 스레드가 모두 끝날 때까지 대기
+        startLatch.countDown();
+
+        doneLatch.await();
 
         // then
         // 둘 중 하나는 성공하고, 하나는 반드시 충돌해야 함
