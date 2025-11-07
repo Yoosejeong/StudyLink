@@ -11,5 +11,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface StudyPostRepository extends StudyPostRepositoryCustom, JpaRepository<StudyPost, Long> {
     @EntityGraph(attributePaths = {"user", "postTags.tag"})
+    Optional<StudyPost> findWithUserAndTagsByIdAndDeletedFalse(Long id);
+
+    @EntityGraph(attributePaths = {"user"})
     Optional<StudyPost> findByIdAndDeletedFalse(Long id);
 }
