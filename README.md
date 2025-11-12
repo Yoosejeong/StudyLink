@@ -35,12 +35,12 @@ StudyLink는 스터디 그룹을 찾거나 팀원을 모집하는 과정을 더 
   <tr>
     <td><img width="400" alt="작성자 화면" src="https://github.com/user-attachments/assets/c1208d3b-e8eb-4046-818d-0ecaad7542d3" /></td>
     <td><img width="400" alt="스터디 지원 화면" src="https://github.com/user-attachments/assets/57df4131-feb1-475c-8966-f720bb616ec8" /></td>
-    <td><img width="400" alt="지원 후 상태 확인" src="https://github.com/user-attachments/assets/5c4f8d01-8fe3-45ed-9d66-7247d77b8fb6" /></td>
+    <td><img width="400" alt="지원 후 상태 확인" src="https://github.com/user-attachments/assets/4a2c86e7-52e4-4341-ae24-48360d95feab" /></td>
   </tr>
   <tr>
     <td align="center">게시글 수정/삭제, 모집 종료로 <br>게시글을 관리할 수 있습니다.</td>
     <td align="center">사용자가 스터디에<br>지원을 신청하는 화면입니다.</td>
-    <td align="center">지원을 완료한 사용자는<br>자신의 지원 상태를 확인할 수 있습니다.</td>
+    <td align="center">지원을 완료한 사용자는<br>자신의 지원 상태를 확인할 수 있습니다. <br> 아직 처리되지 않은 경우 취소가 가능합니다. </td>
   </tr>
 </table>
 </details>
@@ -56,9 +56,10 @@ StudyLink는 스터디 그룹을 찾거나 팀원을 모집하는 과정을 더 
 <details>
 <summary><strong>📄 4. 나의 지원 목록</strong></summary>
 <br>
-사용자는 자신이 어떤 스터디에 지원했는지 목록을 한눈에 볼 수 있으며, 지원 상태(대기, 승인, 거절)를 실시간으로 확인할 수 있습니다.
+사용자는 자신이 어떤 스터디에 지원했는지 목록을 한눈에 볼 수 있으며, 지원 상태(대기, 승인, 거절, 취소)를 실시간으로 확인할 수 있습니다.
 <br><br>
-<img width="2554" height="870" alt="image" src="https://github.com/user-attachments/assets/c3bfa71b-7b0e-4b7a-ab36-8a36132e34d0" />
+<img width="2116" height="746" alt="image" src="https://github.com/user-attachments/assets/82a9fc5c-950b-4ec9-8c38-361812d25c49" />
+
 </details>
 
 <details>
@@ -79,7 +80,8 @@ StudyLink는 스터디 그룹을 찾거나 팀원을 모집하는 과정을 더 
 <br>
 
 ## 🏗️ 시스템 아키텍처
-<img width="598" height="588" alt="스크린샷 2025-10-10 오후 8 52 10" src="https://github.com/user-attachments/assets/ab84ce8a-995b-44f9-832d-65643b8dc444" />
+<img width="1372" height="1240" alt="image" src="https://github.com/user-attachments/assets/7767af4b-9529-4ddc-bf8c-2e959538f7d7" />
+
 
 
 <br>
