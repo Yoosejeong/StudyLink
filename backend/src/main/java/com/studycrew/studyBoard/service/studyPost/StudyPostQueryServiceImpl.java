@@ -31,7 +31,7 @@ public class StudyPostQueryServiceImpl implements StudyPostQueryService {
 
     @Override
     public GetStudyPostAndProfile getStudyPost(Long studyPostId) {
-        StudyPost studyPost = studyPostRepository.findByIdAndDeletedFalse(studyPostId).orElseThrow(() -> new StudyPostHandler(
+        StudyPost studyPost = studyPostRepository.findWithUserAndTagsByIdAndDeletedFalse(studyPostId).orElseThrow(() -> new StudyPostHandler(
                 ErrorStatus._STUDY_POST_NOT_FOUND));
         String key = studyPost.getUser().getProfileKey();
         String url = s3UrlUtil.buildPublicUrl(key);
