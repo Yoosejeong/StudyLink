@@ -94,7 +94,7 @@ StudyLink는 스터디 그룹을 찾거나 팀원을 모집하는 과정을 더 
 | **Database** | `MySQL`, `Redis` |
 | **Infrastructure** | `AWS (EC2, RDS, S3, VPC)`, `Docker`, `Docker Compose`, `Nginx` |
 | **CI/CD** | `GitHub Actions`, `Vercel` | 
-| **Monitoring** | `Prometheus`, `Grafana`|
+| **Monitoring** | `Prometheus`, `Grafana`, `AWS CloudWatch` |
 | **Frontend** | `SvelteKit` |
 
 <br>
