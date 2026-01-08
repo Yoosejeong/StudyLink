@@ -28,6 +28,7 @@ public class StudyPostQueryServiceImpl implements StudyPostQueryService {
 
     private final StudyPostRepository studyPostRepository;
     private final S3UrlUtil s3UrlUtil;
+    private final StudyPostCountService studyPostCountService;
 
     @Override
     public GetStudyPostAndProfile getStudyPost(Long studyPostId) {
@@ -40,13 +41,24 @@ public class StudyPostQueryServiceImpl implements StudyPostQueryService {
 
     @Override
     public Page<GetStudyPostListResponse> getStudyPostList(String rawKeyword, StudyStatus status, Pageable pageable) {
-        Page<GetStudyPostListResponse> page =
+        List<GetStudyPostListResponse> content =
                 studyPostRepository.searchByStatusAndNotDeleted(rawKeyword, status, pageable);
 
-        return page.map(dto -> {
-            dto.setProfileUrl(s3UrlUtil.buildPublicUrl(dto.getProfileKey()));
-            return dto;
-        });
+        long total;
+        if (rawKeyword != null && !rawKeyword.isBlank()) {
+            total = studyPostRepository.countByStatusAndNotDeleted(rawKeyword, status);
+        } else {
+            total = studyPostCountService.getCount(status);
+        }
+
+        List<GetStudyPostListResponse> mapped = content.stream()
+                .map(dto -> {
+                    dto.setProfileUrl(s3UrlUtil.buildPublicUrl(dto.getProfileKey()));
+                    return dto;
+                })
+                .toList();
+
+        return new PageImpl<>(mapped, pageable, total);
     }
 
 }

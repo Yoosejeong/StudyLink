@@ -6,6 +6,9 @@ import com.studycrew.studyBoard.enums.StudyStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface StudyPostRepositoryCustom {
-    Page<GetStudyPostListResponse> searchByStatusAndNotDeleted(String rawKeyword, StudyStatus status, Pageable pageable);
+    List<GetStudyPostListResponse> searchByStatusAndNotDeleted(String rawKeyword, StudyStatus status, Pageable pageable);
+    long countByStatusAndNotDeleted(String rawKeyword, StudyStatus status);
 }

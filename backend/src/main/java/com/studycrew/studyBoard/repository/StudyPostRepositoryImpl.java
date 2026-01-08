@@ -34,28 +34,14 @@ public class StudyPostRepositoryImpl implements StudyPostRepositoryCustom{
     }
 
     @Override
-    public Page<GetStudyPostListResponse> searchByStatusAndNotDeleted(String rawKeyword, StudyStatus status, Pageable pageable) {
+    public List<GetStudyPostListResponse> searchByStatusAndNotDeleted(String rawKeyword, StudyStatus status, Pageable pageable) {
         QStudyPost studyPost = QStudyPost.studyPost;
         QUser user = QUser.user;
         QStudyPostTag spt = QStudyPostTag.studyPostTag;
         QTag tag = QTag.tag;
 
 
-        BooleanBuilder where = new BooleanBuilder()
-                .and(studyPost.deleted.isFalse());
-
-        if (status != null) {
-            where.and(studyPost.studyStatus.eq(status));
-        }
-
-        if (hasText(rawKeyword)) {
-            String key  = normalize(rawKeyword);       // 공백 제거 + 소문자
-            String safe = escapeWildcards(key);        // %,_ 리터럴 처리
-            where.and(Expressions.booleanTemplate(
-                    "REPLACE(LOWER({0}), ' ', '') LIKE CONCAT('%', {1}, '%') ESCAPE '\\'",
-                    studyPost.title, safe
-            ));
-        }
+        BooleanBuilder where = buildWhere(rawKeyword, status, studyPost);
 
         List<GetStudyPostListResponse> content = queryFactory
                 .select(new QStudyPostResponseDTO_GetStudyPostListResponse(
@@ -71,11 +57,6 @@ public class StudyPostRepositoryImpl implements StudyPostRepositoryCustom{
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        Long total = queryFactory
-                .select(studyPost.id.count())
-                .from(studyPost)
-                .where(where)
-                .fetchOne();
 
         if (!content.isEmpty()) {
             List<Long> ids = content.stream()
@@ -105,8 +86,44 @@ public class StudyPostRepositoryImpl implements StudyPostRepositoryCustom{
             content.forEach(dto ->
                     dto.attachTags(tagMap.getOrDefault(dto.getStudyPostId(), Collections.emptyList())));
         }
-        return new PageImpl<>(content, pageable, total == null ? 0L : total);
+        return content;
     }
+
+    @Override
+    public long countByStatusAndNotDeleted(String rawKeyword, StudyStatus status) {
+        QStudyPost studyPost = QStudyPost.studyPost;
+
+        BooleanBuilder where = buildWhere(rawKeyword, status, studyPost);
+
+        Long total = queryFactory
+                .select(studyPost.id.count())
+                .from(studyPost)
+                .where(where)
+                .fetchOne();
+
+        return total == null ? 0L : total;
+    }
+
+    private BooleanBuilder buildWhere(String rawKeyword, StudyStatus status, QStudyPost studyPost) {
+        BooleanBuilder where = new BooleanBuilder()
+                .and(studyPost.deleted.isFalse());
+
+        if (status != null) {
+            where.and(studyPost.studyStatus.eq(status));
+        }
+
+        if (hasText(rawKeyword)) {
+            String key = normalize(rawKeyword);    // 공백 제거 + 소문자
+            String safe = escapeWildcards(key);    // %,_ 리터럴 처리
+            where.and(Expressions.booleanTemplate(
+                    "REPLACE(LOWER({0}), ' ', '') LIKE CONCAT('%', {1}, '%') ESCAPE '\\'",
+                    studyPost.title, safe
+            ));
+        }
+
+        return where;
+    }
+
 
     private boolean hasText(String s) { return s != null && !s.isBlank(); }
 

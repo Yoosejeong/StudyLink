@@ -29,6 +29,7 @@ public class StudyPostCommandServiceImpl implements StudyPostCommandService {
     private final StudyPostRepository studyPostRepository;
     private final StudyApplicationRepository studyApplicationRepository;
     private final TagRepository tagRepository;
+    private final StudyPostCountService studyPostCountService;
 
     @Override
     public StudyPost createStudyPost(StudyPostCreate dto, User user){
@@ -47,6 +48,7 @@ public class StudyPostCommandServiceImpl implements StudyPostCommandService {
 
             tags.forEach(studyPost::addTag);
         }
+        studyPostCountService.evictAll();
         return studyPostRepository.save(studyPost);
     }
 
@@ -58,6 +60,7 @@ public class StudyPostCommandServiceImpl implements StudyPostCommandService {
             throw new StudyPostHandler(ErrorStatus._STUDY_POST_FORBIDDEN);
         }
         studyPost.delete();
+        studyPostCountService.evictAll();
     }
 
     @Override
@@ -79,6 +82,7 @@ public class StudyPostCommandServiceImpl implements StudyPostCommandService {
             throw new StudyPostHandler(ErrorStatus._STUDY_POST_FORBIDDEN);
         }
         closeAndRejectPending(studyPost);
+        studyPostCountService.evictAll();
         return studyPost;
     }
 
