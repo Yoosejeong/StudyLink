@@ -1,15 +1,13 @@
 package com.studycrew.studyBoard.service.studyPost;
 
-import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO;
-import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.GetStudyPostListResponse;
-import com.studycrew.studyBoard.entity.StudyPost;
+import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.GetStudyPostAndProfile;
+import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.StudyPostCursorResponse;
 import com.studycrew.studyBoard.enums.StudyStatus;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 
-import static com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.*;
+import java.time.LocalDateTime;
 
 public interface StudyPostQueryService {
     GetStudyPostAndProfile getStudyPost(Long studyPostId);
-    Slice<GetStudyPostListResponse> getStudyPostList(String rawKeyword, StudyStatus status, Pageable pageable);
+    StudyPostCursorResponse getStudyPostList(String rawKeyword, StudyStatus status,
+                                             LocalDateTime lastCreatedAt, Long lastId, int size);
 }

@@ -9,7 +9,7 @@ import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO.StudyPostCr
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO.StudyPostRequestUpdate;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.GetStudyPost;
-import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.GetStudyPostListResponse;
+import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.StudyPostCursorResponse;
 import com.studycrew.studyBoard.entity.StudyPost;
 import com.studycrew.studyBoard.entity.User;
 import com.studycrew.studyBoard.enums.StudyStatus;
@@ -19,17 +19,17 @@ import com.studycrew.studyBoard.service.user.UserQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 
 @Tag(name = "스터디 모집글", description = "스터디 모집글 관련 API")
 @RestController
@@ -83,14 +83,16 @@ public class StudyPostController {
         return ApiResponse.of(SuccessStatus._STUDY_POST_RETRIEVED, responseDTO);
     }
 
-    @Operation(summary = "스터디 모집글 목록 조회", description = "스터디 모집글을 페이징하여 조회합니다.")
+    @Operation(summary = "스터디 모집글 목록 조회", description = "커서 기반 페이징으로 스터디 모집글을 조회합니다.")
     @GetMapping("/api/study-posts")
-    public ApiResponse<Slice<StudyPostResponseDTO.GetStudyPostListResponse>> getStudyPostList(@RequestParam(required = false) @Size(min = 2, max = 50, message = "검색어는 2~50자 사이여야합니다.") String rawKeyword,
-                                                                                             @RequestParam(required = false) StudyStatus status,
-                                                                                             @PageableDefault(size = 9)
-                                                            Pageable pageable) {
-        Slice<GetStudyPostListResponse> studyPostList = studyPostQueryService.getStudyPostList(rawKeyword, status , pageable);
-        return ApiResponse.of(SuccessStatus._STUDY_POST_LIST_RETRIEVED, studyPostList);
+    public ApiResponse<StudyPostCursorResponse> getStudyPostList(
+            @RequestParam(required = false) @Size(min = 2, max = 50, message = "검색어는 2~50자 사이여야합니다.") String rawKeyword,
+            @RequestParam(required = false) StudyStatus status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime lastCreatedAt,
+            @RequestParam(required = false) Long lastId,
+            @RequestParam(defaultValue = "9") @Min(1) @Max(50) int size) {
+        StudyPostCursorResponse result = studyPostQueryService.getStudyPostList(rawKeyword, status, lastCreatedAt, lastId, size);
+        return ApiResponse.of(SuccessStatus._STUDY_POST_LIST_RETRIEVED, result);
     }
 
     @Operation(summary = "스터디 모집 마감", description = "스터디 모집글을 마감 상태로 변경합니다.")
