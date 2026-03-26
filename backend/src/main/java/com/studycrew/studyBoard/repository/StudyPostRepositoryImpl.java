@@ -20,9 +20,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 
 
 public class StudyPostRepositoryImpl implements StudyPostRepositoryCustom{
@@ -34,7 +34,7 @@ public class StudyPostRepositoryImpl implements StudyPostRepositoryCustom{
     }
 
     @Override
-    public Page<GetStudyPostListResponse> searchByStatusAndNotDeleted(String rawKeyword, StudyStatus status, Pageable pageable) {
+    public Slice<GetStudyPostListResponse> searchByStatusAndNotDeleted(String rawKeyword, StudyStatus status, Pageable pageable) {
         QStudyPost studyPost = QStudyPost.studyPost;
         QUser user = QUser.user;
         QStudyPostTag spt = QStudyPostTag.studyPostTag;
@@ -68,14 +68,13 @@ public class StudyPostRepositoryImpl implements StudyPostRepositoryCustom{
                 .where(where)
                 .orderBy(studyPost.createdAt.desc(), studyPost.id.desc())
                 .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
+                .limit(pageable.getPageSize() + 1L)
                 .fetch();
 
-        Long total = queryFactory
-                .select(studyPost.id.count())
-                .from(studyPost)
-                .where(where)
-                .fetchOne();
+        boolean hasNext = content.size() > pageable.getPageSize();
+        if (hasNext) {
+            content.remove(pageable.getPageSize());
+        }
 
         if (!content.isEmpty()) {
             List<Long> ids = content.stream()
@@ -105,7 +104,7 @@ public class StudyPostRepositoryImpl implements StudyPostRepositoryCustom{
             content.forEach(dto ->
                     dto.attachTags(tagMap.getOrDefault(dto.getStudyPostId(), Collections.emptyList())));
         }
-        return new PageImpl<>(content, pageable, total == null ? 0L : total);
+        return new SliceImpl<>(content, pageable, hasNext);
     }
 
     private boolean hasText(String s) { return s != null && !s.isBlank(); }

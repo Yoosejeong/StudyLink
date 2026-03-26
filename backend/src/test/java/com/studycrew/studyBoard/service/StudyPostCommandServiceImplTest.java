@@ -21,9 +21,9 @@ import static org.assertj.core.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.transaction.annotation.Transactional;
 
 
@@ -133,8 +133,9 @@ class StudyPostCommandServiceImplTest {
         StudyStatus status = null;
         String rawKeyword = null;
         Pageable pageable = PageRequest.of(0, 10);
-        Page<GetStudyPostListResponse> studyPostList = studyPostQueryService.getStudyPostList(rawKeyword, status, pageable);
-        assertThat(studyPostList.getTotalElements()).isEqualTo(3);
+        Slice<GetStudyPostListResponse> studyPostList = studyPostQueryService.getStudyPostList(rawKeyword, status, pageable);
+        assertThat(studyPostList.getContent()).hasSize(3);
+        assertThat(studyPostList.hasNext()).isFalse();
 
     }
 
@@ -227,10 +228,11 @@ class StudyPostCommandServiceImplTest {
         studyPostCommandService.closeStudyPost(studyPost2.getId(), user);
 
         Pageable pageable = PageRequest.of(0, 10);
-        Page<GetStudyPostListResponse> studyPostList = studyPostQueryService.getStudyPostList(rawKeyword, StudyStatus.RECRUITING,
+        Slice<GetStudyPostListResponse> studyPostList = studyPostQueryService.getStudyPostList(rawKeyword, StudyStatus.RECRUITING,
                 pageable);
 
-        assertThat(studyPostList.getTotalElements()).isEqualTo(1);
+        assertThat(studyPostList.getContent()).hasSize(1);
+        assertThat(studyPostList.hasNext()).isFalse();
     }
 
     private static User getUser() {

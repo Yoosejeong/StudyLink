@@ -22,8 +22,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
@@ -85,11 +85,11 @@ public class StudyPostController {
 
     @Operation(summary = "스터디 모집글 목록 조회", description = "스터디 모집글을 페이징하여 조회합니다.")
     @GetMapping("/api/study-posts")
-    public ApiResponse<Page<StudyPostResponseDTO.GetStudyPostListResponse>> getStudyPostList(@RequestParam(required = false) @Size(min = 2, max = 50, message = "검색어는 2~50자 사이여야합니다.") String rawKeyword,
+    public ApiResponse<Slice<StudyPostResponseDTO.GetStudyPostListResponse>> getStudyPostList(@RequestParam(required = false) @Size(min = 2, max = 50, message = "검색어는 2~50자 사이여야합니다.") String rawKeyword,
                                                                                              @RequestParam(required = false) StudyStatus status,
                                                                                              @PageableDefault(size = 9)
                                                             Pageable pageable) {
-        Page<GetStudyPostListResponse> studyPostList = studyPostQueryService.getStudyPostList(rawKeyword, status , pageable);
+        Slice<GetStudyPostListResponse> studyPostList = studyPostQueryService.getStudyPostList(rawKeyword, status , pageable);
         return ApiResponse.of(SuccessStatus._STUDY_POST_LIST_RETRIEVED, studyPostList);
     }
 

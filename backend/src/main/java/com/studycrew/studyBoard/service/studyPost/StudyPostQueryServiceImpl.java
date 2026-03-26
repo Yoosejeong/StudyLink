@@ -11,9 +11,8 @@ import com.studycrew.studyBoard.enums.StudyStatus;
 import com.studycrew.studyBoard.repository.StudyPostRepository;
 import com.studycrew.studyBoard.util.S3UrlUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,8 +38,8 @@ public class StudyPostQueryServiceImpl implements StudyPostQueryService {
     }
 
     @Override
-    public Page<GetStudyPostListResponse> getStudyPostList(String rawKeyword, StudyStatus status, Pageable pageable) {
-        Page<GetStudyPostListResponse> page =
+    public Slice<GetStudyPostListResponse> getStudyPostList(String rawKeyword, StudyStatus status, Pageable pageable) {
+        Slice<GetStudyPostListResponse> page =
                 studyPostRepository.searchByStatusAndNotDeleted(rawKeyword, status, pageable);
 
         return page.map(dto -> {
