@@ -289,7 +289,13 @@
 				<button
 					type="button"
 					class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800"
-					on:click={() => goto('/')}
+					on:click={() => {
+						if (window.history.length > 2) {
+							window.history.back();
+						} else {
+							goto('/');
+						}
+					}}
 				>
 					<ArrowLeft class="h-4 w-4" />
 					<span>목록으로</span>

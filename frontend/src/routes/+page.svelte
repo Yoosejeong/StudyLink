@@ -1,8 +1,10 @@
+<script context="module">
+	let hasAppLoaded = false;
+</script>
+
 <script lang="ts">
-	import { onDestroy } from 'svelte';
 	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
-	import { User } from 'lucide-svelte';
+	import { goto, afterNavigate } from '$app/navigation';
 
 	type CategoryCode =
 		| 'BACKEND'
@@ -45,22 +47,108 @@
 	let nextCursorId: number | null = null;
 	let currentStatus: string | null = null; // 'RECRUITING' | null
 	let keyword = ''; // 검색어(입력값)
-	
+	let pendingRestoreScrollY: number | null = null;
+	const LIST_STATE_STORAGE_KEY = 'study-list-state';
+
+	const isPageReload = (() => {
+		if (typeof window === 'undefined') return false;
+		if (hasAppLoaded) return false; // SPA 이동(뒤로가기 등)일 땐 무조건 false
+		const nav = performance.getEntriesByType('navigation')[0] as
+			| PerformanceNavigationTiming
+			| undefined;
+		return nav?.type === 'reload';
+	})();
+
+	if (typeof window !== 'undefined') {
+		hasAppLoaded = true; // 최초 로드 끝
+		if (isPageReload) {
+			sessionStorage.removeItem(LIST_STATE_STORAGE_KEY);
+		}
+	}
+
+	// 📸 스냅샷 (뒤로가기 시 상태 복구)
+	export const snapshot = {
+		capture: () => ({
+			studies,
+			hasNext,
+			nextCursorCreatedAt,
+			nextCursorId,
+			currentStatus,
+			keyword,
+			scrollY: typeof window !== 'undefined' ? window.scrollY : 0
+		}),
+		restore: (value) => {
+			if (isPageReload) return;
+			studies = value.studies;
+			hasNext = value.hasNext;
+			nextCursorCreatedAt = value.nextCursorCreatedAt;
+			nextCursorId = value.nextCursorId;
+			currentStatus = value.currentStatus;
+			keyword = value.keyword;
+			pendingRestoreScrollY = value.scrollY ?? 0;
+		}
+	};
+
+	type ListState = {
+		studies: Study[];
+		hasNext: boolean;
+		nextCursorCreatedAt: string | null;
+		nextCursorId: number | null;
+		currentStatus: string | null;
+		keyword: string;
+		scrollY: number;
+	};
+
+	function saveListState() {
+		if (typeof window === 'undefined') return;
+		const payload: ListState = {
+			studies,
+			hasNext,
+			nextCursorCreatedAt,
+			nextCursorId,
+			currentStatus,
+			keyword,
+			scrollY: window.scrollY
+		};
+		sessionStorage.setItem(LIST_STATE_STORAGE_KEY, JSON.stringify(payload));
+	}
+
+	function restoreListState(): boolean {
+		if (typeof window === 'undefined') return false;
+		const raw = sessionStorage.getItem(LIST_STATE_STORAGE_KEY);
+		if (!raw) return false;
+		try {
+			const value = JSON.parse(raw) as ListState;
+			studies = value.studies ?? [];
+			hasNext = value.hasNext ?? false;
+			nextCursorCreatedAt = value.nextCursorCreatedAt ?? null;
+			nextCursorId = value.nextCursorId ?? null;
+			currentStatus = value.currentStatus ?? null;
+			keyword = value.keyword ?? '';
+			pendingRestoreScrollY = value.scrollY ?? 0;
+			sessionStorage.removeItem(LIST_STATE_STORAGE_KEY);
+			return true;
+		} catch {
+			sessionStorage.removeItem(LIST_STATE_STORAGE_KEY);
+			return false;
+		}
+	}
+
 	// ✅ 기본 이미지 경로
 	const DEFAULT_AVATAR = '/avatars/default.jpg';
 
 	// ✅ 이미지 src 선택 (공개 URL 우선)
 	function avatarSrc(s: Study) {
-  		return s.profileUrl || undefined;
+		return s.profileUrl || undefined;
 	}
 
 	// ✅ 이미지 로딩 실패 시 폴백
 	function onImgError(e: Event) {
-  		const img = e.target as HTMLImageElement;
-  		// 이미 기본 아바타면 더 바꾸지 않음(무한 onerror 방지)
-  		if (!img.src.endsWith(DEFAULT_AVATAR)) {
-    		img.src = DEFAULT_AVATAR;
-  		}
+		const img = e.target as HTMLImageElement;
+		// 이미 기본 아바타면 더 바꾸지 않음(무한 onerror 방지)
+		if (!img.src.endsWith(DEFAULT_AVATAR)) {
+			img.src = DEFAULT_AVATAR;
+		}
 	}
 
 	const baseUrl = import.meta.env.VITE_API_BASE_URL;
@@ -106,19 +194,50 @@
 		}
 	}
 
-	const unsubscribe = page.subscribe(($page) => {
+	afterNavigate((navigation) => {
+		const restoredFromSession =
+			typeof window !== 'undefined' &&
+			navigation.type === 'popstate' &&
+			studies.length === 0 &&
+			restoreListState();
+
 		const statusParam = $page.url.searchParams.get('status');
 		const kwParam = $page.url.searchParams.get('rawKeyword') ?? '';
 
-		currentStatus = statusParam;
-		keyword = kwParam;
+		// session 복원된 경우는 API 재조회 없이 기존 상태 유지
+		if (restoredFromSession) {
+			// no-op
+		} else if (currentStatus !== statusParam || keyword !== kwParam) {
+			// 필터나 검색어가 바뀌었을 때만 초기화 후 다시 불러옴
+			currentStatus = statusParam;
+			keyword = kwParam;
+			loadList(true);
+		} else if (studies.length === 0) {
+			// 데이터가 없는 경우(첫 진입 또는 스냅샷 없음)에만 불러옴
+			loadList(true);
+		}
 
-		loadList(true);
+		if (
+			pendingRestoreScrollY === null &&
+			typeof window !== 'undefined' &&
+			navigation.type === 'popstate'
+		) {
+			restoreListState();
+		}
+
+		if (pendingRestoreScrollY !== null && typeof window !== 'undefined') {
+			const y = pendingRestoreScrollY;
+			pendingRestoreScrollY = null;
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
+					window.scrollTo({ top: y, left: 0, behavior: 'auto' });
+				});
+			});
+		}
 	});
 
-	onDestroy(() => unsubscribe());
-
 	function goToDetail(id: number) {
+		saveListState();
 		goto(`/studies/${id}`);
 	}
 
@@ -183,25 +302,11 @@
 						원하는 스터디에 지원하고, 함께 성장하세요!
 					</p>
 				</div>
-				<div class="relative max-w-md flex-1">
-					<div class="absolute -top-4 -right-4 rounded-full bg-white p-3 shadow-lg">
-						<div class="flex h-8 w-8 items-center justify-center rounded-full bg-purple-500">
-							📢
-						</div>
-					</div>
-					<div class="space-y-4">
-						<div class="ml-8 rounded-2xl bg-white p-4 shadow-md">
-							<p class="font-medium text-gray-800">스터디를 모집하고 지원해요! 📚</p>
-						</div>
-						<div class="mr-8 rounded-2xl bg-white p-4 shadow-md">
-							<p class="text-gray-700">StudyLink에서</p>
-							<p class="text-gray-700">함께 성장할 팀원을 찾아보세요 🚀</p>
-						</div>
-						<div class="ml-4 rounded-2xl bg-green-400 p-4 text-white shadow-md">
-							<p>매일 새로운 스터디</p>
-							<p>모집글을 확인하세요 💚</p>
-						</div>
-					</div>
+				<!-- 오른쪽: 겹쳐진 카드들 -->
+				<div class="relative w-72 h-44 hidden md:block">
+					<div class="absolute right-0 top-0 w-48 h-32 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-500 shadow-xl rotate-6" />
+					<div class="absolute right-8 top-6 w-48 h-32 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-xl -rotate-3" />
+					<div class="absolute right-4 top-12 w-48 h-32 rounded-2xl bg-gradient-to-br from-rose-400 to-pink-500 shadow-xl rotate-2" />
 				</div>
 			</div>
 		</div>
@@ -335,7 +440,7 @@
 		<div class="mt-10 flex justify-center">
 			<button
 				on:click={loadMore}
-				class="rounded-full border-2 border-gray-200 bg-white px-8 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200"
+				class="rounded-full border-2 border-gray-200 bg-white px-8 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 focus:ring-2 focus:ring-gray-200 focus:outline-none"
 			>
 				더보기
 			</button>
