@@ -290,7 +290,7 @@
 					type="button"
 					class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800"
 					on:click={() => {
-						if (window.history.length > 2) {
+						if (window.history.length > 1) {
 							window.history.back();
 						} else {
 							goto('/');

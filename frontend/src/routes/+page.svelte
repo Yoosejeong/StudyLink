@@ -1,8 +1,5 @@
-<script context="module">
-	let hasAppLoaded = false;
-</script>
-
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto, afterNavigate } from '$app/navigation';
 	import { User } from 'lucide-svelte';
@@ -46,22 +43,24 @@
 	let hasNext = false;
 	let nextCursorCreatedAt: string | null = null;
 	let currentStatus: string | null = null; // 'RECRUITING' | null
+	let nextCursorId: number | null = null;
 	let keyword = ''; // 검색어(입력값)
 	let activeKeyword = ''; // 현재 로드된 검색어
 	let pendingRestoreScrollY: number | null = null;
 	const LIST_SCROLL_STORAGE_KEY = 'study-list-scroll-y';
+	const LIST_STATE_STORAGE_KEY = 'study-list-state';
 
 	const isPageReload = (() => {
 		if (typeof window === 'undefined') return false;
-		if (hasAppLoaded) return false;
 		const nav = performance.getEntriesByType('navigation')[0] as
 			| PerformanceNavigationTiming
 			| undefined;
 		return nav?.type === 'reload';
 	})();
 
-	if (typeof window !== 'undefined') {
-		hasAppLoaded = true;
+	if (typeof window !== 'undefined' && isPageReload) {
+		sessionStorage.removeItem(LIST_STATE_STORAGE_KEY);
+		sessionStorage.removeItem(LIST_SCROLL_STORAGE_KEY);
 	}
 
 	export const snapshot = {
@@ -76,7 +75,6 @@
 			scrollY: typeof window !== 'undefined' ? window.scrollY : 0
 		}),
 		restore: (value) => {
-			if (isPageReload) return;
 			studies = value.studies;
 			hasNext = value.hasNext;
 			nextCursorCreatedAt = value.nextCursorCreatedAt;
@@ -87,22 +85,70 @@
 			pendingRestoreScrollY = value.scrollY ?? 0;
 		}
 	};
-	
+
+	type ListState = {
+		studies: Study[];
+		hasNext: boolean;
+		nextCursorCreatedAt: string | null;
+		nextCursorId: number | null;
+		currentStatus: string | null;
+		keyword: string;
+		activeKeyword: string;
+		scrollY: number;
+	};
+
+	function saveListState() {
+		if (typeof window === 'undefined') return;
+		const value: ListState = {
+			studies,
+			hasNext,
+			nextCursorCreatedAt,
+			nextCursorId,
+			currentStatus,
+			keyword,
+			activeKeyword,
+			scrollY: window.scrollY
+		};
+		sessionStorage.setItem(LIST_STATE_STORAGE_KEY, JSON.stringify(value));
+	}
+
+	function restoreListState() {
+		if (typeof window === 'undefined') return false;
+		const raw = sessionStorage.getItem(LIST_STATE_STORAGE_KEY);
+		if (!raw) return false;
+		try {
+			const value = JSON.parse(raw) as ListState;
+			studies = value.studies ?? [];
+			hasNext = value.hasNext ?? false;
+			nextCursorCreatedAt = value.nextCursorCreatedAt ?? null;
+			nextCursorId = value.nextCursorId ?? null;
+			currentStatus = value.currentStatus ?? null;
+			keyword = value.keyword ?? '';
+			activeKeyword = value.activeKeyword ?? value.keyword ?? '';
+			pendingRestoreScrollY = value.scrollY ?? 0;
+			sessionStorage.removeItem(LIST_STATE_STORAGE_KEY);
+			return true;
+		} catch {
+			sessionStorage.removeItem(LIST_STATE_STORAGE_KEY);
+			return false;
+		}
+	}
+
 	// ✅ 기본 이미지 경로
 	const DEFAULT_AVATAR = '/avatars/default.jpg';
 
 	// ✅ 이미지 src 선택 (공개 URL 우선)
 	function avatarSrc(s: Study) {
-  		return s.profileUrl || undefined;
+		return s.profileUrl || undefined;
 	}
 
 	// ✅ 이미지 로딩 실패 시 폴백
 	function onImgError(e: Event) {
-  		const img = e.target as HTMLImageElement;
-  		// 이미 기본 아바타면 더 바꾸지 않음(무한 onerror 방지)
-  		if (!img.src.endsWith(DEFAULT_AVATAR)) {
-    		img.src = DEFAULT_AVATAR;
-  		}
+		const img = e.target as HTMLImageElement;
+		// 이미 기본 아바타면 더 바꾸지 않음(무한 onerror 방지)
+		if (!img.src.endsWith(DEFAULT_AVATAR)) {
+			img.src = DEFAULT_AVATAR;
+		}
 	}
 
 	const baseUrl = import.meta.env.VITE_API_BASE_URL;
@@ -148,7 +194,48 @@
 		}
 	}
 
+	onMount(() => {
+		if (studies.length === 0) {
+			// 뒤로가기 복원 대기 상태면 초기 API 호출을 건너뛴다.
+			// (afterNavigate(popstate)에서 sessionStorage 상태를 복원)
+			if (typeof window !== 'undefined' && sessionStorage.getItem(LIST_STATE_STORAGE_KEY)) {
+				return;
+			}
+
+			const statusParam = $page.url.searchParams.get('status');
+			const kwParam = $page.url.searchParams.get('rawKeyword') ?? '';
+			currentStatus = statusParam;
+			activeKeyword = kwParam;
+			keyword = kwParam;
+			loadList(true);
+		}
+	});
+
 	afterNavigate((navigation) => {
+		// 뒤로가기(popstate) 시에는 스냅샷 복구를 절대적으로 신뢰하고 API 재호출(loadList)을 완전 차단합니다!
+		if (navigation && navigation.type === 'popstate') {
+			restoreListState();
+			let restoreY = pendingRestoreScrollY;
+			if (restoreY === null && typeof window !== 'undefined') {
+				const savedY = Number(sessionStorage.getItem(LIST_SCROLL_STORAGE_KEY));
+				if (Number.isFinite(savedY) && savedY >= 0) {
+					restoreY = savedY;
+				}
+			}
+
+			if (restoreY !== null && typeof window !== 'undefined') {
+				pendingRestoreScrollY = null;
+				requestAnimationFrame(() => {
+					requestAnimationFrame(() => {
+						window.scrollTo({ top: restoreY as number, left: 0, behavior: 'auto' });
+					});
+				});
+				sessionStorage.removeItem(LIST_SCROLL_STORAGE_KEY);
+			}
+			return; // 👈 팝스테이트 시 여기서 무조건 종료! 스냅샷 배열(24개) 초기화 방지
+		}
+
+		// 일반적인 페이지 이동(검색 클릭 등)일 때만 URL을 검사해서 목록을 불러옴
 		const statusParam = $page.url.searchParams.get('status');
 		const kwParam = $page.url.searchParams.get('rawKeyword') ?? '';
 
@@ -157,34 +244,11 @@
 			activeKeyword = kwParam;
 			keyword = kwParam; // 입력창에도 반영 동기화
 			loadList(true);
-		} else if (studies.length === 0) {
-			loadList(true);
-		}
-
-		if (
-			pendingRestoreScrollY === null &&
-			typeof window !== 'undefined' &&
-			navigation.type === 'popstate'
-		) {
-			const savedY = Number(sessionStorage.getItem(LIST_SCROLL_STORAGE_KEY));
-			if (Number.isFinite(savedY) && savedY >= 0) {
-				pendingRestoreScrollY = savedY;
-			}
-		}
-
-		if (pendingRestoreScrollY !== null && typeof window !== 'undefined') {
-			const y = pendingRestoreScrollY;
-			pendingRestoreScrollY = null;
-			requestAnimationFrame(() => {
-				requestAnimationFrame(() => {
-					window.scrollTo({ top: y, left: 0, behavior: 'auto' });
-				});
-			});
-			sessionStorage.removeItem(LIST_SCROLL_STORAGE_KEY);
 		}
 	});
 
 	function goToDetail(id: number) {
+		saveListState();
 		if (typeof window !== 'undefined') {
 			sessionStorage.setItem(LIST_SCROLL_STORAGE_KEY, String(window.scrollY));
 		}
@@ -253,11 +317,13 @@
 					</p>
 				</div>
 				<!-- 오른쪽: 누끼 딴 판다 🚀 (배너 크기 유지, 판다만 확대) -->
-				<div class="relative w-80 h-52 hidden lg:flex items-center justify-center lg:ml-8 z-10 pointer-events-none">
-					<img 
-						src="/panda.png" 
-						alt="StudyLink Mascot" 
-						class="w-full h-full object-contain scale-[1.35] drop-shadow-[0_25px_25px_rgba(0,0,0,0.15)] -rotate-2 pointer-events-auto hover:rotate-1 hover:scale-[1.45] transition-all duration-300"
+				<div
+					class="pointer-events-none relative z-10 hidden h-52 w-80 items-center justify-center lg:ml-8 lg:flex"
+				>
+					<img
+						src="/panda.png"
+						alt="StudyLink Mascot"
+						class="pointer-events-auto h-full w-full scale-[1.35] -rotate-2 object-contain drop-shadow-[0_25px_25px_rgba(0,0,0,0.15)] transition-all duration-300 hover:scale-[1.45] hover:rotate-1"
 					/>
 				</div>
 			</div>
@@ -392,7 +458,7 @@
 		<div class="mt-10 flex justify-center">
 			<button
 				on:click={loadMore}
-				class="rounded-full border-2 border-gray-200 bg-white px-8 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200"
+				class="rounded-full border-2 border-gray-200 bg-white px-8 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 focus:ring-2 focus:ring-gray-200 focus:outline-none"
 			>
 				더보기
 			</button>
