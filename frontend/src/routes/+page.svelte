@@ -183,25 +183,13 @@
 						원하는 스터디에 지원하고, 함께 성장하세요!
 					</p>
 				</div>
-				<div class="relative max-w-md flex-1">
-					<div class="absolute -top-4 -right-4 rounded-full bg-white p-3 shadow-lg">
-						<div class="flex h-8 w-8 items-center justify-center rounded-full bg-purple-500">
-							📢
-						</div>
-					</div>
-					<div class="space-y-4">
-						<div class="ml-8 rounded-2xl bg-white p-4 shadow-md">
-							<p class="font-medium text-gray-800">스터디를 모집하고 지원해요! 📚</p>
-						</div>
-						<div class="mr-8 rounded-2xl bg-white p-4 shadow-md">
-							<p class="text-gray-700">StudyLink에서</p>
-							<p class="text-gray-700">함께 성장할 팀원을 찾아보세요 🚀</p>
-						</div>
-						<div class="ml-4 rounded-2xl bg-green-400 p-4 text-white shadow-md">
-							<p>매일 새로운 스터디</p>
-							<p>모집글을 확인하세요 💚</p>
-						</div>
-					</div>
+				<!-- 오른쪽: 누끼 딴 판다 🚀 (배너 크기 유지, 판다만 확대) -->
+				<div class="relative w-80 h-52 hidden lg:flex items-center justify-center lg:ml-8 z-10 pointer-events-none">
+					<img 
+						src="/panda.png" 
+						alt="StudyLink Mascot" 
+						class="w-full h-full object-contain scale-[1.35] drop-shadow-[0_25px_25px_rgba(0,0,0,0.15)] -rotate-2 pointer-events-auto hover:rotate-1 hover:scale-[1.45] transition-all duration-300"
+					/>
 				</div>
 			</div>
 		</div>
