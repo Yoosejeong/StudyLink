@@ -45,9 +45,9 @@
 	let studies: Study[] = [];
 	let hasNext = false;
 	let nextCursorCreatedAt: string | null = null;
-	let nextCursorId: number | null = null;
 	let currentStatus: string | null = null; // 'RECRUITING' | null
 	let keyword = ''; // 검색어(입력값)
+	let activeKeyword = ''; // 현재 로드된 검색어
 	let pendingRestoreScrollY: number | null = null;
 	const LIST_SCROLL_STORAGE_KEY = 'study-list-scroll-y';
 
@@ -72,6 +72,7 @@
 			nextCursorId,
 			currentStatus,
 			keyword,
+			activeKeyword,
 			scrollY: typeof window !== 'undefined' ? window.scrollY : 0
 		}),
 		restore: (value) => {
@@ -82,6 +83,7 @@
 			nextCursorId = value.nextCursorId;
 			currentStatus = value.currentStatus;
 			keyword = value.keyword;
+			activeKeyword = value.activeKeyword ?? value.keyword;
 			pendingRestoreScrollY = value.scrollY ?? 0;
 		}
 	};
@@ -117,7 +119,7 @@
 			const url = new URL(`${baseUrl}/api/study-posts`);
 			if (currentStatus) url.searchParams.set('status', currentStatus);
 
-			const trimmed = keyword.trim();
+			const trimmed = activeKeyword.trim();
 			if (trimmed.length >= 2) {
 				url.searchParams.set('rawKeyword', trimmed);
 			}
@@ -150,9 +152,10 @@
 		const statusParam = $page.url.searchParams.get('status');
 		const kwParam = $page.url.searchParams.get('rawKeyword') ?? '';
 
-		if (currentStatus !== statusParam || keyword !== kwParam) {
+		if (currentStatus !== statusParam || activeKeyword !== kwParam) {
 			currentStatus = statusParam;
-			keyword = kwParam;
+			activeKeyword = kwParam;
+			keyword = kwParam; // 입력창에도 반영 동기화
 			loadList(true);
 		} else if (studies.length === 0) {
 			loadList(true);
