@@ -90,7 +90,7 @@ public class StudyPostController {
             @RequestParam(required = false) StudyStatus status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime lastCreatedAt,
             @RequestParam(required = false) Long lastId,
-            @RequestParam(defaultValue = "9") @Min(1) @Max(50) int size) {
+            @RequestParam(defaultValue = "12") @Min(1) @Max(50) int size) {
         StudyPostCursorResponse result = studyPostQueryService.getStudyPostList(rawKeyword, status, lastCreatedAt, lastId, size);
         return ApiResponse.of(SuccessStatus._STUDY_POST_LIST_RETRIEVED, result);
     }
