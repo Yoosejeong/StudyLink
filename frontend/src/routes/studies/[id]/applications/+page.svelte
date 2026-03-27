@@ -108,62 +108,6 @@
 		}
 	}
 
-	async function checkApplicationStatus() {
-		try {
-			const res = await http.get(`/api/study-applications/check?studyPostId=${studyPostId}`);
-			if (redirectOnAuthError(res)) return;
-			if (res.ok) {
-				const data = await res.json();
-				hasApplied = data.result.hasApplied;
-				applicationStatus = data.result.applicationStatus;
-				currentApplicationId = data.result.applicationId || null;
-			} else {
-				console.error('지원 여부 확인 실패', res.status);
-				// 실패 시 초기화
-				hasApplied = false;
-				applicationStatus = null;
-				currentApplicationId = null;
-			}
-		} catch (err) {
-			console.error('지원 여부 요청 오류', err);
-		}
-	}
-
-	async function handleCancel() {
-		if (!currentApplicationId) {
-			alert('오류: 지원서 ID를 찾을 수 없습니다. ');
-			return;
-		}
-
-		const confirmed = confirm('정말로 지원을 취소하시겠습니까?');
-		if (!confirmed) return;
-
-		try {
-			const res = await http.patch(`/api/study-applications/${currentApplicationId}/cancel`);
-			if (redirectOnAuthError(res)) return;
-
-			if (res.ok) {
-				alert('지원이 취소되었습니다.');
-				// 상태를 다시 체크해서 (CANCELED로) UI를 업데이트합니다.
-				// ('다시 지원하기' 버튼이 보이게 됩니다)
-				await checkApplicationStatus();
-			} else {
-				const errorData = await safeJson(res);
-				// 409 Conflict (낙관적 락 충돌)
-				if (res.status === 409) {
-					alert(
-						'요청 처리 중 충돌이 발생했습니다. (작성자가 방금 승인/거절했을 수 있습니다) 페이지를 새로고침합니다.'
-					);
-					window.location.reload();
-				} else {
-					alert(`취소 실패: ${errorData?.message || res.status}`);
-				}
-			}
-		} catch (err) {
-			console.error('취소 요청 오류', err);
-			alert('네트워크 오류로 취소에 실패했습니다.');
-		}
-	}
 </script>
 
 {#if isLoading}

@@ -34,14 +34,15 @@
 		category: CategoryCode;
 		studyStatus: 'RECRUITING' | 'CLOSED';
 		profileKey?: string | null; // S3 key
-		profileUrl?: string | nll;
+		profileUrl?: string | null;
 		tags: string[];
 		updatedAt: string;
 	}
 
 	let studies: Study[] = [];
-	let totalPages = 1;
-	let currentPage = 0;
+	let hasNext = false;
+	let nextCursorCreatedAt: string | null = null;
+	let nextCursorId: number | null = null;
 	let currentStatus: string | null = null; // 'RECRUITING' | null
 	let keyword = ''; // 검색어(입력값)
 	
@@ -50,7 +51,7 @@
 
 	// ✅ 이미지 src 선택 (공개 URL 우선)
 	function avatarSrc(s: Study) {
-  		return s.prpofileUrl || undefined;
+  		return s.profileUrl || undefined;
 	}
 
 	// ✅ 이미지 로딩 실패 시 폴백
@@ -64,33 +65,55 @@
 
 	const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
-	const unsubscribe = page.subscribe(async ($page) => {
-		// URL 쿼리 → 로컬 상태 동기화
-		const pageParam = Number($page.url.searchParams.get('page') ?? '0');
-		const statusParam = $page.url.searchParams.get('status');
-		const kwParam = $page.url.searchParams.get('rawKeyword') ?? '';
-
-		currentPage = pageParam;
-		currentStatus = statusParam;
-		keyword = kwParam; // 입력창에도 반영
+	async function loadList(reset = false) {
+		if (reset) {
+			studies = [];
+			nextCursorCreatedAt = null;
+			nextCursorId = null;
+			hasNext = false;
+		}
 
 		try {
 			const url = new URL(`${baseUrl}/api/study-posts`);
-			url.searchParams.set('page', String(pageParam));
-			if (statusParam) url.searchParams.set('status', statusParam);
+			if (currentStatus) url.searchParams.set('status', currentStatus);
 
-			const trimmed = kwParam.trim();
+			const trimmed = keyword.trim();
 			if (trimmed.length >= 2) {
-				url.searchParams.set('rawKeyword', trimmed); // 2~50자만 서버에 전달
+				url.searchParams.set('rawKeyword', trimmed);
 			}
+
+			if (!reset && nextCursorCreatedAt && nextCursorId !== null) {
+				url.searchParams.set('lastCreatedAt', nextCursorCreatedAt);
+				url.searchParams.set('lastId', String(nextCursorId));
+			}
+
 			const res = await fetch(url.toString());
 			const data = await res.json();
 
-			studies = data.result?.content ?? [];
-			totalPages = data.result?.totalPages ?? 1;
+			if (data.isSuccess) {
+				const fetchedItems = data.result?.items ?? [];
+				if (reset) {
+					studies = fetchedItems;
+				} else {
+					studies = [...studies, ...fetchedItems];
+				}
+				hasNext = data.result?.hasNext ?? false;
+				nextCursorCreatedAt = data.result?.nextCursorCreatedAt ?? null;
+				nextCursorId = data.result?.nextCursorId ?? null;
+			}
 		} catch (err) {
 			console.error('❌ 목록 불러오기 실패', err);
 		}
+	}
+
+	const unsubscribe = page.subscribe(($page) => {
+		const statusParam = $page.url.searchParams.get('status');
+		const kwParam = $page.url.searchParams.get('rawKeyword') ?? '';
+
+		currentStatus = statusParam;
+		keyword = kwParam;
+
+		loadList(true);
 	});
 
 	onDestroy(() => unsubscribe());
@@ -102,7 +125,6 @@
 	// 검색 실행
 	function doSearch() {
 		const params = new URLSearchParams();
-		params.set('page', '0'); // 검색 시 첫 페이지로
 		if (currentStatus) params.set('status', currentStatus);
 
 		const trimmed = keyword.trim();
@@ -122,25 +144,20 @@
 	function clearSearch() {
 		keyword = '';
 		const params = new URLSearchParams();
-		params.set('page', '0');
 		if (currentStatus) params.set('status', currentStatus);
 		goto(`/?${params.toString()}`);
 	}
 
-	// 페이지 이동 (검색/상태 유지)
-	function goToPage(page: number) {
-		const params = new URLSearchParams();
-		params.set('page', String(page));
-		if (currentStatus) params.set('status', currentStatus);
-		const trimmed = keyword.trim();
-		if (trimmed.length >= 2) params.set('rawKeyword', trimmed);
-		goto(`/?${params.toString()}`);
+	// 더보기
+	function loadMore() {
+		if (hasNext) {
+			loadList(false);
+		}
 	}
 
 	// 상태 필터 변경 (검색 유지)
 	function filterByStatus(status: string | null) {
 		const params = new URLSearchParams();
-		params.set('page', '0');
 		if (status) params.set('status', status);
 		const trimmed = keyword.trim();
 		if (trimmed.length >= 2) params.set('rawKeyword', trimmed);
@@ -313,22 +330,15 @@
 		{/if}
 	</div>
 
-	<!-- ✅ 페이지버튼 -->
-	<div class="mt-10 flex justify-center gap-2">
-		{#each Array(totalPages)
-			.fill(0)
-			.map((_, i) => i) as page}
+	<!-- ✅ 더보기 버튼 -->
+	{#if hasNext}
+		<div class="mt-10 flex justify-center">
 			<button
-				on:click={() => goToPage(page)}
-				class={`rounded border px-4 py-2 transition
-        ${
-					page === currentPage
-						? 'border-gray-700 bg-gray-700 text-white opacity-95'
-						: 'border-gray-400 bg-gray-300 text-gray-900 opacity-95 hover:bg-gray-400'
-				}`}
+				on:click={loadMore}
+				class="rounded-full border-2 border-gray-200 bg-white px-8 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200"
 			>
-				{page + 1}
+				더보기
 			</button>
-		{/each}
-	</div>
+		</div>
+	{/if}
 </main>

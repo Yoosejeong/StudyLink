@@ -14,6 +14,7 @@
 		MoreVertical
 	} from 'lucide-svelte';
 	import { slide } from 'svelte/transition';
+	import { currentUser } from '$lib/stores/auth';
 
 	const DEFAULT_AVATAR = '/avatars/default.jpg';
 
@@ -67,8 +68,8 @@
 	const studyPostId = data.id;
 
 	// 클라이언트에서만 필요한 상태들
-	let currentUserId: number | null = null;
-	let currentUserNickname: string | null = null;
+	$: currentUserId = $currentUser?.userId ?? null;
+	$: currentUserNickname = $currentUser?.nickname ?? null;
 
 	let hasApplied = false;
 	let applicationStatus: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELED' | null = null;
@@ -96,7 +97,11 @@
 			openAuthModal();
 			return;
 		}
-		await Promise.all([fetchUser(), checkApplicationStatus()]);
+		
+		const hasToken = typeof localStorage !== 'undefined' && !!localStorage.getItem('accessToken');
+		if (hasToken) {
+			await checkApplicationStatus();
+		}
 	});
 
 	function handleEdit() {
@@ -113,23 +118,11 @@
 		return false;
 	}
 
-	async function fetchUser() {
-		try {
-			const res = await http.get('/api/users');
-			if (redirectOnAuthError(res)) return;
-			if (res.ok) {
-				const data: { result: CurrentUser } = await res.json();
-				currentUserId = data.result.userId;
-				currentUserNickname = data.result.nickname;
-			} else {
-				console.error('유저 정보 조회 실패', res.status);
-			}
-		} catch (err) {
-			console.error('유저 정보 요청 실패', err);
-		}
-	}
-
 	async function handleApply() {
+		if (!currentUserId) {
+			openAuthModal();
+			return;
+		}
 		try {
 			const res = await http.post(`/api/study-posts/${studyPostId}/applications`);
 			if (redirectOnAuthError(res)) return;
@@ -153,9 +146,8 @@
 			if (res.ok) {
 				const data = await res.json();
 				hasApplied = data.result.hasApplied;
-				currentApplicationId = data.result.applicationId || null;
+				currentApplicationId = data.result.applicationId || data.result.studyApplicationId || null;
 				applicationStatus = data.result.applicationStatus;
-				currentApplicationId = data.result.studyApplicationId || null;
 			} else {
 				console.error('지원 여부 확인 실패', res.status);
 			}
@@ -165,6 +157,10 @@
 	}
 
 	async function handleCancel() {
+		if (!currentUserId) {
+			openAuthModal();
+			return;
+		}
 		if (!currentApplicationId) {
 			alert('오류: 지원서 ID를 찾을 수 없습니다. ');
 			return;
@@ -452,10 +448,11 @@
 							</button>
 						</div>
 					{:else}
-						{@const statusInfo = {
-							ACCEPTED: { text: '스터디에 참여중입니다', icon: CheckCircle, color: 'green' },
-							REJECTED: { text: '아쉽지만, 참여가 거절되었습니다', icon: XCircle, color: 'red' }
-						}[applicationStatus]}
+						{@const statusInfo = applicationStatus === 'ACCEPTED'
+							? { text: '스터디에 참여중입니다', icon: CheckCircle, color: 'green' }
+							: applicationStatus === 'REJECTED'
+							? { text: '아쉽지만, 참여가 거절되었습니다', icon: XCircle, color: 'red' }
+							: null}
 
 						{#if statusInfo}
 							<div

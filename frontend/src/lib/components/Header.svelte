@@ -24,7 +24,10 @@
 
 	// --- 타입들 ---
 	type ApiEnvelope<T> = { isSuccess: boolean; code: string; message: string; result: T };
-	type HeaderProfile = { profileUrl?: string | null };
+	type HeaderProfile = {
+		profileUrl?: string | null;
+		expiresAt?: string | null;
+	};
 
 	// --- 아바타 상태 ---
 	let avatarUrl: string | null = null;
@@ -34,6 +37,8 @@
 	const LS_KEY = 'meAvatarPresigned';
 	const SAFETY_MS = 30_000; // 만료 30초 전에 재발급 요구
 	type AvatarCache = { url: string; exp: number }; // exp = epoch ms
+
+
 
 	function readAvatarCache(): AvatarCache | null {
 		try {
@@ -61,16 +66,23 @@
 		const res = await http.get('/api/s3/presign/me');
 		if (!res.ok) return false;
 		const env: ApiEnvelope<HeaderProfile> = await res.json();
-		const url = env?.result?.profileUrl ?? env?.result?.profileURL ?? null;
+		const url = env?.result?.profileUrl ?? null;
 		const exp = env?.result?.expiresAt ?? null;
-		if (!url || !exp) return false;
+		if (!url) return false;
 		avatarUrl = url;
-		avatarExpiresAt = exp;
-		writeAvatarCache(url, exp);
+		if (exp) {
+			avatarExpiresAt = exp;
+			writeAvatarCache(url, exp);
+		}
 		return true;
 	}
 
 	async function loadAvatar() {
+		const cached = readAvatarCache();
+		if (cached) {
+			avatarUrl = cached.url;
+		}
+
 		const r = await http.get('/api/s3/presign/me');
 		if (!r.ok) {
 			avatarUrl = null;
@@ -78,17 +90,21 @@
 		}
 		const env = (await r.json()) as ApiEnvelope<HeaderProfile>;
 		avatarUrl = env?.result?.profileUrl ?? null;
+		if (!avatarUrl && cached) {
+			avatarUrl = cached.url;
+		}
 	}
 
 	// 로그인 상태 변화에 맞춰 로드/정리
 	onMount(() => {
-		const unsubLogin = isLoggedIn.subscribe((v) => {
-			if (v) void loadAvatar();
-			else {
-        menuOpen = false;      // ✅ 로그아웃되면 즉시 닫기
-        avatarUrl = null;
-      }
-		});
+			const unsubLogin = isLoggedIn.subscribe((v) => {
+				if (v) void loadAvatar();
+				else {
+	        menuOpen = false;      // ✅ 로그아웃되면 즉시 닫기
+	        avatarUrl = null;
+					clearAvatarCache();
+	      }
+			});
 		const unsubVer = avatarVersion.subscribe(() => {
 			void loadAvatar();
 		});
@@ -151,7 +167,7 @@
 							src={avatarUrl || DEFAULT_AVATAR}
 							alt="내 프로필"
 							class="block size-8.5 cursor-pointer rounded-full object-cover"
-							on:error={(e) => ((e.target as HTMLImageElement).src = DEFAULT_AVATAR)}
+							on:error={onImgError}
 							on:click={toggleMenu}
 						/>
 						{#if menuOpen}
