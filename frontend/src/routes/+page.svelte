@@ -1,7 +1,10 @@
+<script context="module">
+	let hasAppLoaded = false;
+</script>
+
 <script lang="ts">
-	import { onDestroy } from 'svelte';
 	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
+	import { goto, afterNavigate } from '$app/navigation';
 	import { User } from 'lucide-svelte';
 
 	type CategoryCode =
@@ -45,6 +48,32 @@
 	let nextCursorId: number | null = null;
 	let currentStatus: string | null = null; // 'RECRUITING' | null
 	let keyword = ''; // 검색어(입력값)
+
+	const isPageReload = (() => {
+		if (typeof window === 'undefined') return false;
+		if (hasAppLoaded) return false;
+		const nav = performance.getEntriesByType('navigation')[0] as
+			| PerformanceNavigationTiming
+			| undefined;
+		return nav?.type === 'reload';
+	})();
+
+	if (typeof window !== 'undefined') {
+		hasAppLoaded = true;
+	}
+
+	export const snapshot = {
+		capture: () => ({ studies, hasNext, nextCursorCreatedAt, nextCursorId, currentStatus, keyword }),
+		restore: (value) => {
+			if (isPageReload) return;
+			studies = value.studies;
+			hasNext = value.hasNext;
+			nextCursorCreatedAt = value.nextCursorCreatedAt;
+			nextCursorId = value.nextCursorId;
+			currentStatus = value.currentStatus;
+			keyword = value.keyword;
+		}
+	};
 	
 	// ✅ 기본 이미지 경로
 	const DEFAULT_AVATAR = '/avatars/default.jpg';
@@ -106,17 +135,18 @@
 		}
 	}
 
-	const unsubscribe = page.subscribe(($page) => {
+	afterNavigate(() => {
 		const statusParam = $page.url.searchParams.get('status');
 		const kwParam = $page.url.searchParams.get('rawKeyword') ?? '';
 
-		currentStatus = statusParam;
-		keyword = kwParam;
-
-		loadList(true);
+		if (currentStatus !== statusParam || keyword !== kwParam) {
+			currentStatus = statusParam;
+			keyword = kwParam;
+			loadList(true);
+		} else if (studies.length === 0) {
+			loadList(true);
+		}
 	});
-
-	onDestroy(() => unsubscribe());
 
 	function goToDetail(id: number) {
 		goto(`/studies/${id}`);
