@@ -6,26 +6,24 @@ import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.studycrew.studyBoard.dto.StudyPostDTO.QStudyPostResponseDTO_GetStudyPostListResponse;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.GetStudyPostListResponse;
+import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.StudyPostCursorResponse;
 import com.studycrew.studyBoard.entity.QStudyPost;
 import com.studycrew.studyBoard.entity.QTag;
 import com.studycrew.studyBoard.entity.QUser;
 import com.studycrew.studyBoard.entity.mapping.QStudyPostTag;
 import com.studycrew.studyBoard.enums.StudyStatus;
 import jakarta.persistence.EntityManager;
-import java.util.LinkedHashMap;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 
-
-public class StudyPostRepositoryImpl implements StudyPostRepositoryCustom{
+public class StudyPostRepositoryImpl implements StudyPostRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
 
@@ -34,12 +32,12 @@ public class StudyPostRepositoryImpl implements StudyPostRepositoryCustom{
     }
 
     @Override
-    public Page<GetStudyPostListResponse> searchByStatusAndNotDeleted(String rawKeyword, StudyStatus status, Pageable pageable) {
+    public StudyPostCursorResponse searchByStatusAndNotDeleted(String rawKeyword, StudyStatus status,
+                                                               LocalDateTime lastCreatedAt, Long lastId, int size) {
         QStudyPost studyPost = QStudyPost.studyPost;
         QUser user = QUser.user;
         QStudyPostTag spt = QStudyPostTag.studyPostTag;
         QTag tag = QTag.tag;
-
 
         BooleanBuilder where = new BooleanBuilder()
                 .and(studyPost.deleted.isFalse());
@@ -49,12 +47,19 @@ public class StudyPostRepositoryImpl implements StudyPostRepositoryCustom{
         }
 
         if (hasText(rawKeyword)) {
-            String key  = normalize(rawKeyword);       // 공백 제거 + 소문자
-            String safe = escapeWildcards(key);        // %,_ 리터럴 처리
+            String key  = normalize(rawKeyword);
+            String safe = escapeWildcards(key);
             where.and(Expressions.booleanTemplate(
                     "REPLACE(LOWER({0}), ' ', '') LIKE CONCAT('%', {1}, '%') ESCAPE '\\'",
                     studyPost.title, safe
             ));
+        }
+
+        if (lastCreatedAt != null && lastId != null) {
+            where.and(
+                studyPost.createdAt.lt(lastCreatedAt)
+                    .or(studyPost.createdAt.eq(lastCreatedAt).and(studyPost.id.lt(lastId)))
+            );
         }
 
         List<GetStudyPostListResponse> content = queryFactory
@@ -67,15 +72,13 @@ public class StudyPostRepositoryImpl implements StudyPostRepositoryCustom{
                 .leftJoin(studyPost.user, user)
                 .where(where)
                 .orderBy(studyPost.createdAt.desc(), studyPost.id.desc())
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
+                .limit(size + 1L)
                 .fetch();
 
-        Long total = queryFactory
-                .select(studyPost.id.count())
-                .from(studyPost)
-                .where(where)
-                .fetchOne();
+        boolean hasNext = content.size() > size;
+        if (hasNext) {
+            content.remove(size);
+        }
 
         if (!content.isEmpty()) {
             List<Long> ids = content.stream()
@@ -105,7 +108,17 @@ public class StudyPostRepositoryImpl implements StudyPostRepositoryCustom{
             content.forEach(dto ->
                     dto.attachTags(tagMap.getOrDefault(dto.getStudyPostId(), Collections.emptyList())));
         }
-        return new PageImpl<>(content, pageable, total == null ? 0L : total);
+
+        GetStudyPostListResponse last = hasNext ? content.get(content.size() - 1) : null;
+        LocalDateTime nextCursorCreatedAt = last != null ? last.getCreatedAt() : null;
+        Long nextCursorId = last != null ? last.getStudyPostId() : null;
+
+        return StudyPostCursorResponse.builder()
+                .items(content)
+                .hasNext(hasNext)
+                .nextCursorCreatedAt(nextCursorCreatedAt)
+                .nextCursorId(nextCursorId)
+                .build();
     }
 
     private boolean hasText(String s) { return s != null && !s.isBlank(); }

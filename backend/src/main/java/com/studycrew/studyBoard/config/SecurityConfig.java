@@ -13,6 +13,7 @@ import java.util.Collections;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -92,7 +93,8 @@ public class SecurityConfig {
         //경로별 인가 작업
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/api/login", "/api/s3/presign/**", "/api/logout/", "/api/signUp","/api/study-posts","/api/reissue","/v3/api-docs/**","/swagger-ui/**","/swagger-ui.html", "/actuator/**").permitAll()
+                        .requestMatchers("/api/login", "/api/s3/presign/**", "/api/logout/", "/api/signUp","/api/study-posts", "/api/reissue","/v3/api-docs/**","/swagger-ui/**","/swagger-ui.html", "/actuator/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/study-posts/**").permitAll()
                         .requestMatchers("/api/user").hasRole("USER")
                         .anyRequest().authenticated());
 

@@ -94,4 +94,14 @@ public class StudyPostResponseDTO {
         }
     }
 
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    public static class StudyPostCursorResponse {
+        private List<GetStudyPostListResponse> items;
+        private boolean hasNext;
+        private LocalDateTime nextCursorCreatedAt;
+        private Long nextCursorId;
+    }
+
 }

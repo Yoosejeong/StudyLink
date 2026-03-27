@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { http } from '$lib/api/http';
 	import { bumpAvatar } from '$lib/stores/avatar';
+	import { currentUser, isLoggedIn } from '$lib/stores/auth';
 
 	// ---- API 엔드포인트 ----
 	const GET_ME_URL = '/api/users';
@@ -69,33 +70,20 @@
 
 	// ---- 초기 로딩 ----
 	onMount(async () => {
-		await Promise.all([loadMe(), loadAvatar()]);
+		await loadAvatar();
 	});
 
-	async function loadMe() {
-		loading = true;
-		errorMsg = '';
-		try {
-			const res = await http.get(GET_ME_URL);
-			if (!res.ok) {
-				errorMsg = `내 정보 조회 실패 (${res.status})`;
-				return;
-			}
-			const env = (await res.json()) as ApiEnvelope<MeDto>;
-			const me = env?.result;
-			if (!me) {
-				errorMsg = '내 정보가 비어 있습니다.';
-				return;
-			}
-			username = me.username ?? '';
-			email = me.email ?? '';
-			currentNickname = me.nickname ?? '';
+	$: if ($currentUser) {
+		username = $currentUser.username ?? '';
+		email = $currentUser.email ?? '';
+		if (!currentNickname) {
+			currentNickname = $currentUser.nickname ?? '';
 			nickname = currentNickname;
-		} catch {
-			errorMsg = '네트워크 오류';
-		} finally {
-			loading = false;
 		}
+		loading = false;
+	} else if ($isLoggedIn === false) {
+		errorMsg = '로그인이 필요합니다.';
+		loading = false;
 	}
 
 	// ---- 닉네임 유효성/저장 ----
@@ -131,6 +119,7 @@
 				return;
 			}
 			currentNickname = trimmed;
+			currentUser.update(u => u ? { ...u, nickname: trimmed } : u); // ✅ 헤더 등 전역 반영
 			openSuccess('닉네임이 변경되었습니다.');
 		} catch {
 			errorMsg = '네트워크 오류';

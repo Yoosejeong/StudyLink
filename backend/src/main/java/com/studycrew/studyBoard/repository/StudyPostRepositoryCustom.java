@@ -1,11 +1,11 @@
 package com.studycrew.studyBoard.repository;
 
-import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.GetStudyPostListResponse;
-import com.studycrew.studyBoard.entity.StudyPost;
+import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.StudyPostCursorResponse;
 import com.studycrew.studyBoard.enums.StudyStatus;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+
+import java.time.LocalDateTime;
 
 public interface StudyPostRepositoryCustom {
-    Page<GetStudyPostListResponse> searchByStatusAndNotDeleted(String rawKeyword, StudyStatus status, Pageable pageable);
+    StudyPostCursorResponse searchByStatusAndNotDeleted(String rawKeyword, StudyStatus status,
+                                                        LocalDateTime lastCreatedAt, Long lastId, int size);
 }
