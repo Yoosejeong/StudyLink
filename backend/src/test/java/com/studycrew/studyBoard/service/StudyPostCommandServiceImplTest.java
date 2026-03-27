@@ -1,12 +1,11 @@
 package com.studycrew.studyBoard.service;
 
 import com.studycrew.studyBoard.apiPayload.code.status.ErrorStatus;
-import com.studycrew.studyBoard.apiPayload.exception.handler.StudyApplicationHandler;
 import com.studycrew.studyBoard.apiPayload.exception.handler.StudyPostHandler;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostRequestDTO.StudyPostRequestUpdate;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO;
-import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.GetStudyPostListResponse;
+import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.StudyPostCursorResponse;
 import com.studycrew.studyBoard.entity.StudyApplication;
 import com.studycrew.studyBoard.entity.StudyPost;
 import com.studycrew.studyBoard.entity.User;
@@ -21,9 +20,6 @@ import static org.assertj.core.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
 
@@ -126,16 +122,14 @@ class StudyPostCommandServiceImplTest {
     void 스터디글_목록_조회() {
         User user = userRepository.save(getUser());
 
-        for(int i=0; i<3; i++){
+        for (int i = 0; i < 3; i++) {
             studyPostRepository.save(getStudyPost(user, i));
         }
 
-        StudyStatus status = null;
-        String rawKeyword = null;
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<GetStudyPostListResponse> studyPostList = studyPostQueryService.getStudyPostList(rawKeyword, status, pageable);
-        assertThat(studyPostList.getTotalElements()).isEqualTo(3);
+        StudyPostCursorResponse result = studyPostQueryService.getStudyPostList(null, null, null, null, 10);
 
+        assertThat(result.getItems()).hasSize(3);
+        assertThat(result.isHasNext()).isFalse();
     }
 
     @Test
@@ -214,23 +208,104 @@ class StudyPostCommandServiceImplTest {
 
     @Test
     void 스터디글_모집중만_전체조회() {
-        String rawKeyword = null;
-
-        User user = getUser();
-        userRepository.save(user);
-        StudyPost studyPost = getStudyPost(user, 1);
-        studyPostRepository.save(studyPost);
-
-        StudyPost studyPost2 = getStudyPost(user, 2);
-        studyPostRepository.save(studyPost2);
+        User user = userRepository.save(getUser());
+        StudyPost studyPost = studyPostRepository.save(getStudyPost(user, 1));
+        StudyPost studyPost2 = studyPostRepository.save(getStudyPost(user, 2));
 
         studyPostCommandService.closeStudyPost(studyPost2.getId(), user);
 
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<GetStudyPostListResponse> studyPostList = studyPostQueryService.getStudyPostList(rawKeyword, StudyStatus.RECRUITING,
-                pageable);
+        StudyPostCursorResponse result = studyPostQueryService.getStudyPostList(null, StudyStatus.RECRUITING, null, null, 10);
 
-        assertThat(studyPostList.getTotalElements()).isEqualTo(1);
+        assertThat(result.getItems()).hasSize(1);
+        assertThat(result.isHasNext()).isFalse();
+    }
+
+    @Test
+    void 스터디글_목록_조회_hasNext_true() {
+        User user = userRepository.save(getUser());
+
+        for (int i = 0; i < 5; i++) {
+            studyPostRepository.save(getStudyPost(user, i));
+        }
+
+        StudyPostCursorResponse result = studyPostQueryService.getStudyPostList(null, null, null, null, 3);
+
+        assertThat(result.getItems()).hasSize(3);
+        assertThat(result.isHasNext()).isTrue();
+        assertThat(result.getNextCursorCreatedAt()).isNotNull();
+        assertThat(result.getNextCursorId()).isNotNull();
+    }
+
+    @Test
+    void 스터디글_목록_커서로_다음_페이지_조회() {
+        User user = userRepository.save(getUser());
+
+        for (int i = 0; i < 5; i++) {
+            studyPostRepository.save(getStudyPost(user, i));
+        }
+
+        // 첫 번째 페이지 (size=3)
+        StudyPostCursorResponse firstPage = studyPostQueryService.getStudyPostList(null, null, null, null, 3);
+
+        assertThat(firstPage.getItems()).hasSize(3);
+        assertThat(firstPage.isHasNext()).isTrue();
+
+        // 두 번째 페이지 (첫 페이지 커서 사용)
+        StudyPostCursorResponse secondPage = studyPostQueryService.getStudyPostList(
+                null, null,
+                firstPage.getNextCursorCreatedAt(),
+                firstPage.getNextCursorId(),
+                3
+        );
+
+        assertThat(secondPage.getItems()).hasSize(2);
+        assertThat(secondPage.isHasNext()).isFalse();
+
+        // 첫 페이지 + 두 번째 페이지 id 합치면 전체 5개, 중복 없음
+        var firstIds = firstPage.getItems().stream().map(d -> d.getStudyPostId()).toList();
+        var secondIds = secondPage.getItems().stream().map(d -> d.getStudyPostId()).toList();
+        assertThat(firstIds).doesNotContainAnyElementsOf(secondIds);
+    }
+
+    @Test
+    void 스터디글_목록_키워드_검색() {
+        User user = userRepository.save(getUser());
+
+        studyPostRepository.save(createStudyPostWithTitle(user, "Spring Boot 스터디"));
+        studyPostRepository.save(createStudyPostWithTitle(user, "React 스터디"));
+        studyPostRepository.save(createStudyPostWithTitle(user, "알고리즘 모임"));
+
+        StudyPostCursorResponse result = studyPostQueryService.getStudyPostList("스터디", null, null, null, 10);
+
+        assertThat(result.getItems()).hasSize(2);
+        assertThat(result.getItems())
+                .extracting(d -> d.getTitle())
+                .allMatch(title -> title.contains("스터디"));
+    }
+
+    @Test
+    void 스터디글_목록_키워드_검색_결과_없음() {
+        User user = userRepository.save(getUser());
+        studyPostRepository.save(createStudyPostWithTitle(user, "Spring Boot 스터디"));
+
+        StudyPostCursorResponse result = studyPostQueryService.getStudyPostList("없는키워드", null, null, null, 10);
+
+        assertThat(result.getItems()).isEmpty();
+        assertThat(result.isHasNext()).isFalse();
+        assertThat(result.getNextCursorId()).isNull();
+    }
+
+    @Test
+    void 삭제된_스터디글_목록_미노출() {
+        User user = userRepository.save(getUser());
+        StudyPost post = studyPostRepository.save(getStudyPost(user, 1));
+        studyPostRepository.save(getStudyPost(user, 2));
+
+        studyPostCommandService.deleteStudyPost(post.getId(), user);
+
+        StudyPostCursorResponse result = studyPostQueryService.getStudyPostList(null, null, null, null, 10);
+
+        assertThat(result.getItems()).hasSize(1);
     }
 
     private static User getUser() {
@@ -242,6 +317,15 @@ class StudyPostCommandServiceImplTest {
                 .role("ROLE_USER")
                 .build();
         return user;
+    }
+
+    private StudyPost createStudyPostWithTitle(User user, String title) {
+        StudyPostRequestDTO.StudyPostCreate requestDTO = StudyPostRequestDTO.StudyPostCreate.builder()
+                .title(title)
+                .content("내용")
+                .maxPeople(10)
+                .build();
+        return studyPostCommandService.createStudyPost(requestDTO, user);
     }
 
     private static User getUser2() {
