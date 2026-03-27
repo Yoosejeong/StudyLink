@@ -48,6 +48,8 @@
 	let nextCursorId: number | null = null;
 	let currentStatus: string | null = null; // 'RECRUITING' | null
 	let keyword = ''; // 검색어(입력값)
+	let pendingRestoreScrollY: number | null = null;
+	const LIST_SCROLL_STORAGE_KEY = 'study-list-scroll-y';
 
 	const isPageReload = (() => {
 		if (typeof window === 'undefined') return false;
@@ -63,7 +65,15 @@
 	}
 
 	export const snapshot = {
-		capture: () => ({ studies, hasNext, nextCursorCreatedAt, nextCursorId, currentStatus, keyword }),
+		capture: () => ({
+			studies,
+			hasNext,
+			nextCursorCreatedAt,
+			nextCursorId,
+			currentStatus,
+			keyword,
+			scrollY: typeof window !== 'undefined' ? window.scrollY : 0
+		}),
 		restore: (value) => {
 			if (isPageReload) return;
 			studies = value.studies;
@@ -72,6 +82,7 @@
 			nextCursorId = value.nextCursorId;
 			currentStatus = value.currentStatus;
 			keyword = value.keyword;
+			pendingRestoreScrollY = value.scrollY ?? 0;
 		}
 	};
 	
@@ -135,7 +146,7 @@
 		}
 	}
 
-	afterNavigate(() => {
+	afterNavigate((navigation) => {
 		const statusParam = $page.url.searchParams.get('status');
 		const kwParam = $page.url.searchParams.get('rawKeyword') ?? '';
 
@@ -146,9 +157,34 @@
 		} else if (studies.length === 0) {
 			loadList(true);
 		}
+
+		if (
+			pendingRestoreScrollY === null &&
+			typeof window !== 'undefined' &&
+			navigation.type === 'popstate'
+		) {
+			const savedY = Number(sessionStorage.getItem(LIST_SCROLL_STORAGE_KEY));
+			if (Number.isFinite(savedY) && savedY >= 0) {
+				pendingRestoreScrollY = savedY;
+			}
+		}
+
+		if (pendingRestoreScrollY !== null && typeof window !== 'undefined') {
+			const y = pendingRestoreScrollY;
+			pendingRestoreScrollY = null;
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
+					window.scrollTo({ top: y, left: 0, behavior: 'auto' });
+				});
+			});
+			sessionStorage.removeItem(LIST_SCROLL_STORAGE_KEY);
+		}
 	});
 
 	function goToDetail(id: number) {
+		if (typeof window !== 'undefined') {
+			sessionStorage.setItem(LIST_SCROLL_STORAGE_KEY, String(window.scrollY));
+		}
 		goto(`/studies/${id}`);
 	}
 
