@@ -47,11 +47,9 @@ public class StudyPostRepositoryImpl implements StudyPostRepositoryCustom {
         }
 
         if (hasText(rawKeyword)) {
-            String key  = normalize(rawKeyword);
-            String safe = escapeWildcards(key);
             where.and(Expressions.booleanTemplate(
-                    "REPLACE(LOWER({0}), ' ', '') LIKE CONCAT('%', {1}, '%') ESCAPE '\\'",
-                    studyPost.title, safe
+                    "MATCH({0}) AGAINST ({1} IN BOOLEAN MODE)",
+                    studyPost.title, rawKeyword.trim()
             ));
         }
 
@@ -123,11 +121,4 @@ public class StudyPostRepositoryImpl implements StudyPostRepositoryCustom {
 
     private boolean hasText(String s) { return s != null && !s.isBlank(); }
 
-    private String normalize(String raw) {
-        return raw.trim().replaceAll("\\s+", "").toLowerCase(java.util.Locale.ROOT);
-    }
-
-    private String escapeWildcards(String s) {
-        return s.replace("\\","\\\\").replace("%","\\%").replace("_","\\_");
-    }
 }
