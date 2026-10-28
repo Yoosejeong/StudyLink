@@ -94,7 +94,7 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers("/api/login", "/api/s3/presign/**", "/api/logout/", "/api/signUp","/api/study-posts", "/api/reissue","/v3/api-docs/**","/swagger-ui/**","/swagger-ui.html", "/actuator/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/study-posts/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/study-posts/**", "/api/ai/test").permitAll()
                         .requestMatchers("/api/user").hasRole("USER")
                         .anyRequest().authenticated());
 
