@@ -141,7 +141,7 @@ public class StudyPostRepositoryImpl implements StudyPostRepositoryCustom {
         StringBuilder sql = new StringBuilder("""
                 SELECT id FROM study_posts
                 WHERE deleted = false
-                  AND MATCH(title) AGAINST (:keyword IN BOOLEAN MODE)
+                  AND MATCH(title, content) AGAINST (:keyword IN BOOLEAN MODE)
                 """);
 
         if (status != null) {

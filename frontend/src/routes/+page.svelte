@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto, afterNavigate } from '$app/navigation';
-	import { User } from 'lucide-svelte';
+	import { Search } from 'lucide-svelte';
 
 	type CategoryCode =
 		| 'BACKEND'
@@ -296,91 +296,56 @@
 		if (trimmed.length >= 2) params.set('rawKeyword', trimmed);
 		goto(`/?${params.toString()}`);
 	}
+
+	function toggleRecruitingFilter(e: Event) {
+		const checked = (e.currentTarget as HTMLInputElement).checked;
+		filterByStatus(checked ? 'RECRUITING' : null);
+	}
 </script>
 
-<main class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-	<!-- ✅ 히어로 섹션 -->
+<main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+	<!-- 검색 바 -->
 	<div
-		class="mx-4 mb-16 overflow-hidden rounded-3xl bg-gradient-to-r from-yellow-300 to-yellow-400"
+		class="flex w-full items-center gap-3 rounded-[10px] border border-[#E2E5E9] bg-white px-4 py-3 sm:px-5"
 	>
-		<div class="relative px-8 py-12 md:px-16 md:py-16">
-			<div class="flex flex-col items-center justify-between lg:flex-row">
-				<div class="mb-8 flex-1 lg:mb-0">
-					<div
-						class="mb-4 inline-block rounded-full bg-pink-400 px-4 py-2 text-sm font-medium text-white"
-					>
-						JOIN US
-					</div>
-					<h2 class="mb-4 text-4xl font-bold text-gray-900 md:text-5xl">Grow Together! 🤍</h2>
-					<p class="max-w-lg text-lg text-gray-700 md:text-xl">
-						원하는 스터디에 지원하고, 함께 성장하세요!
-					</p>
-				</div>
-				<!-- 오른쪽: 누끼 딴 판다 🚀 (배너 크기 유지, 판다만 확대) -->
-				<div
-					class="pointer-events-none relative z-10 hidden h-52 w-80 items-center justify-center lg:ml-8 lg:flex"
-				>
-					<img
-						src="/panda.png"
-						alt="StudyLink Mascot"
-						class="pointer-events-auto h-full w-full scale-[1.35] -rotate-2 object-contain drop-shadow-[0_25px_25px_rgba(0,0,0,0.15)] transition-all duration-300 hover:scale-[1.45] hover:rotate-1"
-					/>
-				</div>
-			</div>
-		</div>
+		<button
+			type="button"
+			on:click={doSearch}
+			disabled={keyword.trim().length > 0 && keyword.trim().length < 2}
+			aria-label="검색"
+			class="shrink-0 text-gray-500 hover:text-[#252A32] disabled:cursor-not-allowed disabled:text-gray-300"
+		>
+			<Search size={20} aria-hidden="true" />
+		</button>
+		<input
+			type="text"
+			bind:value={keyword}
+			on:keydown={onSearchKeydown}
+			placeholder="찾고 싶은 스터디를 검색하세요"
+			aria-label="스터디 검색"
+			class="min-w-0 flex-1 border-0 bg-transparent py-1 text-[#252A32] shadow-none ring-0 placeholder:text-gray-500 focus:border-0 focus:ring-0 focus:outline-none"
+		/>
+		{#if keyword.trim().length > 0}
+			<button
+				class="shrink-0 px-1 py-2 text-sm text-gray-500 hover:text-[#252A32]"
+				on:click={clearSearch}
+				aria-label="검색어 지우기">지우기</button
+			>
+		{/if}
 	</div>
 
-	<!-- 상태 필터 + 검색 바 (한 줄 정렬) -->
-	<div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-		<!-- 왼쪽: 상태 필터 -->
-		<div class="flex gap-3">
-			<button
-				on:click={() => filterByStatus(null)}
-				class={`flex items-center gap-2 rounded-full border-2 px-6 py-3 text-sm font-medium transition-all
-        ${
-					!currentStatus
-						? 'border-gray-200 bg-gray-100 text-gray-800'
-						: 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
-				}`}
-			>
-				전체보기
-			</button>
-
-			<button
-				on:click={() => filterByStatus('RECRUITING')}
-				class={`flex items-center gap-2 rounded-full border-2 px-6 py-3 text-sm font-medium transition-all
-        ${
-					currentStatus === 'RECRUITING'
-						? 'border-teal-300 bg-teal-50 text-teal-700'
-						: 'border-teal-200 bg-white text-teal-600 hover:bg-teal-50'
-				}`}
-			>
-				👀 모집중만 보기
-			</button>
-		</div>
-
-		<!-- 오른쪽: 검색 바 -->
-		<div class="flex items-center gap-2 sm:ml-auto">
+	<!-- 목록 제목 + 상태 필터 -->
+	<div class="mt-8 mb-6 flex items-center justify-between gap-4">
+		<h2 class="text-2xl font-bold text-[#252A32]">스터디 모집글</h2>
+		<label class="flex shrink-0 cursor-pointer items-center gap-2 text-sm text-gray-600">
 			<input
-				type="text"
-				bind:value={keyword}
-				on:keydown={onSearchKeydown}
-				placeholder="제목으로 검색하세요.(2~50자)"
-				class="w-56 rounded-full border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none sm:w-64 md:w-72"
+				type="checkbox"
+				checked={currentStatus === 'RECRUITING'}
+				on:change={toggleRecruitingFilter}
+				class="size-4 rounded border-gray-300 accent-[#252A32]"
 			/>
-			{#if keyword.trim().length > 0}
-				<button
-					class="rounded-full border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50"
-					on:click={clearSearch}
-					aria-label="검색어 지우기">지우기</button
-				>
-			{/if}
-			<button
-				class="rounded-full bg-gray-600 px-3 py-2 text-sm text-white hover:bg-blue-700 disabled:bg-gray-300"
-				on:click={doSearch}
-				disabled={keyword.trim().length > 0 && keyword.trim().length < 2}>검색</button
-			>
-		</div>
+			<span>모집 중만 보기</span>
+		</label>
 	</div>
 
 	<!-- 목록 -->

@@ -148,7 +148,9 @@
 	<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 		<div class="flex h-16 items-center justify-between">
 			<div class="flex items-center">
-				<a href="/" class="text-2xl font-bold text-blue-600 hover:underline">StudyLink</a>
+				<a href="/" aria-label="StudyLink 홈" class="flex items-center">
+					<img src="/studylink-header.svg" alt="" class="h-10 w-auto" />
+				</a>
 			</div>
 
 			<div class="flex items-center space-x-2 sm:space-x-3">

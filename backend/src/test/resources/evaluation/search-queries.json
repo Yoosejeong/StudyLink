@@ -1,0 +1,17 @@
+[
+  {"id":"Q01","type":"EXACT","query":"백엔드 스터디 찾아줘","keyword":"백엔드","relevance":{"1":2,"28":2}},
+  {"id":"Q02","type":"EXACT","query":"알고리즘 문제풀이 스터디 찾아줘","keyword":"알고리즘","relevance":{"2":2,"27":2}},
+  {"id":"Q03","type":"EXACT","query":"도커 공부하고 싶어","keyword":"도커","relevance":{"3":2}},
+  {"id":"Q04","type":"EXACT","query":"SQL 튜닝 공부하고 싶어","keyword":"SQL","relevance":{"5":2}},
+  {"id":"Q05","type":"BROAD","query":"모바일 앱 개발 공부하고 싶어","keyword":"모바일","relevance":{"8":2,"21":2,"22":1,"23":2,"24":1,"25":1}},
+  {"id":"Q06","type":"CONTENT","query":"Spring Boot 공부하고 싶어","keyword":"Spring Boot","relevance":{"1":2}},
+  {"id":"Q07","type":"CONTENT","query":"React 프로젝트 하고 싶어","keyword":"React","relevance":{"6":2,"8":1}},
+  {"id":"Q08","type":"CONTENT","query":"Grafana 모니터링 배우고 싶어","keyword":"Grafana","relevance":{"20":2}},
+  {"id":"Q09","type":"CONTENT","query":"GitHub Actions로 자동 배포 배우고 싶어","keyword":"GitHub Actions","relevance":{"18":2}},
+  {"id":"Q10","type":"CONTENT","query":"EC2와 RDS 공부하고 싶어","keyword":"EC2","relevance":{"16":2}},
+  {"id":"Q11","type":"SEMANTIC","query":"서버 개발 프로젝트 하고 싶어","keyword":"서버 개발","relevance":{"28":2,"1":1}},
+  {"id":"Q12","type":"SEMANTIC","query":"클라우드 인프라 공부하고 싶어","keyword":"클라우드","relevance":{"16":2,"3":1,"17":1,"18":1,"19":1}},
+  {"id":"Q13","type":"SEMANTIC","query":"코딩테스트 준비하고 싶어","keyword":"코딩테스트","relevance":{"27":2,"2":2}},
+  {"id":"Q14","type":"SEMANTIC","query":"머신러닝 기초부터 공부하고 싶어","keyword":"머신러닝","relevance":{"12":2}},
+  {"id":"Q15","type":"NO_RESULT","query":"Rust 스터디 찾아줘","keyword":"Rust","relevance":{}}
+]
