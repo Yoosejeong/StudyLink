@@ -2,7 +2,8 @@ spring:
   application:
     name: studyBoard
   datasource:
-    url: jdbc:mysql://localhost:3306/studycrewdb?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    # ddl-auto: create 가 로컬 개발 DB(studycrewdb)를 지우지 않도록 테스트 전용 스키마 사용
+    url: jdbc:mysql://localhost:3306/studycrewdb_test?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: root
     password: passwd
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -32,6 +33,10 @@ spring:
         secret-key: sdfefe
       s3:
         enabled: true
+  ai:
+    google:
+      genai:
+        api-key: test-key
 app:
   s3:
     bucket: studylink-bucket
