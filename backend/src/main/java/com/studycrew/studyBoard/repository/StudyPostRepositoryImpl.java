@@ -10,6 +10,7 @@ import com.studycrew.studyBoard.entity.QStudyPost;
 import com.studycrew.studyBoard.entity.QTag;
 import com.studycrew.studyBoard.entity.QUser;
 import com.studycrew.studyBoard.entity.mapping.QStudyPostTag;
+import com.studycrew.studyBoard.enums.SearchTarget;
 import com.studycrew.studyBoard.enums.StudyStatus;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
@@ -37,6 +38,12 @@ public class StudyPostRepositoryImpl implements StudyPostRepositoryCustom {
     @Override
     public StudyPostCursorResponse searchByStatusAndNotDeleted(String rawKeyword, StudyStatus status,
                                                                LocalDateTime lastCreatedAt, Long lastId, int size) {
+        return searchByStatusAndNotDeleted(SearchTarget.TITLE, rawKeyword, status, lastCreatedAt, lastId, size);
+    }
+
+    @Override
+    public StudyPostCursorResponse searchByStatusAndNotDeleted(SearchTarget target, String rawKeyword, StudyStatus status,
+                                                               LocalDateTime lastCreatedAt, Long lastId, int size) {
         QStudyPost studyPost = QStudyPost.studyPost;
         QUser user = QUser.user;
         QStudyPostTag spt = QStudyPostTag.studyPostTag;
@@ -46,7 +53,7 @@ public class StudyPostRepositoryImpl implements StudyPostRepositoryCustom {
         List<Long> fulltextIds = null;
 
         if (hasText(rawKeyword)) {
-            List<Long> candidateIds = getFulltextMatchingIds(sanitizeFulltextKeyword(rawKeyword), status, lastCreatedAt, lastId, size + 1);
+            List<Long> candidateIds = getFulltextMatchingIds(target, sanitizeFulltextKeyword(rawKeyword), status, lastCreatedAt, lastId, size + 1);
             hasNext = candidateIds.size() > size;
             fulltextIds = hasNext ? new ArrayList<>(candidateIds.subList(0, size)) : candidateIds;
 
@@ -136,13 +143,14 @@ public class StudyPostRepositoryImpl implements StudyPostRepositoryCustom {
     }
 
     @SuppressWarnings("unchecked")
-    private List<Long> getFulltextMatchingIds(String keyword, StudyStatus status,
+    private List<Long> getFulltextMatchingIds(SearchTarget target, String keyword, StudyStatus status,
                                                LocalDateTime lastCreatedAt, Long lastId, int limit) {
+        // MATCH 컬럼은 enum 상수에서만 오므로 사용자 입력이 SQL에 들어가지 않음
         StringBuilder sql = new StringBuilder("""
                 SELECT id FROM study_posts
                 WHERE deleted = false
-                  AND MATCH(title) AGAINST (:keyword IN BOOLEAN MODE)
-                """);
+                  AND MATCH(%s) AGAINST (:keyword IN BOOLEAN MODE)
+                """.formatted(target.getFulltextColumns()));
 
         if (status != null) {
             sql.append(" AND study_status = :status");
