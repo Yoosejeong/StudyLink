@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -74,6 +75,17 @@ public class SearchEvaluator {
     public record Summary(String strategyName, int k, String group, int queries, int scoredQueries,
                           Double meanRecall, Double meanNdcg, int noResultQueries, int noResultCorrect,
                           LatencyStats latency, LocalDateTime measuredAt) {
+
+        public String toConsoleLine() {
+            return String.format(Locale.ROOT,
+                    "[%s] %-9s queries=%2d recall@%d=%s ndcg@%d=%s noResult=%d/%d latency p50=%.2fms p95=%.2fms",
+                    strategyName, group, queries, k, format(meanRecall), k, format(meanNdcg),
+                    noResultCorrect, noResultQueries, latency.p50Ms(), latency.p95Ms());
+        }
+
+        private static String format(Double value) {
+            return value == null ? "-" : String.format(Locale.ROOT, "%.3f", value);
+        }
 
         static Summary of(EvaluationRun run, String group, List<QueryResult> results) {
             List<QueryResult> scored = results.stream().filter(r -> r.recall() != null).toList();

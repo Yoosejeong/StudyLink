@@ -33,6 +33,11 @@ public final class CsvReportWriter {
 
     private CsvReportWriter() {}
 
+    public static Path defaultOutputDir() {
+        String dir = System.getenv("SEARCH_EVAL_OUTPUT_DIR");
+        return Path.of(dir == null || dir.isBlank() ? "evaluation-results" : dir);
+    }
+
     public static Path writeQueryResults(EvaluationRun run, Path dir) {
         Stream<List<String>> rows = run.results().stream().map(r -> queryRow(run, r));
         return write(dir.resolve(run.strategyName() + "-queries.csv"), QUERY_HEADER, rows);

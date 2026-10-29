@@ -18,7 +18,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -51,11 +50,11 @@ class FulltextSearchEvaluationTest {
                 evaluator.evaluate(fulltext("fulltext_title_content", SearchTarget.TITLE_CONTENT), queries),
                 evaluator.evaluate(fulltext("fulltext_title", SearchTarget.TITLE), queries));
 
-        Path outputDir = outputDir();
+        Path outputDir = CsvReportWriter.defaultOutputDir();
         runs.forEach(run -> CsvReportWriter.writeQueryResults(run, outputDir));
         CsvReportWriter.writeSummary(runs, outputDir, "fulltext-summary.csv");
 
-        runs.forEach(run -> run.summaries().forEach(this::print));
+        runs.forEach(run -> run.summaries().stream().map(Summary::toConsoleLine).forEach(System.out::println));
         System.out.println("CSV 저장 위치: " + outputDir.toAbsolutePath());
 
         assertThat(runs).allSatisfy(run -> assertThat(run.results()).hasSize(queries.size()));
@@ -67,21 +66,5 @@ class FulltextSearchEvaluationTest {
                 .getItems().stream()
                 .map(GetStudyPostListResponse::getStudyPostId)
                 .toList());
-    }
-
-    private Path outputDir() {
-        String dir = System.getenv("SEARCH_EVAL_OUTPUT_DIR");
-        return Path.of(dir == null || dir.isBlank() ? "evaluation-results" : dir);
-    }
-
-    private void print(Summary s) {
-        System.out.println(String.format(Locale.ROOT,
-                "[%s] %-9s queries=%2d recall@%d=%s ndcg@%d=%s noResult=%d/%d latency p50=%.2fms p95=%.2fms",
-                s.strategyName(), s.group(), s.queries(), s.k(), format(s.meanRecall()), s.k(), format(s.meanNdcg()),
-                s.noResultCorrect(), s.noResultQueries(), s.latency().p50Ms(), s.latency().p95Ms()));
-    }
-
-    private String format(Double value) {
-        return value == null ? "-" : String.format(Locale.ROOT, "%.3f", value);
     }
 }
