@@ -1,0 +1,16 @@
+﻿strategy,k,query_id,type,query,keyword,relevant_ids,result_ids,hits,recall_at_k,ndcg_at_k,no_result_correct,latency_mean_ms,latency_p50_ms,latency_p95_ms,latency_max_ms
+fulltext_title_content,5,Q01,EXACT,백엔드 스터디 찾아줘,백엔드,1:2;28:2,28;1,2,1.0000,1.0000,,2.6912,2.4787,3.8015,5.1825
+fulltext_title_content,5,Q02,EXACT,알고리즘 문제풀이 스터디 찾아줘,알고리즘,2:2;27:2,2,1,0.5000,0.6131,,2.0499,2.1040,2.2826,2.3349
+fulltext_title_content,5,Q03,EXACT,도커 공부하고 싶어,도커,3:2,3,1,1.0000,1.0000,,1.8332,1.7775,2.0541,2.3510
+fulltext_title_content,5,Q04,EXACT,SQL 튜닝 공부하고 싶어,SQL,5:2,5,1,1.0000,1.0000,,1.9087,1.9190,2.2606,2.2702
+fulltext_title_content,5,Q05,BROAD,모바일 앱 개발 공부하고 싶어,모바일,8:2;21:2;23:2;22:1;24:1;25:1,24;21;8,3,0.5000,0.6092,,1.9882,1.9807,2.2150,2.4309
+fulltext_title_content,5,Q06,CONTENT,Spring Boot 공부하고 싶어,Spring Boot,1:2,1,1,1.0000,1.0000,,1.9436,1.9477,2.1850,2.4144
+fulltext_title_content,5,Q07,CONTENT,React 프로젝트 하고 싶어,React,6:2;8:1,8;6,2,1.0000,0.7967,,1.8400,1.8268,2.1908,2.3485
+fulltext_title_content,5,Q08,CONTENT,Grafana 모니터링 배우고 싶어,Grafana,20:2,20,1,1.0000,1.0000,,1.4841,1.4001,1.8638,2.1300
+fulltext_title_content,5,Q09,CONTENT,GitHub Actions로 자동 배포 배우고 싶어,GitHub Actions,18:2,18,1,1.0000,1.0000,,1.7695,1.7882,2.1139,2.1377
+fulltext_title_content,5,Q10,CONTENT,EC2와 RDS 공부하고 싶어,EC2,16:2,16,1,1.0000,1.0000,,1.5707,1.5485,1.8530,2.1650
+fulltext_title_content,5,Q11,SEMANTIC,서버 개발 프로젝트 하고 싶어,서버 개발,28:2;1:1,29;19,0,0.0000,0.0000,,1.3526,1.2364,2.0285,2.7525
+fulltext_title_content,5,Q12,SEMANTIC,클라우드 인프라 공부하고 싶어,클라우드,16:2;3:1;17:1;18:1;19:1,,0,0.0000,0.0000,,0.6150,0.5827,0.7765,0.8481
+fulltext_title_content,5,Q13,SEMANTIC,코딩테스트 준비하고 싶어,코딩테스트,2:2;27:2,27,1,0.5000,0.6131,,1.1737,1.1648,1.2714,1.3965
+fulltext_title_content,5,Q14,SEMANTIC,머신러닝 기초부터 공부하고 싶어,머신러닝,12:2,12,1,1.0000,1.0000,,1.1388,1.1121,1.3372,1.5078
+fulltext_title_content,5,Q15,NO_RESULT,Rust 스터디 찾아줘,Rust,,,0,,,true,0.5794,0.5781,0.6429,0.7472
