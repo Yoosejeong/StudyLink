@@ -1,6 +1,7 @@
 package com.studycrew.studyBoard.ai;
 
 import com.studycrew.studyBoard.enums.Category;
+import com.studycrew.studyBoard.enums.SearchTarget;
 import com.studycrew.studyBoard.enums.StudyStatus;
 import com.studycrew.studyBoard.service.studyPost.StudyPostQueryService;
 import lombok.RequiredArgsConstructor;
@@ -17,9 +18,9 @@ import java.util.List;
 public class StudySearchTool {
     private final StudyPostQueryService studyPostQueryService;
 
-    @Tool(description = "StudyLink DB에서 제목 키워드로 모집 중인 스터디를 최신순 최대 5개 검색합니다. 자연어 문장 대신 핵심 기술 또는 주제 키워드를 사용하세요.")
+    @Tool(description = "StudyLink DB에서 제목과 본문 키워드로 모집 중인 스터디를 최신순 최대 5개 검색합니다. 자연어 문장 대신 핵심 기술 또는 주제 키워드를 사용하세요.")
     public SearchResult searchStudies(
-            @ToolParam(description = "공백 제거 후 2~50자의 제목 검색어. 예: Java, Spring Boot, 알고리즘") String keyword) {
+            @ToolParam(description = "공백 제거 후 2~50자의 제목/본문 검색어. 예: Java, Spring Boot, 알고리즘") String keyword) {
         String normalized = keyword == null ? "" : keyword.trim();
         if (normalized.length() < 2 || normalized.length() > 50
                 || normalized.replaceAll("[+\\-><()~*\"@]+", " ").isBlank()) {
@@ -29,7 +30,7 @@ public class StudySearchTool {
         log.info("AI searchStudies invoked");
         try {
             var response = studyPostQueryService.getStudyPostList(
-                    normalized, StudyStatus.RECRUITING, null, null, 5);
+                    SearchTarget.TITLE_CONTENT, normalized, StudyStatus.RECRUITING, null, null, 5);
             var items = response.getItems().stream()
                     .map(item -> new StudySummary(item.getStudyPostId(), item.getTitle(),
                             item.getCategory(), item.getTags(), item.getStudyStatus()))
