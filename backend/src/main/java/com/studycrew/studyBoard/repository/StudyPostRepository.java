@@ -1,6 +1,7 @@
 package com.studycrew.studyBoard.repository;
 
 import com.studycrew.studyBoard.entity.StudyPost;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface StudyPostRepository extends StudyPostRepositoryCustom, JpaRepository<StudyPost, Long> {
     Optional<StudyPost> findByIdAndDeletedFalse(Long id);
+    List<StudyPost> findAllByDeletedFalseOrderByIdAsc();
 
     @EntityGraph(attributePaths = {"user", "postTags.tag"})
     Optional<StudyPost> findWithUserAndTagsByIdAndDeletedFalse(Long id);
