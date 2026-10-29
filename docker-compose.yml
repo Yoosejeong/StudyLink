@@ -34,3 +34,16 @@ services:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
     container_name: grafana
+  # 로컬 Vector 검색 개발용 (docker compose --profile vector up -d qdrant)
+  qdrant:
+    image: qdrant/qdrant:v1.13.6
+    profiles: ["vector"]
+    ports:
+      - "6333:6333"   # REST, 대시보드: http://localhost:6333/dashboard
+      - "6334:6334"   # gRPC (Spring Boot 연결)
+    volumes:
+      - qdrant-data:/qdrant/storage
+    container_name: qdrant
+
+volumes:
+  qdrant-data:
