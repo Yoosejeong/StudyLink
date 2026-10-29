@@ -1,7 +1,6 @@
 package com.studycrew.studyBoard.evaluation;
 
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.GetStudyPostListResponse;
-import com.studycrew.studyBoard.enums.SearchTarget;
 import com.studycrew.studyBoard.enums.StudyStatus;
 import com.studycrew.studyBoard.evaluation.core.CsvReportWriter;
 import com.studycrew.studyBoard.evaluation.core.EvalQuery;
@@ -44,27 +43,21 @@ class FulltextSearchEvaluationTest {
     @Test
     void fulltextBaseline() {
         List<EvalQuery> queries = EvaluationDataset.load(EvaluationDataset.DEFAULT_PATH);
-        SearchEvaluator evaluator = new SearchEvaluator(K, WARMUP_ROUNDS, MEASURED_ROUNDS);
-
-        List<EvaluationRun> runs = List.of(
-                evaluator.evaluate(fulltext("fulltext_title_content", SearchTarget.TITLE_CONTENT), queries),
-                evaluator.evaluate(fulltext("fulltext_title", SearchTarget.TITLE), queries));
-
-        Path outputDir = CsvReportWriter.defaultOutputDir();
-        runs.forEach(run -> CsvReportWriter.writeQueryResults(run, outputDir));
-        CsvReportWriter.writeSummary(runs, outputDir, "fulltext-summary.csv");
-
-        runs.forEach(run -> run.summaries().stream().map(Summary::toConsoleLine).forEach(System.out::println));
-        System.out.println("CSV 저장 위치: " + outputDir.toAbsolutePath());
-
-        assertThat(runs).allSatisfy(run -> assertThat(run.results()).hasSize(queries.size()));
-    }
-
-    private SearchStrategy fulltext(String name, SearchTarget target) {
-        return SearchStrategy.of(name, (query, k) -> studyPostQueryService
-                .getStudyPostList(target, query.keyword(), StudyStatus.RECRUITING, null, null, k)
+        SearchStrategy fulltext = SearchStrategy.of("fulltext_title_content", (query, k) -> studyPostQueryService
+                .getStudyPostList(query.keyword(), StudyStatus.RECRUITING, null, null, k)
                 .getItems().stream()
                 .map(GetStudyPostListResponse::getStudyPostId)
                 .toList());
+
+        EvaluationRun run = new SearchEvaluator(K, WARMUP_ROUNDS, MEASURED_ROUNDS).evaluate(fulltext, queries);
+
+        // 제목 전용 검색과 비교한 fulltext-summary.csv 는 기록으로 남기고 덮어쓰지 않는다
+        Path outputDir = CsvReportWriter.defaultOutputDir();
+        CsvReportWriter.writeQueryResults(run, outputDir);
+        CsvReportWriter.writeSummary(List.of(run), outputDir, "fulltext_title_content-summary.csv");
+        run.summaries().stream().map(Summary::toConsoleLine).forEach(System.out::println);
+        System.out.println("CSV 저장 위치: " + outputDir.toAbsolutePath());
+
+        assertThat(run.results()).hasSize(queries.size());
     }
 }

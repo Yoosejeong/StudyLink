@@ -1,7 +1,6 @@
 package com.studycrew.studyBoard.ai;
 
 import com.studycrew.studyBoard.enums.Category;
-import com.studycrew.studyBoard.enums.SearchTarget;
 import com.studycrew.studyBoard.enums.StudyStatus;
 import com.studycrew.studyBoard.service.studyPost.StudyPostQueryService;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +29,7 @@ public class StudySearchTool {
         log.info("AI searchStudies invoked");
         try {
             var response = studyPostQueryService.getStudyPostList(
-                    SearchTarget.TITLE_CONTENT, normalized, StudyStatus.RECRUITING, null, null, 5);
+                    normalized, StudyStatus.RECRUITING, null, null, 5);
             var items = response.getItems().stream()
                     .map(item -> new StudySummary(item.getStudyPostId(), item.getTitle(),
                             item.getCategory(), item.getTags(), item.getStudyStatus()))

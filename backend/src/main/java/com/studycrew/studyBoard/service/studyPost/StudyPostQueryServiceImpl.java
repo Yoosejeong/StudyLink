@@ -7,7 +7,6 @@ import com.studycrew.studyBoard.converter.StudyPostConverter;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.GetStudyPostAndProfile;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.StudyPostCursorResponse;
 import com.studycrew.studyBoard.entity.StudyPost;
-import com.studycrew.studyBoard.enums.SearchTarget;
 import com.studycrew.studyBoard.enums.StudyStatus;
 import com.studycrew.studyBoard.repository.StudyPostRepository;
 import com.studycrew.studyBoard.util.S3UrlUtil;
@@ -37,14 +36,8 @@ public class StudyPostQueryServiceImpl implements StudyPostQueryService {
     @Override
     public StudyPostCursorResponse getStudyPostList(String rawKeyword, StudyStatus status,
                                                     LocalDateTime lastCreatedAt, Long lastId, int size) {
-        return getStudyPostList(SearchTarget.TITLE, rawKeyword, status, lastCreatedAt, lastId, size);
-    }
-
-    @Override
-    public StudyPostCursorResponse getStudyPostList(SearchTarget target, String rawKeyword, StudyStatus status,
-                                                    LocalDateTime lastCreatedAt, Long lastId, int size) {
         StudyPostCursorResponse result =
-                studyPostRepository.searchByStatusAndNotDeleted(target, rawKeyword, status, lastCreatedAt, lastId, size);
+                studyPostRepository.searchByStatusAndNotDeleted(rawKeyword, status, lastCreatedAt, lastId, size);
 
         result.getItems().forEach(dto -> dto.setProfileUrl(s3UrlUtil.buildPublicUrl(dto.getProfileKey())));
         return result;

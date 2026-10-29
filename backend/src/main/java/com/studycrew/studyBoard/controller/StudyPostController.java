@@ -12,7 +12,6 @@ import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.GetStudyPo
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.StudyPostCursorResponse;
 import com.studycrew.studyBoard.entity.StudyPost;
 import com.studycrew.studyBoard.entity.User;
-import com.studycrew.studyBoard.enums.SearchTarget;
 import com.studycrew.studyBoard.enums.StudyStatus;
 import com.studycrew.studyBoard.service.studyPost.StudyPostCommandService;
 import com.studycrew.studyBoard.service.studyPost.StudyPostQueryService;
@@ -92,8 +91,7 @@ public class StudyPostController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime lastCreatedAt,
             @RequestParam(required = false) Long lastId,
             @RequestParam(defaultValue = "12") @Min(1) @Max(50) int size) {
-        StudyPostCursorResponse result = studyPostQueryService.getStudyPostList(
-                SearchTarget.TITLE_CONTENT, rawKeyword, status, lastCreatedAt, lastId, size);
+        StudyPostCursorResponse result = studyPostQueryService.getStudyPostList(rawKeyword, status, lastCreatedAt, lastId, size);
         return ApiResponse.of(SuccessStatus._STUDY_POST_LIST_RETRIEVED, result);
     }
 

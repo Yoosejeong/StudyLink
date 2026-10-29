@@ -4,7 +4,6 @@ import com.studycrew.studyBoard.ai.StudySearchTool;
 import com.studycrew.studyBoard.ai.StudySearchTool.StudySummary;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.GetStudyPostListResponse;
 import com.studycrew.studyBoard.dto.StudyPostDTO.StudyPostResponseDTO.StudyPostCursorResponse;
-import com.studycrew.studyBoard.enums.SearchTarget;
 import com.studycrew.studyBoard.enums.StudyStatus;
 import com.studycrew.studyBoard.service.studyPost.StudyPostQueryService;
 import org.junit.jupiter.api.BeforeAll;
@@ -53,7 +52,6 @@ class StudyPostSearchIntegrationTest {
 
     @BeforeAll
     void setUp() {
-        jdbcTemplate.execute("ALTER TABLE study_posts ADD FULLTEXT INDEX ft_study_posts_title (title) WITH PARSER ngram");
         jdbcTemplate.execute("ALTER TABLE study_posts ADD FULLTEXT INDEX ft_study_posts_title_content (title, content) WITH PARSER ngram");
 
         jdbcTemplate.update("""
@@ -101,13 +99,9 @@ class StudyPostSearchIntegrationTest {
     }
 
     @Test
-    void 본문에만_있는_키워드는_제목_검색에서는_안나오고_제목본문_검색에서만_나온다() {
-        assertThat(searchIds(SearchTarget.TITLE, "Spring Boot", 10)).isEmpty();
-        assertThat(searchIds(SearchTarget.TITLE_CONTENT, "Spring Boot", 10)).containsExactly(SPRING_IN_CONTENT);
-
-        assertThat(searchIds(SearchTarget.TITLE, "React", 10)).containsExactly(REACT_IN_TITLE);
-        assertThat(searchIds(SearchTarget.TITLE_CONTENT, "React", 10))
-                .containsExactly(REACT_NATIVE_CONTENT, REACT_IN_CONTENT, REACT_IN_TITLE);
+    void 본문에만_있는_키워드도_검색된다() {
+        assertThat(searchIds("Spring Boot", 10)).containsExactly(SPRING_IN_CONTENT);
+        assertThat(searchIds("React", 10)).containsExactly(REACT_NATIVE_CONTENT, REACT_IN_CONTENT, REACT_IN_TITLE);
     }
 
     @Test
@@ -116,7 +110,7 @@ class StudyPostSearchIntegrationTest {
 
         assertThat(toolResult.status()).isEqualTo("OK");
         assertThat(toolResult.studies()).extracting(StudySummary::studyPostId)
-                .containsExactlyElementsOf(searchIds(SearchTarget.TITLE_CONTENT, "React", 5));
+                .containsExactlyElementsOf(searchIds("React", 5));
         assertThat(toolResult.studies()).extracting(StudySummary::studyPostId)
                 .containsExactly(REACT_NATIVE_CONTENT, REACT_IN_CONTENT, REACT_IN_TITLE);
     }
@@ -129,28 +123,22 @@ class StudyPostSearchIntegrationTest {
                 .andExpect(jsonPath("$.result.items[*].studyPostId").value(contains(
                         (int) REACT_NATIVE_CONTENT, (int) REACT_CLOSED, (int) REACT_IN_CONTENT, (int) REACT_IN_TITLE)));
 
-        assertThat(searchIds(SearchTarget.TITLE_CONTENT, "React", 10))
-                .doesNotContain(REACT_CLOSED, REACT_DELETED);
+        assertThat(searchIds("React", 10)).doesNotContain(REACT_CLOSED, REACT_DELETED);
     }
 
     @Test
-    void 검색어가_없으면_기존_목록_조회와_동일하다() throws Exception {
+    void 검색어가_없으면_삭제되지_않은_전체_목록을_최신순으로_조회한다() throws Exception {
         mockMvc.perform(get("/api/study-posts"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.items[*].studyPostId").value(contains(
                         (int) UNRELATED, (int) REACT_NATIVE_CONTENT, (int) REACT_CLOSED, (int) REACT_IN_CONTENT,
                         (int) REACT_IN_TITLE, (int) SPRING_IN_CONTENT)));
-
-        List<Long> legacy = ids(studyPostQueryService.getStudyPostList(null, null, null, null, 12));
-        List<Long> titleContent = ids(studyPostQueryService.getStudyPostList(
-                SearchTarget.TITLE_CONTENT, null, null, null, null, 12));
-        assertThat(titleContent).isEqualTo(legacy);
     }
 
     @Test
     void 커서_페이징이_정상_동작한다() throws Exception {
         StudyPostCursorResponse first = studyPostQueryService.getStudyPostList(
-                SearchTarget.TITLE_CONTENT, "React", StudyStatus.RECRUITING, null, null, 2);
+                "React", StudyStatus.RECRUITING, null, null, 2);
         assertThat(ids(first)).containsExactly(REACT_NATIVE_CONTENT, REACT_IN_CONTENT);
         assertThat(first.isHasNext()).isTrue();
         assertThat(first.getNextCursorId()).isEqualTo(REACT_IN_CONTENT);
@@ -179,8 +167,8 @@ class StudyPostSearchIntegrationTest {
         assertThat(studySearchTool.searchStudies("+++").status()).isEqualTo("INVALID_KEYWORD");
     }
 
-    private List<Long> searchIds(SearchTarget target, String keyword, int size) {
-        return ids(studyPostQueryService.getStudyPostList(target, keyword, StudyStatus.RECRUITING, null, null, size));
+    private List<Long> searchIds(String keyword, int size) {
+        return ids(studyPostQueryService.getStudyPostList(keyword, StudyStatus.RECRUITING, null, null, size));
     }
 
     private List<Long> ids(StudyPostCursorResponse response) {

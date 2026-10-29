@@ -268,34 +268,6 @@ class StudyPostCommandServiceImplTest {
     }
 
     @Test
-    void 스터디글_목록_키워드_검색() {
-        User user = userRepository.save(getUser());
-
-        studyPostRepository.save(createStudyPostWithTitle(user, "Spring Boot 스터디"));
-        studyPostRepository.save(createStudyPostWithTitle(user, "React 스터디"));
-        studyPostRepository.save(createStudyPostWithTitle(user, "알고리즘 모임"));
-
-        StudyPostCursorResponse result = studyPostQueryService.getStudyPostList("스터디", null, null, null, 10);
-
-        assertThat(result.getItems()).hasSize(2);
-        assertThat(result.getItems())
-                .extracting(d -> d.getTitle())
-                .allMatch(title -> title.contains("스터디"));
-    }
-
-    @Test
-    void 스터디글_목록_키워드_검색_결과_없음() {
-        User user = userRepository.save(getUser());
-        studyPostRepository.save(createStudyPostWithTitle(user, "Spring Boot 스터디"));
-
-        StudyPostCursorResponse result = studyPostQueryService.getStudyPostList("없는키워드", null, null, null, 10);
-
-        assertThat(result.getItems()).isEmpty();
-        assertThat(result.isHasNext()).isFalse();
-        assertThat(result.getNextCursorId()).isNull();
-    }
-
-    @Test
     void 삭제된_스터디글_목록_미노출() {
         User user = userRepository.save(getUser());
         StudyPost post = studyPostRepository.save(getStudyPost(user, 1));
@@ -317,15 +289,6 @@ class StudyPostCommandServiceImplTest {
                 .role("ROLE_USER")
                 .build();
         return user;
-    }
-
-    private StudyPost createStudyPostWithTitle(User user, String title) {
-        StudyPostRequestDTO.StudyPostCreate requestDTO = StudyPostRequestDTO.StudyPostCreate.builder()
-                .title(title)
-                .content("내용")
-                .maxPeople(10)
-                .build();
-        return studyPostCommandService.createStudyPost(requestDTO, user);
     }
 
     private static User getUser2() {
