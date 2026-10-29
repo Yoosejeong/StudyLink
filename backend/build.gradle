@@ -29,7 +29,10 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	compileOnly 'org.projectlombok:lombok'
-	runtimeOnly 'com.mysql:mysql-connector-j'
+	// X DevAPI용 protobuf 4.x가 Qdrant client/Gemini SDK가 쓰는 protobuf 3.x를 덮어쓰지 않도록 제외 (JDBC는 protobuf 미사용)
+	runtimeOnly('com.mysql:mysql-connector-j') {
+		exclude group: 'com.google.protobuf', module: 'protobuf-java'
+	}
 
 	//jwt
 	implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
@@ -56,6 +59,9 @@ dependencies {
 
     implementation platform("org.springframework.ai:spring-ai-bom:1.1.2")
     implementation 'org.springframework.ai:spring-ai-starter-model-google-genai'
+    implementation 'org.springframework.ai:spring-ai-google-genai-embedding'
+    implementation 'org.springframework.ai:spring-ai-qdrant-store'
+    implementation 'io.grpc:grpc-api:1.65.1'   // QdrantGrpcClient 컴파일용 (qdrant client가 사용하는 버전과 동일)
 }
 
 tasks.named('test') {
